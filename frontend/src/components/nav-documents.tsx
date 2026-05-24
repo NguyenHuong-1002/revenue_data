@@ -28,10 +28,9 @@ export function NavDocuments({
   }[]
 }) {
   const { isMobile } = useSidebar()
-
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Tài liệu</SidebarGroupLabel>
+      <SidebarGroupLabel>Tài liệu </SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -84,6 +83,6 @@ export function NavDocuments({
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-    </SidebarGroup>
+    </SidebarGroup> 
   )
 }
