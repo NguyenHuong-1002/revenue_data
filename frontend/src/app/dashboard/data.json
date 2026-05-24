@@ -1,0 +1,614 @@
+[
+  {
+    "id": 1,
+    "header": "Trang bìa",
+    "type": "Trang bìa",
+    "status": "Đang xử lý",
+    "target": "18",
+    "limit": "5",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 2,
+    "header": "Mục lục",
+    "type": "Mục lục",
+    "status": "Hoàn thành",
+    "target": "29",
+    "limit": "24",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 3,
+    "header": "Tóm tắt điều hành",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "10",
+    "limit": "13",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 4,
+    "header": "Cách tiếp cận kỹ thuật",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "27",
+    "limit": "23",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 5,
+    "header": "Thiết kế",
+    "type": "Tường thuật",
+    "status": "Đang xử lý",
+    "target": "2",
+    "limit": "16",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 6,
+    "header": "Năng lực",
+    "type": "Tường thuật",
+    "status": "Đang xử lý",
+    "target": "20",
+    "limit": "8",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 7,
+    "header": "Tích hợp với hệ thống hiện tại",
+    "type": "Tường thuật",
+    "status": "Đang xử lý",
+    "target": "19",
+    "limit": "21",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 8,
+    "header": "Đổi mới và Lợi thế",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "25",
+    "limit": "26",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 9,
+    "header": "Tổng quan về Giải pháp Sáng tạo của EMR",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "7",
+    "limit": "23",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 10,
+    "header": "Thuật toán Nâng cao và Học máy",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "30",
+    "limit": "28",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 11,
+    "header": "Giao thức Truyền thông Thích ứng",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "9",
+    "limit": "31",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 12,
+    "header": "Lợi thế So với Công nghệ Hiện tại",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "12",
+    "limit": "0",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 13,
+    "header": "Hiệu suất Quá khứ",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "22",
+    "limit": "33",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 14,
+    "header": "Phản hồi Khách hàng và Mức độ Hài lòng",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "15",
+    "limit": "34",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 15,
+    "header": "Thách thức Triển khai và Giải pháp",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "3",
+    "limit": "35",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 16,
+    "header": "Biện pháp Bảo mật và Chính sách Bảo vệ Dữ liệu",
+    "type": "Tường thuật",
+    "status": "Đang xử lý",
+    "target": "6",
+    "limit": "36",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 17,
+    "header": "Khả năng Mở rộng và Chuẩn bị cho Tương lai",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "4",
+    "limit": "37",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 18,
+    "header": "Phân tích Chi phí-Lợi ích",
+    "type": "Ngôn ngữ đơn giản",
+    "status": "Hoàn thành",
+    "target": "14",
+    "limit": "38",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 19,
+    "header": "Đào tạo Người dùng và Trải nghiệm Gia nhập",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "17",
+    "limit": "39",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 20,
+    "header": "Lộ trình Phát triển Tương lai",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "11",
+    "limit": "40",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 21,
+    "header": "Tổng quan Kiến trúc Hệ thống",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "24",
+    "limit": "18",
+    "reviewer": "Maya Johnson"
+  },
+  {
+    "id": 22,
+    "header": "Kế hoạch Quản lý Rủi ro",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "15",
+    "limit": "22",
+    "reviewer": "Carlos Rodriguez"
+  },
+  {
+    "id": 23,
+    "header": "Tài liệu Tuân thủ",
+    "type": "Pháp lý",
+    "status": "Đang xử lý",
+    "target": "31",
+    "limit": "27",
+    "reviewer": "Sarah Chen"
+  },
+  {
+    "id": 24,
+    "header": "Tài liệu API",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "8",
+    "limit": "12",
+    "reviewer": "Raj Patel"
+  },
+  {
+    "id": 25,
+    "header": "Mô phỏng Giao diện Người dùng",
+    "type": "Trực quan",
+    "status": "Đang xử lý",
+    "target": "19",
+    "limit": "25",
+    "reviewer": "Leila Ahmadi"
+  },
+  {
+    "id": 26,
+    "header": "Lược đồ Cơ sở dữ liệu",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "22",
+    "limit": "20",
+    "reviewer": "Thomas Wilson"
+  },
+  {
+    "id": 27,
+    "header": "Phương pháp Kiểm thử",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "17",
+    "limit": "14",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 28,
+    "header": "Chiến lược Triển khai",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "26",
+    "limit": "30",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 29,
+    "header": "Phân tích Ngân sách",
+    "type": "Tài chính",
+    "status": "Đang xử lý",
+    "target": "13",
+    "limit": "16",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 30,
+    "header": "Phân tích Thị trường",
+    "type": "Nghiên cứu",
+    "status": "Hoàn thành",
+    "target": "29",
+    "limit": "32",
+    "reviewer": "Sophia Martinez"
+  },
+  {
+    "id": 31,
+    "header": "So sánh Đối thủ Cạnh tranh",
+    "type": "Nghiên cứu",
+    "status": "Đang xử lý",
+    "target": "21",
+    "limit": "19",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 32,
+    "header": "Kế hoạch Bảo trì",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "16",
+    "limit": "23",
+    "reviewer": "Alex Thompson"
+  },
+  {
+    "id": 33,
+    "header": "Chân dung Người dùng",
+    "type": "Nghiên cứu",
+    "status": "Đang xử lý",
+    "target": "27",
+    "limit": "24",
+    "reviewer": "Nina Patel"
+  },
+  {
+    "id": 34,
+    "header": "Tuân thủ Khả năng Tiếp cận",
+    "type": "Pháp lý",
+    "status": "Hoàn thành",
+    "target": "18",
+    "limit": "21",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 35,
+    "header": "Chỉ số Hiệu suất",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "23",
+    "limit": "26",
+    "reviewer": "David Kim"
+  },
+  {
+    "id": 36,
+    "header": "Kế hoạch Khôi phục Thảm họa",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "14",
+    "limit": "17",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 37,
+    "header": "Tích hợp Bên thứ ba",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "25",
+    "limit": "28",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 38,
+    "header": "Tổng hợp Phản hồi Người dùng",
+    "type": "Nghiên cứu",
+    "status": "Hoàn thành",
+    "target": "20",
+    "limit": "15",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 39,
+    "header": "Chiến lược Bản địa hóa",
+    "type": "Tường thuật",
+    "status": "Đang xử lý",
+    "target": "12",
+    "limit": "19",
+    "reviewer": "Maria Garcia"
+  },
+  {
+    "id": 40,
+    "header": "Tương thích Di động",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "28",
+    "limit": "31",
+    "reviewer": "James Wilson"
+  },
+  {
+    "id": 41,
+    "header": "Kế hoạch Di chuyển Dữ liệu",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "19",
+    "limit": "22",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 42,
+    "header": "Quy trình Đảm bảo Chất lượng",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "30",
+    "limit": "33",
+    "reviewer": "Priya Singh"
+  },
+  {
+    "id": 43,
+    "header": "Phân tích Các bên Liên quan",
+    "type": "Nghiên cứu",
+    "status": "Đang xử lý",
+    "target": "11",
+    "limit": "14",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 44,
+    "header": "Đánh giá Tác động Môi trường",
+    "type": "Nghiên cứu",
+    "status": "Hoàn thành",
+    "target": "24",
+    "limit": "27",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 45,
+    "header": "Quyền Sở hữu Trí tuệ",
+    "type": "Pháp lý",
+    "status": "Đang xử lý",
+    "target": "17",
+    "limit": "20",
+    "reviewer": "Sarah Johnson"
+  },
+  {
+    "id": 46,
+    "header": "Khung Hỗ trợ Khách hàng",
+    "type": "Tường thuật",
+    "status": "Hoàn thành",
+    "target": "22",
+    "limit": "25",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 47,
+    "header": "Chiến lược Kiểm soát Phiên bản",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "15",
+    "limit": "18",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 48,
+    "header": "Quy trình Tích hợp Liên tục",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "26",
+    "limit": "29",
+    "reviewer": "Michael Chen"
+  },
+  {
+    "id": 49,
+    "header": "Tuân thủ Quy định",
+    "type": "Pháp lý",
+    "status": "Đang xử lý",
+    "target": "13",
+    "limit": "16",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 50,
+    "header": "Hệ thống Xác thực Người dùng",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "28",
+    "limit": "31",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 51,
+    "header": "Khung Phân tích Dữ liệu",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "21",
+    "limit": "24",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 52,
+    "header": "Cơ sở hạ tầng Đám mây",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "16",
+    "limit": "19",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 53,
+    "header": "Biện pháp Bảo mật Mạng",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "29",
+    "limit": "32",
+    "reviewer": "Lisa Wong"
+  },
+  {
+    "id": 54,
+    "header": "Mốc thời gian Dự án",
+    "type": "Kế hoạch",
+    "status": "Hoàn thành",
+    "target": "14",
+    "limit": "17",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 55,
+    "header": "Phân bổ Nguồn lực",
+    "type": "Kế hoạch",
+    "status": "Đang xử lý",
+    "target": "27",
+    "limit": "30",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 56,
+    "header": "Cấu trúc và Vai trò Nhóm",
+    "type": "Kế hoạch",
+    "status": "Hoàn thành",
+    "target": "20",
+    "limit": "23",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 57,
+    "header": "Giao thức Truyền thông",
+    "type": "Kế hoạch",
+    "status": "Đang xử lý",
+    "target": "15",
+    "limit": "18",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 58,
+    "header": "Chỉ số Thành công",
+    "type": "Kế hoạch",
+    "status": "Hoàn thành",
+    "target": "30",
+    "limit": "33",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 59,
+    "header": "Hỗ trợ Quốc tế hóa",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "23",
+    "limit": "26",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 60,
+    "header": "Quy trình Sao lưu và Khôi phục",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "18",
+    "limit": "21",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 61,
+    "header": "Hệ thống Giám sát và Cảnh báo",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "25",
+    "limit": "28",
+    "reviewer": "Daniel Park"
+  },
+  {
+    "id": 62,
+    "header": "Hướng dẫn Đánh giá Mã",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "12",
+    "limit": "15",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 63,
+    "header": "Tiêu chuẩn Tài liệu",
+    "type": "Nội dung kỹ thuật",
+    "status": "Đang xử lý",
+    "target": "27",
+    "limit": "30",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 64,
+    "header": "Quy trình Quản lý Phát hành",
+    "type": "Kế hoạch",
+    "status": "Hoàn thành",
+    "target": "22",
+    "limit": "25",
+    "reviewer": "Gán người đánh giá"
+  },
+  {
+    "id": 65,
+    "header": "Ma trận Ưu tiên Tính năng",
+    "type": "Kế hoạch",
+    "status": "Đang xử lý",
+    "target": "19",
+    "limit": "22",
+    "reviewer": "Emma Davis"
+  },
+  {
+    "id": 66,
+    "header": "Đánh giá Nợ Kỹ thuật",
+    "type": "Nội dung kỹ thuật",
+    "status": "Hoàn thành",
+    "target": "24",
+    "limit": "27",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 67,
+    "header": "Lập kế hoạch Năng lực",
+    "type": "Kế hoạch",
+    "status": "Đang xử lý",
+    "target": "21",
+    "limit": "24",
+    "reviewer": "Jamik Tashpulatov"
+  },
+  {
+    "id": 68,
+    "header": "Thỏa thuận Cấp độ Dịch vụ",
+    "type": "Pháp lý",
+    "status": "Hoàn thành",
+    "target": "26",
+    "limit": "29",
+    "reviewer": "Gán người đánh giá"
+  }
+]
