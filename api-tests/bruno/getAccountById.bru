@@ -1,0 +1,75 @@
+meta {
+  name: Lấy chi tiết tài khoản theo ID (getAccountById)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/accounts/{{current_test_user_id}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+tests {
+  // 1. Kiểm tra mã trạng thái phản hồi phải là 200 OK
+  test("Status code is 200 OK", function () {
+      expect(res.status).to.equal(200);
+  });
+  
+  // 2. Kiểm tra định dạng dữ liệu trả về là JSON
+  test("Content-Type is application/json", function () {
+      expect(res.headers['content-type']).to.include("application/json");
+  });
+  
+  // 3. Kiểm tra tốc độ phản hồi cực nhanh dưới 300ms
+  test("Response time is less than 300ms", function () {
+      expect(res.responseTime).to.be.below(300);
+  });
+  
+  // 4. Kiểm tra cấu trúc phản hồi của chi tiết Account
+  test("Response has required IAccount properties", function () {
+      expect(res.body).to.be.an("object");
+      expect(res.body).to.have.property("account_id");
+      expect(res.body).to.have.property("role");
+      expect(res.body).to.have.property("fullname");
+      expect(res.body).to.have.property("username");
+      expect(res.body).to.have.property("mail");
+      expect(res.body).to.have.property("avatarURL");
+      expect(res.body).to.have.property("created_at");
+      expect(res.body).to.have.property("updated_at");
+  });
+  
+  // 5. Kiểm tra tính hợp lệ và kiểu dữ liệu của các trường
+  test("Account properties have valid data types and values", function () {
+      expect(res.body.account_id).to.be.a("string").and.have.lengthOf(36);
+      
+      const requestedId = bru.getEnvVar("current_test_user_id");
+      if (requestedId) {
+          expect(res.body.account_id).to.equal(requestedId);
+      }
+      
+      expect(res.body.role).to.be.a("string");
+      expect(["ADMIN", "STAFF"]).to.include(res.body.role);
+      
+      // Email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      expect(emailRegex.test(res.body.mail)).to.be.true;
+  });
+  
+  // 6. KIỂM TRA BẢO MẬT: Không được để lộ password hash
+  test("SECURITY CHECK: Response must not leak password_hash or password", function () {
+      expect(res.body).to.not.have.property("password");
+      expect(res.body).to.not.have.property("passwordHash");
+      expect(res.body).to.not.have.property("password_hash");
+  });
+  
+  // 7. Lưu trữ username và role của tài khoản đang truy vấn để ghi nhận
+  test("Save account metadata for log references", function () {
+      bru.setEnvVar("last_queried_username", res.body.username);
+      bru.setEnvVar("last_queried_role", res.body.role);
+  });
+}

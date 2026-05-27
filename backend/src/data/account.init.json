@@ -1,0 +1,112 @@
+[
+  {
+    "account_id": "ee9fba92-e53b-43ef-8b0b-47aa9a42f6a9",
+    "role": "ADMIN",
+    "fullname": "Quản trị viên Hệ thống",
+    "username": "admin",
+    "password_hash": "scrypt$5271c2dc1399e0a895a5e403a34df544$86c11499920311f72fde2b576e0c2f69e0f6ab4898e74151111d531dbd51c95dae11082cfc2fff3fbfb7eaf04ec33050412a3a9b99caccebc80615d9861614ca",
+    "mail": "admin@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.142Z",
+    "updated_at": "2026-05-27T07:20:41.142Z"
+  },
+  {
+    "account_id": "95668225-b2fe-4512-9e21-31896b9311c1",
+    "role": "ADMIN",
+    "fullname": "Lê Minh Hoàng",
+    "username": "hoangle",
+    "password_hash": "scrypt$d8abc0db5889c9b67acccb7300f8a456$2050abb7cfe324e6401d22bb07cced822b3f8d0afd09a876aa53af26788e30cf64cd02967b6ddd9e50cd850d0a08e802ba6050b709fa90312c00c34907a85540",
+    "mail": "hoangle@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.202Z",
+    "updated_at": "2026-05-27T07:20:41.202Z"
+  },
+  {
+    "account_id": "ffb5ed3b-fa43-41f8-90b4-0ecc7f4a0316",
+    "role": "STAFF",
+    "fullname": "Nguyễn Thị Lan Anh",
+    "username": "lananh",
+    "password_hash": "scrypt$7722a7d73b1b9e549ba4de568733778b$32e3783745fc515c23e9b10207f7db5d9ff3c19d6311aec0d4aecc970ce12c423749663068c58e6d7831b6528d12377d2431d9c1bf8b190004898fb2e2fc0b5e",
+    "mail": "lananh@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.267Z",
+    "updated_at": "2026-05-27T07:20:41.267Z"
+  },
+  {
+    "account_id": "e059a09a-616a-4ed6-9601-b69871b4cf85",
+    "role": "STAFF",
+    "fullname": "Nguyễn Văn Minh",
+    "username": "minhnguyen",
+    "password_hash": "scrypt$369e6a032b099b7cb417c1a806bbe92d$9e24acff81bf070918694daff9a1a2741573ec2add43023f229d33593010595d80b0d117f1af5911aa6e2d91737cb9a2b406c3884ad6ba8571d5466a82400b2c",
+    "mail": "minh@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.333Z",
+    "updated_at": "2026-05-27T07:20:41.333Z"
+  },
+  {
+    "account_id": "8777fc07-0ccf-4d54-acda-3636369c80bd",
+    "role": "STAFF",
+    "fullname": "Trần Thị Lan",
+    "username": "tranthilan",
+    "password_hash": "scrypt$e9ea621842906c6d55c8569524a14816$a226f70978742d42ecb3bc04d60a6c9a0b4001ae5528e14886fe813dc57f0d8c55687cd276222908a1c580afa823cfe20432c9cdced71b4c16eaf9f23ee2eefc",
+    "mail": "lan.tran@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.413Z",
+    "updated_at": "2026-05-27T07:20:41.413Z"
+  },
+  {
+    "account_id": "098ac3cb-f1ac-42ee-8cfa-7d948ea90258",
+    "role": "STAFF",
+    "fullname": "Phạm Anh Quân",
+    "username": "anhquan",
+    "password_hash": "scrypt$7f1c1bf38433fa6cf732d2055fc12ad5$8c5583e2e977b9af03203f77e4566ae340abf2b8feec6ae6f7d1c1b05d177faafa1f9bac252942b649875fbba984d064d294a40abbf2c45a9c92fdbfd9ad67ca",
+    "mail": "quan.pa@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.489Z",
+    "updated_at": "2026-05-27T07:20:41.489Z"
+  },
+  {
+    "account_id": "da372f72-82f8-47ae-ab8b-f9f3757d008c",
+    "role": "STAFF",
+    "fullname": "Hoàng Thu Hà",
+    "username": "thuha",
+    "password_hash": "scrypt$117bb4fd803f13175e74b7e9d7fef0d8$e68eb499ae1e55f65defd07f1c270239c716cb1ea0984a1bc85a6c449aa4472df4d32e196cf64376c38b28c42f634e98f901eb4338fc8875feda853733251798",
+    "mail": "ha.ht@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.566Z",
+    "updated_at": "2026-05-27T07:20:41.566Z"
+  },
+  {
+    "account_id": "93d5e8d9-6e3b-4bfc-a761-cd70de7fe753",
+    "role": "STAFF",
+    "fullname": "Nguyễn Duy Việt",
+    "username": "duyviet",
+    "password_hash": "scrypt$c0545b9dfe0be87380619ac830a97219$4b5ac9f4fffc1c5e07cf98f4b2f9ea6b31f748ef0fb2be5925f62bb606bc8e74b3416431681118ecc3c4e7c1a38db3250e9a9b24d3031da2bbbd64c5a3299827",
+    "mail": "viet.nd@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.623Z",
+    "updated_at": "2026-05-27T07:20:41.623Z"
+  },
+  {
+    "account_id": "68fe6ec8-6a51-463f-9803-964648f23a9b",
+    "role": "STAFF",
+    "fullname": "Vũ Bích Ngọc",
+    "username": "bichngoc",
+    "password_hash": "scrypt$ac074e0f9c057eed7da0040affaaada7$e6543561ddad45606fcdf00f756110f6cabe18286ed87dd384a5f62c563abf1b65155c8fa3905c6916e95f5aa3f5ff1c5b20db75d76187d5c62d288a067aa87f",
+    "mail": "ngoc.vb@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.675Z",
+    "updated_at": "2026-05-27T07:20:41.675Z"
+  },
+  {
+    "account_id": "4b1d8437-da11-457b-81fa-3554d365941f",
+    "role": "STAFF",
+    "fullname": "Trần Tiến Việt",
+    "username": "tienviet",
+    "password_hash": "scrypt$7583608c327bc7b488de399163f8e7f9$595d2a0f22fdfbc9e230c5eba47e1da8db11c01d4d0bc01b0eb3e688050be8f86afba9ee953a3840e8534cbb3157ce73aab5fe51e9c4a10947866cc42832a4b4",
+    "mail": "viet.tt@revenue.com",
+    "avatarURL": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop",
+    "created_at": "2026-05-27T07:20:41.730Z",
+    "updated_at": "2026-05-27T07:20:41.730Z"
+  }
+]

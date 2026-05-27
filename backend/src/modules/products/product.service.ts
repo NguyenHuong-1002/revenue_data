@@ -1,69 +1,175 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { ProductDTO } from "src/dto/product.dto";
-import { Product } from "src/models/product.model";
-
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DatabaseService } from 'src/models/database.service';
+import { CreateProductDto } from './DTO/create-product.dto';
+import { GetProductAllDto } from './DTO/get-product-all.dto';
+import { IProduct, IPaginatedProducts } from './interfaces/product.interface';
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { NotificationService } from '../notifications/notification.service';
 
 @Injectable()
 export class ProductService {
+  // eslint-disable-next-line prettier/prettier
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly notificationService: NotificationService,
+  ) { }
 
-  private products: Product[] = [
-    { id: 1, categoryId: 2, price: 80000, productName: 'Keyboard' }, {
-      id: 2, categoryId: 2, price: 90000, productName: 'Nine dev'
+  async getProductsAll(filters: GetProductAllDto): Promise<IPaginatedProducts> {
+    const whereClauses: string[] = [];
+    const values: unknown[] = [];
+
+    if (filters.product_id) {
+      whereClauses.push('product_id = ?');
+      values.push(filters.product_id);
     }
-  ]
-  getProducts(): Product[] {
-    return this.products;
+    if (filters.color) {
+      whereClauses.push('color LIKE ?');
+      values.push(`%${filters.color}%`);
+    }
+    if (filters.listing_price !== undefined) {
+      whereClauses.push('listing_price = ?');
+      values.push(filters.listing_price);
+    }
+    if (filters.price_cost !== undefined) {
+      whereClauses.push('price_cost = ?');
+      values.push(filters.price_cost);
+    }
+    if (filters.gender) {
+      whereClauses.push('gender = ?');
+      values.push(filters.gender);
+    }
+    if (filters.detail_product_group) {
+      whereClauses.push('detail_product_group = ?');
+      values.push(filters.detail_product_group);
+    }
+    if (filters.size) {
+      whereClauses.push('size = ?');
+      values.push(filters.size);
+    }
+    if (filters.age_group !== undefined) {
+      whereClauses.push('age_group = ?');
+      values.push(filters.age_group);
+    }
+    if (filters.activity_group) {
+      whereClauses.push('activity_group = ?');
+      values.push(filters.activity_group);
+    }
+    if (filters.lifestyle_group) {
+      whereClauses.push('lifestyle_group = ?');
+      values.push(filters.lifestyle_group);
+    }
+
+    const whereSQL =
+      whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
+
+    const countSQL = `SELECT COUNT(*) as total FROM product ${whereSQL}`;
+    const [countRows] = await this.db.client.query<RowDataPacket[]>(countSQL, values);
+    const total = Number(countRows[0].total);
+
+    const { page, limit } = filters;
+    const offset = (page - 1) * limit;
+    const dataSQL = `SELECT * FROM product ${whereSQL} ORDER BY product_id ASC LIMIT ? OFFSET ?`;
+    const [dataRows] = await this.db.client.query<RowDataPacket[]>(dataSQL, [
+      ...values,
+      limit,
+      offset,
+    ]);
+
+    return {
+      data: dataRows as IProduct[],
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
-  creatProducts(productDTO: ProductDTO): Product {
-    const product: Product = {
-      id: Math.random(),
-      ...productDTO
+  async getDetailProduct(id: string): Promise<IProduct> {
+    const [rows] = await this.db.client.query<RowDataPacket[]>(
+      'SELECT * FROM product WHERE product_id = ?',
+      [id],
+    );
+    if (rows.length === 0) {
+      throw new NotFoundException(`Product with ID '${id}' not found`);
     }
-    this.products.push(product);
-    return product;
+    return rows[0] as IProduct;
   }
 
-  getDetailProduct(id: number): Product {
-    this.validateId(id);
+  async createProduct(dto: CreateProductDto, adminUsername?: string): Promise<IProduct> {
+    const id = `SP${Date.now()}`;
+    await this.db.client.query<ResultSetHeader>(
+      `INSERT INTO product (product_id, color, listing_price, price_cost, gender, detail_product_group, size, age_group, activity_group, lifestyle_group) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        dto.color,
+        dto.listing_price,
+        dto.price_cost,
+        dto.gender,
+        dto.detail_product_group,
+        dto.size,
+        dto.age_group,
+        dto.activity_group,
+        dto.lifestyle_group,
+      ],
+    );
 
-    const product = this.products.find(item => item.id === id);
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
+    // Tự động tạo thông báo
+    await this.notificationService.createNotification({
+      title: 'Tạo sản phẩm mới',
+      content: `Admin ${adminUsername || 'hệ thống'} đã tạo mới sản phẩm ${id} (Màu: ${dto.color}, Kích cỡ: ${dto.size}).`,
+      type: 'SYSTEM',
+    });
 
-    return product;
+    return this.getDetailProduct(id);
   }
 
-  updateProduct(productDTO: ProductDTO, id: number): Product {
-    this.validateId(id);
+  async updateProduct(dto: CreateProductDto, id: string, adminUsername?: string): Promise<IProduct> {
+    await this.getDetailProduct(id);
+    await this.db.client.query<ResultSetHeader>(
+      `UPDATE product SET color = ?, listing_price = ?, price_cost = ?, gender = ?, detail_product_group = ?, size = ?, age_group = ?, activity_group = ?, lifestyle_group = ? WHERE product_id = ?`,
+      [
+        dto.color,
+        dto.listing_price,
+        dto.price_cost,
+        dto.gender,
+        dto.detail_product_group,
+        dto.size,
+        dto.age_group,
+        dto.activity_group,
+        dto.lifestyle_group,
+        id,
+      ],
+    );
 
-    const index = this.products.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw new NotFoundException('Product not found');
-    }
+    // Tự động tạo thông báo
+    await this.notificationService.createNotification({
+      title: 'Cập nhật sản phẩm',
+      content: `Admin ${adminUsername || 'hệ thống'} đã cập nhật thông tin sản phẩm ${id}.`,
+      type: 'SYSTEM',
+    });
 
-    this.products[index].categoryId = productDTO.categoryId;
-    this.products[index].price = productDTO.price;
-    this.products[index].productName = productDTO.productName;
-    return this.products[index];
+    return this.getDetailProduct(id);
   }
 
-  deleteProduct(id: number): boolean {
-    this.validateId(id);
+  async deleteProduct(id: string, adminUsername?: string): Promise<boolean> {
+    await this.getDetailProduct(id);
+    const [result] = await this.db.client.query<ResultSetHeader>(
+      'DELETE FROM product WHERE product_id = ?',
+      [id],
+    );
+    const success = result.affectedRows > 0;
 
-    const index = this.products.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw new NotFoundException('Product not found');
+    if (success) {
+      // Tự động tạo thông báo
+      await this.notificationService.createNotification({
+        title: 'Xóa sản phẩm',
+        content: `Admin ${adminUsername || 'hệ thống'} đã xóa sản phẩm ${id} khỏi hệ thống.`,
+        type: 'SYSTEM',
+      });
     }
 
-    this.products.splice(index, 1);
-    return true;
+    return success;
   }
-
-  private validateId(id: number) {
-    if (Number.isNaN(id)) {
-      throw new BadRequestException('Product id must be a number');
-    }
-  }
-};
+}

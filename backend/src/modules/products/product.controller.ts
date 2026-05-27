@@ -6,41 +6,80 @@ import {
   Param,
   Post,
   Put,
+  Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ProductService } from './product.service';
-import { Product } from 'src/models/product.model';
-import { ProductDTO } from 'src/dto/product.dto';
 
+import { AuthGuard, Roles, CurrentUser, JwtPayload } from 'src/middlewares/auth.guard';
+import { IProduct, IPaginatedProducts } from './interfaces/product.interface';
+import { ProductService } from './product.service';
+import { CreateProductDto } from './DTO/create-product.dto';
+import { GetProductAllDto } from './DTO/get-product-all.dto';
+import {
+  ApiTags,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import {
+  ApiGetProductsSwagger,
+  ApiPostProductSwagger,
+  ApiGetDetailProductSwagger,
+  ApiUpdateProductSwagger,
+  ApiDeleteProductSwagger,
+} from './product.swagger';
+
+@ApiTags('Sản phẩm (Products)')
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('products')
 export class ProductController {
+  // eslint-disable-next-line prettier/prettier
   constructor(private readonly productService: ProductService) { }
 
+  @ApiGetProductsSwagger()
   @Get()
-  getProducts(): Product[] {
-    return this.productService.getProducts();
+  getProductsController(
+    @Query(new ValidationPipe({ transform: true })) query: GetProductAllDto,
+  ): Promise<IPaginatedProducts> {
+    return this.productService.getProductsAll(query);
   }
 
+  @Roles('ADMIN')
+  @ApiPostProductSwagger()
   @Post()
-  postProduct(@Body(new ValidationPipe()) productDTO: ProductDTO): Product {
-    return this.productService.creatProducts(productDTO);
+  postProduct(
+    @CurrentUser() user: any,
+    @Body(new ValidationPipe({ transform: true })) productDTO: CreateProductDto,
+  ): Promise<IProduct> {
+    return this.productService.createProduct(productDTO, user.username);
   }
 
+  @ApiGetDetailProductSwagger()
   @Get('/:id')
-  getDetailProduct(@Param('id') id: string): Product {
-    return this.productService.getDetailProduct(Number(id));
+  getDetailProduct(@Param('id') id: string): Promise<IProduct> {
+    return this.productService.getDetailProduct(id);
   }
 
+  @Roles('ADMIN')
+  @ApiUpdateProductSwagger()
   @Put('/:id')
   updateProduct(
-    @Body() productDTO: ProductDTO,
+    @CurrentUser() user: any,
+    @Body(new ValidationPipe({ transform: true })) productDTO: CreateProductDto,
     @Param('id') id: string,
-  ): Product {
-    return this.productService.updateProduct(productDTO, Number(id));
+  ): Promise<IProduct> {
+    return this.productService.updateProduct(productDTO, id, user.username);
   }
 
+  @Roles('ADMIN')
+  @ApiDeleteProductSwagger()
   @Delete('/:id')
-  deleteProduct(@Param('id') id: string): boolean {
-    return this.productService.deleteProduct(Number(id));
+  deleteProduct(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+  ): Promise<boolean> {
+    return this.productService.deleteProduct(id, user.username);
   }
 }
+
+

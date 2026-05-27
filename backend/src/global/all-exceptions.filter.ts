@@ -5,80 +5,106 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { existsSync, mkdirSync, appendFileSync } from 'node:fs'; // existsSync() kiểm tra thư mục tồn tại hay không // mkdirSync kiểm tra thư mục  // appendFileSync  ghi nội dung vào thư mục
-import { join } from 'node:path'; // đường dẫn
-import type { Request, Response } from 'express'; // import kiểu dữ liệu 
+import type { Request, Response } from 'express';
+import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 
-// bắt tất cả exception trong ứng dụng 
+type ErrorMessage = string | string[];
+
+type ErrorResponse = {
+  statusCode: number;
+  message: ErrorMessage;
+  path: string;
+  method: string;
+  timestamp: string;
+};
+
+type NestErrorResponse = {
+  message?: ErrorMessage;
+};
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logDir = join(process.cwd(), 'logs'); // bắt về đường dẫn folder logs
-  private readonly logFile = join(this.logDir, 'error.log'); // đường dẫn file error.log
+  private readonly logDir = join(process.cwd(), 'logs');
+  private readonly logFile = join(this.logDir, 'error.log');
 
-  catch(exception: unknown, host: ArgumentsHost) { // exception : chứa lỗi xảy ra , host : chứa request/response/context
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const response = ctx.getResponse<Response>();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR; // lấy ra trạng thái
-
-    const message = this.getErrorMessage(exception); // lấy ra lỗi ngoại lệ đã định nghĩa bên dưới
-
-    const errorResponse = { // định nghĩa đầu ra của lỗi
-      statusCode: status,
-      message,
+    const statusCode = this.getStatusCode(exception);
+    const errorResponse: ErrorResponse = {
+      statusCode,
+      message: this.getMessage(exception),
       path: request.url,
       method: request.method,
       timestamp: new Date().toISOString(),
     };
 
-    this.writeLog(exception, errorResponse); // ghi vào file logs 
-
-    response.status(status).json(errorResponse);
+    this.writeLog(exception, errorResponse);
+    response.status(statusCode).json(errorResponse);
   }
 
-  private writeLog(exception: unknown, errorResponse: Record<string, unknown>) {
-    if (!existsSync(this.logDir)) {
-      mkdirSync(this.logDir, { recursive: true });
-    } // kiểm tra xem tồn tại chưa
+  private getStatusCode(exception: unknown): number {
+    if (exception instanceof HttpException) {
+      return exception.getStatus();
+    }
 
-    const stack =
-      exception instanceof Error
-        ? exception.stack
-        : JSON.stringify(exception, null, 2);
-
-    const logMessage = [
-      `[${errorResponse.timestamp}] ${errorResponse.method} ${errorResponse.path}`,
-      `Status: ${errorResponse.statusCode}`,
-      `Message: ${errorResponse.message}`,
-      `Stack: ${stack}`,
-      '',
-    ].join('\n');
-
-    appendFileSync(this.logFile, logMessage); // ghi vào file
+    return HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
-  private getErrorMessage(exception: unknown) {
+  private getMessage(exception: unknown): ErrorMessage {
     if (!(exception instanceof HttpException)) {
       return 'Internal server error';
     }
 
-    const exceptionResponse = exception.getResponse();
-    if (typeof exceptionResponse === 'string') {
-      return exceptionResponse;
+    const error = exception.getResponse();
+
+    if (typeof error === 'string') {
+      return error;
     }
 
-    if (
-      typeof exceptionResponse === 'object' &&
-      exceptionResponse !== null &&
-      'message' in exceptionResponse
-    ) {
-      return exceptionResponse.message;
+    if (this.hasMessage(error)) {
+      return error.message ?? exception.message;
     }
 
     return exception.message;
-  } // cấu hình lại messgae lỗi
+  }
+
+  private hasMessage(value: unknown): value is NestErrorResponse {
+    return typeof value === 'object' && value !== null && 'message' in value;
+  }
+
+  private writeLog(exception: unknown, errorResponse: ErrorResponse) {
+    this.createLogDir();
+
+    const logMessage = [
+      `[${errorResponse.timestamp}] ${errorResponse.method} ${errorResponse.path}`,
+      `Status: ${errorResponse.statusCode}`,
+      `Message: ${this.formatMessage(errorResponse.message)}`,
+      `Stack: ${this.getStack(exception)}`,
+      '',
+    ].join('\n');
+
+    appendFileSync(this.logFile, logMessage);
+  }
+
+  private createLogDir() {
+    if (!existsSync(this.logDir)) {
+      mkdirSync(this.logDir, { recursive: true });
+    }
+  }
+
+  private formatMessage(message: ErrorMessage): string {
+    return Array.isArray(message) ? message.join(', ') : message;
+  }
+
+  private getStack(exception: unknown): string {
+    if (exception instanceof Error) {
+      return exception.stack ?? exception.message;
+    }
+
+    return JSON.stringify(exception, null, 2);
+  }
 }
