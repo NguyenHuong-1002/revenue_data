@@ -9,6 +9,4 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   database: process.env.MYSQL_DATABASE,
   autoLoadEntities: true, //Tự động nạp các Entity)
   synchronize: false, //(Không tự động đồng bộ cấu hình bảng)
-  entities: [__dirname + '/../entities/**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
 };

@@ -1,13 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsIn,
-  IsInt,
-  IsNotEmpty,
-  IsNumber,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty, IsNumber, IsString, Max, Min } from 'class-validator';
 
 export class CreateProductDto {
   @IsNotEmpty({ message: 'Màu sắc (color) không được để trống!' })
@@ -34,24 +26,36 @@ export class CreateProductDto {
   gender!: string;
 
   @IsNotEmpty({
-    message:
-      'Chi tiết nhóm sản phẩm (detail_product_group) không được để trống!',
+    message: 'Chi tiết nhóm sản phẩm (detail_product_group) không được để trống!',
   })
   @IsString({
-    message:
-      'Chi tiết nhóm sản phẩm (detail_product_group) phải là một chuỗi ký tự!',
+    message: 'Chi tiết nhóm sản phẩm (detail_product_group) phải là một chuỗi ký tự!',
   })
   detail_product_group!: string;
 
   @IsNotEmpty({ message: 'Kích cỡ (size) không được để trống!' })
-  @IsString({ message: 'Kích cỡ (size) phải là một chuỗi ký tự!' })
-  size!: string;
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Kích cỡ (size) phải là một số hợp lệ!' })
+  size!: number;
 
   @IsNotEmpty({ message: 'Nhóm độ tuổi (age_group) không được để trống!' })
   @IsString({ message: 'Nhóm độ tuổi (age_group) phải là một chuỗi ký tự!' })
-  @IsIn(['24 đến <40 tuổi', '40 đến <60 tuổi', '0 đến <3 tuổi', 'Trên 60 tuổi', '6 đến <10 tuổi', '3 đến <6 tuổi', '10 đến <16 tuổi', 'Khác'], {
-    message: 'Nhóm độ tuổi (age_group) không hợp lệ!',
-  })
+  @IsIn(
+    [
+      '16 đến <24 tuổi',
+      '24 đến <40 tuổi',
+      '40 đến <60 tuổi',
+      '0 đến <3 tuổi',
+      'Trên 60 tuổi',
+      '6 đến <10 tuổi',
+      '3 đến <6 tuổi',
+      '10 đến <16 tuổi',
+      'Khác',
+    ],
+    {
+      message: 'Nhóm độ tuổi (age_group) không hợp lệ!',
+    },
+  )
   age_group!: string;
 
   @IsNotEmpty({

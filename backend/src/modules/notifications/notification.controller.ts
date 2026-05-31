@@ -9,7 +9,7 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { AuthGuard, CurrentUser, JwtPayload, Roles } from 'src/middlewares/auth.guard';
+import { AuthGuard, CurrentUser, type JwtPayload, Roles } from 'src/middlewares/auth.guard';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './DTO/create-notification.dto';
 import { GetNotificationsDto } from './DTO/get-notifications.dto';
@@ -18,26 +18,23 @@ import { INotification, IPaginatedNotifications } from './interfaces/notificatio
 @UseGuards(AuthGuard)
 @Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(private readonly notificationService: NotificationService) { }
 
   @Get()
   getNotifications(
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
     @Query(new ValidationPipe({ transform: true })) query: GetNotificationsDto,
   ): Promise<IPaginatedNotifications> {
     return this.notificationService.getNotificationsForUser(user.sub, query);
   }
 
   @Patch('/:id/read')
-  markAsRead(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-  ): Promise<INotification> {
+  markAsRead(@CurrentUser() user: JwtPayload, @Param('id') id: string): Promise<INotification> {
     return this.notificationService.markAsRead(id, user.sub);
   }
 
   @Post('/read-all')
-  async markAllAsRead(@CurrentUser() user: any): Promise<{ success: boolean }> {
+  async markAllAsRead(@CurrentUser() user: JwtPayload): Promise<{ success: boolean }> {
     await this.notificationService.markAllAsRead(user.sub);
     return { success: true };
   }

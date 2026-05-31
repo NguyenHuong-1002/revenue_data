@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS product (
   price_cost           DECIMAL(15, 0) NOT NULL DEFAULT 0,
   gender               ENUM('MEN','WOM','BOY','GIR') NOT NULL,
   detail_product_group ENUM('SANTD','DEPTD','GTTPC','GTTCD','SANTR','GIATR','PKIEN','TBLTH','TBLTR') NOT NULL,
-  size                 VARCHAR(20)  NOT NULL, 
-  age_group            ENUM('24 đến <40 tuổi', '40 đến <60 tuổi', '0 đến <3 tuổi', 'Trên 60 tuổi', '6 đến <10 tuổi', '3 đến <6 tuổi', '10 đến <16 tuổi', 'Khác') NOT NULL,
+  size                 INT          NOT NULL DEFAULT 0, 
+  age_group            ENUM('16 đến <24 tuổi', '24 đến <40 tuổi', '40 đến <60 tuổi', '0 đến <3 tuổi', 'Trên 60 tuổi', '6 đến <10 tuổi', '3 đến <6 tuổi', '10 đến <16 tuổi', 'Khác') NOT NULL,
   activity_group       ENUM('Thường nhật/Trường học', 'Thể thao', 'Văn phòng', 'Chuyên biệt', 'Khác') NOT NULL,
   lifestyle_group      ENUM('Sport', 'Casual', 'Fashion', 'Formal', 'Khác') NOT NULL,
   created_at           DATETIME     DEFAULT CURRENT_TIMESTAMP,
@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS account (
   password_hash VARCHAR(255) NOT NULL,
   mail         VARCHAR(255)  NOT NULL,
   avatarURL    VARCHAR(255) NULL,
+  deleted_at   DATETIME     DEFAULT NULL,
   created_at   DATETIME     DEFAULT CURRENT_TIMESTAMP,
   updated_at   DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -95,7 +96,7 @@ CREATE TABLE IF NOT EXISTS saleReport (
   product_id          VARCHAR(50)  NOT NULL,
   customer_id         VARCHAR(50)  NOT NULL,
   sold_quantity       INT          NOT NULL DEFAULT 0,
-  distribution_channel ENUM('Online', 'Bán lẻ', 'Phát sinh', 'Bán sỉ', 'Siêu thị', 'Hợp đồng') NOT NULL,
+  distribution_channel ENUM('Online', 'Bán lẻ', 'Phát sinh', 'Bán sỉ', 'Siêu thị', 'Hợp đồng', 'Chi nhánh') NOT NULL,
   branch_id           VARCHAR(50)  NOT NULL,
   time_report         DATETIME     NOT NULL,
   created_at          DATETIME     DEFAULT CURRENT_TIMESTAMP,
@@ -110,19 +111,32 @@ CREATE TABLE IF NOT EXISTS saleReport (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 8. notification
+-- 8. notification (Đã chỉnh sửa: Chỉ lưu nội dung thông báo)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS notification (
   notification_id VARCHAR(50)  NOT NULL PRIMARY KEY,
-  account_id      VARCHAR(50)  NULL, -- NULL nghĩa là thông báo chung toàn hệ thống
   title           VARCHAR(255) NOT NULL,
   content         TEXT         NOT NULL,
   type            ENUM('SYSTEM', 'INVENTORY_ALERT', 'NEW_SALE', 'CUSTOMER_NEW', 'OTHER') NOT NULL DEFAULT 'SYSTEM',
-  read_at         DATETIME     NULL DEFAULT NULL, -- NULL là chưa đọc
   created_at      DATETIME     DEFAULT CURRENT_TIMESTAMP,
-  updated_at      DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_at      DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 9. account_notification (Bảng mới: Lưu trạng thái của từng cá nhân)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS account_notification (
+  account_id      VARCHAR(50) NOT NULL,
+  notification_id VARCHAR(50) NOT NULL,
+  is_read         TINYINT(1)  NOT NULL DEFAULT 0, -- 0: Chưa đọc, 1: Đã đọc
+  read_at         DATETIME    DEFAULT NULL,
+  is_deleted      TINYINT(1)  NOT NULL DEFAULT 0, -- 0: Chưa xóa, 1: Đã xóa (Ẩn với user này)
+  deleted_at      DATETIME    DEFAULT NULL,
+  PRIMARY KEY (account_id, notification_id),
   
-  INDEX idx_noti_account (account_id),
-  INDEX idx_noti_read (read_at),
-  CONSTRAINT fk_noti_account FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE
+  INDEX idx_acc_noti_read (is_read),
+  INDEX idx_acc_noti_deleted (is_deleted),
+  
+  CONSTRAINT fk_an_account      FOREIGN KEY (account_id)      REFERENCES account(account_id) ON DELETE CASCADE,
+  CONSTRAINT fk_an_notification FOREIGN KEY (notification_id) REFERENCES notification(notification_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

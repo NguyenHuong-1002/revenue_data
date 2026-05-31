@@ -54,12 +54,10 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
  * Custom Param Decorator `@CurrentUser()` giúp lấy nhanh thông tin User đang đăng nhập ngay tại tham số của hàm trong Controller
  * Ví dụ sử dụng: `async getProfile(@CurrentUser() user: JwtPayload)`
  */
-export const CurrentUser = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest<Request>();
-    return request.user; // Trả về thông tin user đã được Guard xác thực và lưu vào request trước đó
-  },
-);
+export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest<Request>();
+  return request.user; // Trả về thông tin user đã được Guard xác thực và lưu vào request trước đó
+});
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -67,8 +65,7 @@ export class AuthGuard implements CanActivate {
     // Reflector là một tiện ích của NestJS dùng để đọc các Metadata được gắn từ các Decorator (@Public, @Roles)
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
-    // eslint-disable-next-line prettier/prettier
-  ) { }
+  ) {}
 
   /**
    * Hàm cốt lõi của Guard: Quyết định một Request có hợp lệ để đi tiếp vào API hay không
@@ -121,10 +118,10 @@ export class AuthGuard implements CanActivate {
    */
   private checkRoles(context: ExecutionContext, user: JwtPayload): void {
     // Đọc danh sách các vai trò được yêu cầu bởi decorator `@Roles(...)` trên API đó
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     // Nếu API không yêu cầu phân quyền cụ thể (không gắn @Roles), mặc định là ai đăng nhập cũng được vào
     if (!requiredRoles?.length) {
       return;

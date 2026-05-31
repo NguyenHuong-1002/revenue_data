@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import * as fs from 'node:fs';
@@ -13,7 +14,6 @@ export class ApiLoggerMiddleware implements NestMiddleware {
 
     res.on('finish', () => {
       const duration = Date.now() - startTime;
-      
       // Định dạng ngày giờ: MM/DD/YYYY, H:MM:SS AM/PM
       const timestamp = new Date().toLocaleString('en-US', {
         year: 'numeric',

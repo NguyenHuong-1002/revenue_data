@@ -1,0 +1,42 @@
+[
+  {
+    "store_id": "1100",
+    "name": "Chi Nhánh Đống Đa - Royal City",
+    "city": "Hà Nội"
+  },
+  {
+    "store_id": "1200",
+    "name": "Chi Nhánh Cầu Giấy",
+    "city": "Hà Nội"
+  },
+  {
+    "store_id": "1300",
+    "name": "Chi Nhánh Quận 1 - Bến Thành",
+    "city": "TP. Hồ Chí Minh"
+  },
+  {
+    "store_id": "1400",
+    "name": "Chi Nhánh Quận 3 - Lê Văn Sỹ",
+    "city": "TP. Hồ Chí Minh"
+  },
+  {
+    "store_id": "1500",
+    "name": "Chi Nhánh Hải Châu",
+    "city": "Đà Nẵng"
+  },
+  {
+    "store_id": "1600",
+    "name": "Chi Nhánh Thanh Khê",
+    "city": "Đà Nẵng"
+  },
+  {
+    "store_id": "1800",
+    "name": "Chi Nhánh Ninh Kiều",
+    "city": "Cần Thơ"
+  },
+  {
+    "store_id": "2000",
+    "name": "Chi Nhánh Hồng Bàng",
+    "city": "Hải Phòng"
+  }
+]

@@ -75,3 +75,43 @@ export class PaginatedAccountsResponseDto {
     totalPages: number;
   };
 }
+
+export class LoginResponseDto {
+  @ApiProperty({
+    example: 'Success',
+    description: 'Thông báo kết quả đăng nhập',
+  })
+  message!: string;
+
+  @ApiProperty({
+    type: AccountItemDto,
+    description: 'Thông tin cơ bản của tài khoản đã xác thực (đã lược bỏ mật khẩu)',
+  })
+  account!: AccountItemDto;
+
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlZTlmYmE5Ml...',
+    description: 'Chuỗi JWT Access Token dùng để xác thực các request tiếp theo',
+  })
+  accessToken!: string;
+
+  @ApiProperty({
+    example: 'Bearer',
+    description: 'Loại token xác thực (luôn là Bearer)',
+  })
+  tokenType!: string;
+}
+
+export class RegisterResponseDto {
+  @ApiProperty({
+    example: true,
+    description: 'Trạng thái đăng ký thành công hay thất bại',
+  })
+  success!: boolean;
+
+  @ApiProperty({
+    example: 'Đăng ký tài khoản thành công',
+    description: 'Thông báo kết quả đăng ký',
+  })
+  message!: string;
+}

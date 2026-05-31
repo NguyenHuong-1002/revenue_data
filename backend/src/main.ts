@@ -5,12 +5,20 @@ import { AllExceptionsFilter } from './global/all-exceptions.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { FileLogger } from './global/file-logger';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import * as path from 'node:path';
 
 declare const module: any;
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: new FileLogger(),
   });
+
+  // Cấu hình phục vụ file tĩnh (static assets) từ thư mục public
+  app.useStaticAssets(path.join(__dirname, '..', 'public'), {
+    prefix: '/public/',
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -43,9 +51,7 @@ async function bootstrap() {
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
   console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(
-    `📑 Swagger API Document is available at: http://localhost:${port}/api/docs`,
-  );
+  console.log(`📑 Swagger API Document is available at: http://localhost:${port}/api/docs`);
 
   // 3. Webpack Hot Module Replacement (HMR)
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

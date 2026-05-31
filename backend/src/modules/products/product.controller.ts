@@ -11,15 +11,13 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
-import { AuthGuard, Roles, CurrentUser, JwtPayload } from 'src/middlewares/auth.guard';
+import { AuthGuard, Roles, CurrentUser } from 'src/middlewares/auth.guard';
+import type { JwtPayload } from 'src/middlewares/auth.guard';
 import { IProduct, IPaginatedProducts } from './interfaces/product.interface';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './DTO/create-product.dto';
 import { GetProductAllDto } from './DTO/get-product-all.dto';
-import {
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   ApiGetProductsSwagger,
   ApiPostProductSwagger,
@@ -33,7 +31,6 @@ import {
 @UseGuards(AuthGuard)
 @Controller('products')
 export class ProductController {
-  // eslint-disable-next-line prettier/prettier
   constructor(private readonly productService: ProductService) { }
 
   @ApiGetProductsSwagger()
@@ -74,12 +71,7 @@ export class ProductController {
   @Roles('ADMIN')
   @ApiDeleteProductSwagger()
   @Delete('/:id')
-  deleteProduct(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-  ): Promise<boolean> {
+  deleteProduct(@CurrentUser() user: JwtPayload, @Param('id') id: string): Promise<boolean> {
     return this.productService.deleteProduct(id, user.username);
   }
 }
-
-

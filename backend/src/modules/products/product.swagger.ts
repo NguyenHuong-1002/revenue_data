@@ -17,7 +17,7 @@ export function ApiGetProductsSwagger() {
     ApiResponse({
       status: 401,
       description: 'Lỗi chưa đăng nhập hoặc token không hợp lệ.',
-    })
+    }),
   );
 }
 
@@ -39,7 +39,7 @@ export function ApiPostProductSwagger() {
     ApiResponse({
       status: 403,
       description: 'Lỗi không đủ thẩm quyền (Không phải ADMIN).',
-    })
+    }),
   );
 }
 
@@ -47,8 +47,7 @@ export function ApiGetDetailProductSwagger() {
   return applyDecorators(
     ApiOperation({
       summary: 'Lấy thông tin chi tiết một sản phẩm theo ID',
-      description:
-        'API này trả về chi tiết của một sản phẩm dựa trên ID sản phẩm được cung cấp.',
+      description: 'API này trả về chi tiết của một sản phẩm dựa trên ID sản phẩm được cung cấp.',
     }),
     ApiParam({
       name: 'id',
@@ -68,7 +67,7 @@ export function ApiGetDetailProductSwagger() {
     ApiResponse({
       status: 404,
       description: 'Không tìm thấy sản phẩm với ID đã cung cấp.',
-    })
+    }),
   );
 }
 
@@ -76,8 +75,7 @@ export function ApiUpdateProductSwagger() {
   return applyDecorators(
     ApiOperation({
       summary: 'Cập nhật thông tin sản phẩm theo ID (Admin)',
-      description:
-        'API này cho phép Admin cập nhật thông tin chi tiết của một sản phẩm hiện có.',
+      description: 'API này cho phép Admin cập nhật thông tin chi tiết của một sản phẩm hiện có.',
     }),
     ApiParam({
       name: 'id',
@@ -101,7 +99,7 @@ export function ApiUpdateProductSwagger() {
     ApiResponse({
       status: 404,
       description: 'Không tìm thấy sản phẩm cần cập nhật.',
-    })
+    }),
   );
 }
 
@@ -109,8 +107,7 @@ export function ApiDeleteProductSwagger() {
   return applyDecorators(
     ApiOperation({
       summary: 'Xóa sản phẩm theo ID (Admin)',
-      description:
-        'API này cho phép Admin xóa hoàn toàn một sản phẩm ra khỏi hệ thống.',
+      description: 'API này cho phép Admin xóa hoàn toàn một sản phẩm ra khỏi hệ thống.',
     }),
     ApiParam({
       name: 'id',
@@ -134,6 +131,6 @@ export function ApiDeleteProductSwagger() {
     ApiResponse({
       status: 404,
       description: 'Không tìm thấy sản phẩm cần xóa.',
-    })
+    }),
   );
 }

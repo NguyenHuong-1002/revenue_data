@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ConsoleLogger } from '@nestjs/common';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -6,7 +8,7 @@ export class FileLogger extends ConsoleLogger {
   private readonly logDir = path.join(process.cwd(), 'logs');
   private readonly logFile = path.join(this.logDir, 'system.log');
 
-  error(message: any, stack?: string, context?: string) {
+  error(message: unknown, stack?: string, context?: string) {
     // 1. Gọi logger mặc định của NestJS để hiển thị trên console có màu sắc
     super.error(message, stack, context);
 
@@ -14,15 +16,15 @@ export class FileLogger extends ConsoleLogger {
     this.writeToLogFile('ERROR', message, context, stack);
   }
 
-  warn(message: any, context?: string) {
+  warn(message: unknown, context?: string) {
     super.warn(message, context);
     this.writeToLogFile('WARN', message, context);
   }
 
-  private writeToLogFile(level: string, message: any, context?: string, stack?: string) {
+  private writeToLogFile(level: string, message: unknown, context?: string, stack?: string) {
     try {
       const pid = process.pid;
-      
+
       // Định dạng ngày giờ chuẩn: MM/DD/YYYY, H:MM:SS AM/PM
       const timestamp = new Date().toLocaleString('en-US', {
         year: 'numeric',
@@ -36,9 +38,9 @@ export class FileLogger extends ConsoleLogger {
 
       const ctx = context ? `[${context}] ` : '';
       const msgText = typeof message === 'object' ? JSON.stringify(message) : message;
-      
+
       let logMessage = `[Nest] ${pid}  - ${timestamp}   ${level.padEnd(5)} ${ctx}${msgText}\n`;
-      
+
       if (stack) {
         logMessage += `${stack}\n`;
       }

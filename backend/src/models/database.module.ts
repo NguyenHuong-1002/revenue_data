@@ -6,5 +6,4 @@ import { DatabaseService } from './database.service';
   providers: [DatabaseService],
   exports: [DatabaseService],
 })
-// eslint-disable-next-line prettier/prettier
-export class DatabaseModule { }
+export class DatabaseModule {}

@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,14 +15,45 @@ import { NotificationService } from '../notifications/notification.service';
 import { CreateAccountDto } from './DTO/create-account.dto';
 import { GetAccountsAllDto } from './DTO/getAccountsAll.dto';
 import { LoginAccountDto } from './DTO/login-account.dto';
+import { SearchAccountsDto } from './DTO/search-accounts.dto';
 import { UpdateAccountDto } from './DTO/update-account.dto';
 import {
   AccountResponse,
   IAccount,
   ILoginResponse,
   IPaginatedAccounts,
-  IRegisterResponse,
 } from './interfaces/account.interface';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import sharp from 'sharp';
+import type { Request } from 'express';
+
+export const avatarMulterOptions = {
+  storage: diskStorage({
+    destination: './public/uploads/avatars',
+    filename: (
+      req: Request,
+      file: Express.Multer.File,
+      callback: (error: Error | null, filename: string) => void,
+    ) => {
+      const ext = extname(file.originalname);
+      callback(null, `avatar-${req.user!.sub}${ext}`);
+    },
+  }),
+  fileFilter: (
+    req: Request,
+    file: Express.Multer.File,
+    callback: (error: Error | null, acceptFile: boolean) => void,
+  ) => {
+    const allowed = ['image/jpg', 'image/jpeg', 'image/png', 'image/gif'];
+    if (!allowed.includes(file.mimetype)) {
+      callback(new BadRequestException('Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif)!'), false);
+      return;
+    }
+    callback(null, true);
+  },
+  limits: { fileSize: 5 * 1024 * 1024 },
+};
 
 @Injectable()
 export class AccountService {
@@ -30,7 +62,6 @@ export class AccountService {
     private readonly accountRepository: Repository<AccountEntity>,
     private readonly jwtService: JwtService,
     private readonly notificationService: NotificationService,
-    // eslint-disable-next-line prettier/prettier
   ) { }
 
   /**
@@ -82,10 +113,7 @@ export class AccountService {
    * @returns Trả về chi tiết thông tin tài khoản vừa được tạo
    * @throws ConflictException Nếu Tên đăng nhập (Username) hoặc Email đã bị trùng lặp trong hệ thống
    */
-  async createAccount(
-    dto: CreateAccountDto,
-    adminUsername?: string,
-  ): Promise<AccountResponse> {
+  async createAccount(dto: CreateAccountDto, adminUsername?: string): Promise<AccountResponse> {
     const existing = await this.accountRepository.findOne({
       where: [{ username: dto.username }, { mail: dto.mail }],
     });
@@ -127,7 +155,7 @@ export class AccountService {
    * @returns Trạng thái đăng ký thành công kèm thông điệp
    * @throws ConflictException Nếu Username hoặc Email đã được đăng ký trước đó
    */
-  async register(dto: CreateAccountDto): Promise<IRegisterResponse> {
+  async register(dto: CreateAccountDto): Promise<void> {
     const existing = await this.accountRepository.findOne({
       where: [{ username: dto.username }, { mail: dto.mail }],
     });
@@ -152,7 +180,6 @@ export class AccountService {
     });
 
     await this.accountRepository.save(account);
-    return { success: true, message: 'Dang ky thanh cong' };
   }
 
   /**
@@ -176,7 +203,6 @@ export class AccountService {
       throw new UnauthorizedException('Username hoac password khong dung');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _passwordHash, ...accountResponse } = account;
 
     const accessToken = this.jwtService.sign({
@@ -233,7 +259,7 @@ export class AccountService {
    * @param adminUsername Tên của Admin thực hiện thao tác (dùng để lưu nhật ký thông báo)
    * @returns `true` nếu xóa thành công bản ghi khỏi DB
    */
-  async deleteAccount(id: string, adminUsername?: string): Promise<boolean> {
+  async deleteAccount(id: string, adminUsername?: string): Promise<void> {
     const account = await this.getAccountById(id);
     const result = await this.accountRepository.delete({ account_id: id });
     const success = (result.affected ?? 0) > 0;
@@ -246,8 +272,98 @@ export class AccountService {
         type: 'SYSTEM',
       });
     }
+  }
 
-    return success;
+  /**
+   * Xóa mềm tài khoản — ghi nhận thời điểm xoá vào cột deleted_at thay vì xoá hẳn khỏi DB.
+   * TypeORM sẽ tự động loại tài khoản này khỏi mọi query thông thường (filter WHERE deleted_at IS NULL).
+   * Có thể khôi phục lại bằng cách reset deleted_at về NULL.
+   * @param id ID tài khoản cần xoá mềm
+   * @param adminUsername Tên Admin thực hiện thao tác (dùng để lưu nhật ký thông báo)
+   * @returns `true` nếu xoá mềm thành công
+   */
+  async softDeleteAccount(id: string, adminUsername?: string): Promise<void> {
+    const account = await this.getAccountById(id);
+    const result = await this.accountRepository.softDelete({ account_id: id });
+    const success = (result.affected ?? 0) > 0;
+
+    if (success) {
+      await this.notificationService.createNotification({
+        title: 'Vô hiệu hoá tài khoản',
+        content: `Admin ${adminUsername || 'hệ thống'} đã vô hiệu hoá tài khoản ${account.username} (${account.fullname}).`,
+        type: 'SYSTEM',
+      });
+    }
+  }
+
+  /**
+   * Tìm kiếm tài khoản theo từ khoá (keyword) và lọc theo vai trò (role) với hỗ trợ phân trang.
+   * Keyword khớp một phần (LIKE) với fullname, username hoặc mail — không phân biệt hoa thường.
+   * Các tài khoản đã xoá mềm (deleted_at IS NOT NULL) bị loại tự động.
+   * @param dto DTO chứa keyword, role, page, limit
+   * @returns Danh sách tài khoản phân trang thoả mãn điều kiện tìm kiếm
+   */
+  async searchAccounts(dto: SearchAccountsDto): Promise<IPaginatedAccounts> {
+    const { keyword, role, page, limit } = dto;
+    const skip = (page - 1) * limit;
+
+    const qb = this.accountRepository
+      .createQueryBuilder('account')
+      .orderBy('account.created_at', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    if (keyword && keyword.trim() !== '') {
+      const term = `%${keyword.trim()}%`;
+      qb.andWhere(
+        '(account.fullname LIKE :term OR account.username LIKE :term OR account.mail LIKE :term)',
+        { term },
+      );
+    }
+
+    if (role) {
+      qb.andWhere('account.role = :role', { role });
+    }
+
+    const [accounts, total] = await qb.getManyAndCount();
+
+    return {
+      data: accounts,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Cập nhật URL ảnh đại diện cho tài khoản từ tên tệp tin upload lên cục bộ
+   * @param id ID của tài khoản cần cập nhật avatar
+   * @param filename Tên file ảnh đại diện được lưu trữ cục bộ
+   * @returns Object kết quả cập nhật gồm trạng thái, thông điệp và đường dẫn URL avatar mới
+   */
+  async updateAvatar(id: string, filename: string) {
+    await this.getAccountById(id);
+
+    const filePath = join(process.cwd(), 'public', 'uploads', 'avatars', filename);
+    const compressedName = `avatar-${id}.webp`;
+    const compressedPath = join(process.cwd(), 'public', 'uploads', 'avatars', compressedName);
+
+    await sharp(filePath)
+      .resize(500, 500, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toFile(compressedPath);
+
+    const avatarURL = `/public/uploads/avatars/${compressedName}`;
+    await this.accountRepository.update({ account_id: id }, { avatarURL });
+
+    return {
+      success: true,
+      message: 'Cập nhật ảnh đại diện thành công!',
+      avatarURL,
+    };
   }
 
   /**

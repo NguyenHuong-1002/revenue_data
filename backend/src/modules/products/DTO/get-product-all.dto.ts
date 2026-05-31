@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsNumber,
-  IsOptional,
-  IsInt,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class GetProductAllDto {
@@ -45,14 +38,14 @@ export class GetProductAllDto {
 
   @IsOptional()
   @IsString({
-    message:
-      'Chi tiết nhóm sản phẩm (detail_product_group) phải là một chuỗi ký tự!',
+    message: 'Chi tiết nhóm sản phẩm (detail_product_group) phải là một chuỗi ký tự!',
   })
   detail_product_group?: string;
 
   @IsOptional()
-  @IsString({ message: 'Kích cỡ (size) phải là một chuỗi ký tự!' })
-  size?: string;
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Kích cỡ (size) phải là một số hợp lệ!' })
+  size?: number;
 
   @IsOptional()
   @IsString({ message: 'Nhóm độ tuổi (age_group) phải là một chuỗi ký tự!' })

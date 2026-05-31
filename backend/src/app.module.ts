@@ -9,6 +9,7 @@ import { AccountModule } from './modules/accounts/account.module';
 import { typeOrmConfig } from './config/typeorm.config';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { ApiLoggerMiddleware } from './middlewares/api-logger.middleware';
+import { DataImportModule } from './modules/data-import/data-import.module';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ dotenv.config();
     DataProcessingModule,
     DatabaseModule,
     NotificationModule,
+    DataImportModule,
   ],
 })
 export class AppModule implements NestModule {

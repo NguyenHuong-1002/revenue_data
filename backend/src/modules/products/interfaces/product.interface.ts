@@ -5,7 +5,7 @@ export interface IProduct {
   price_cost: number;
   gender: string;
   detail_product_group: string;
-  size: string;
+  size: number;
   age_group: string;
   activity_group: string;
   lifestyle_group: string;

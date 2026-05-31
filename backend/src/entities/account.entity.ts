@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('account')
 export class AccountEntity {
@@ -37,4 +37,7 @@ export class AccountEntity {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updated_at!: Date;
+
+  @DeleteDateColumn({ type: 'datetime', nullable: true, default: null })
+  deleted_at!: Date | null;
 }

@@ -8,11 +8,10 @@ import { NotificationService } from '../notifications/notification.service';
 
 @Injectable()
 export class ProductService {
-  // eslint-disable-next-line prettier/prettier
   constructor(
     private readonly db: DatabaseService,
     private readonly notificationService: NotificationService,
-  ) { }
+  ) {}
 
   async getProductsAll(filters: GetProductAllDto): Promise<IPaginatedProducts> {
     const whereClauses: string[] = [];
@@ -42,7 +41,7 @@ export class ProductService {
       whereClauses.push('detail_product_group = ?');
       values.push(filters.detail_product_group);
     }
-    if (filters.size) {
+    if (filters.size !== undefined) {
       whereClauses.push('size = ?');
       values.push(filters.size);
     }
@@ -59,8 +58,7 @@ export class ProductService {
       values.push(filters.lifestyle_group);
     }
 
-    const whereSQL =
-      whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
+    const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
     const countSQL = `SELECT COUNT(*) as total FROM product ${whereSQL}`;
     const [countRows] = await this.db.client.query<RowDataPacket[]>(countSQL, values);
@@ -125,7 +123,11 @@ export class ProductService {
     return this.getDetailProduct(id);
   }
 
-  async updateProduct(dto: CreateProductDto, id: string, adminUsername?: string): Promise<IProduct> {
+  async updateProduct(
+    dto: CreateProductDto,
+    id: string,
+    adminUsername?: string,
+  ): Promise<IProduct> {
     await this.getDetailProduct(id);
     await this.db.client.query<ResultSetHeader>(
       `UPDATE product SET color = ?, listing_price = ?, price_cost = ?, gender = ?, detail_product_group = ?, size = ?, age_group = ?, activity_group = ?, lifestyle_group = ? WHERE product_id = ?`,

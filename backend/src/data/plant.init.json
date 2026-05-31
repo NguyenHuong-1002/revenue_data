@@ -1,0 +1,219 @@
+[
+  {
+    "plant_id": "1201",
+    "name_plant": "Nhà máy 1201 - Hà Nội",
+    "address": "KCN trung tâm, Hà Nội",
+    "manager_name": "Nguyễn Văn Hùng",
+    "phone": "0944328887"
+  },
+  {
+    "plant_id": "1202",
+    "name_plant": "Nhà máy 1202 - Bắc Ninh",
+    "address": "KCN trung tâm, Bắc Ninh",
+    "manager_name": "Trần Thị Lan",
+    "phone": "0945611401"
+  },
+  {
+    "plant_id": "1203",
+    "name_plant": "Nhà máy 1203 - Hải Phòng",
+    "address": "KCN trung tâm, Hải Phòng",
+    "manager_name": "Lê Hoàng Nam",
+    "phone": "0948147475"
+  },
+  {
+    "plant_id": "1204",
+    "name_plant": "Nhà máy 1204 - Bình Dương",
+    "address": "KCN trung tâm, Bình Dương",
+    "manager_name": "Phạm Minh Tuấn",
+    "phone": "0935925945"
+  },
+  {
+    "plant_id": "1205",
+    "name_plant": "Nhà máy 1205 - Đồng Nai",
+    "address": "KCN trung tâm, Đồng Nai",
+    "manager_name": "Đỗ Quốc Bảo",
+    "phone": "0988626199"
+  },
+  {
+    "plant_id": "1206",
+    "name_plant": "Nhà máy 1206 - Long An",
+    "address": "KCN trung tâm, Long An",
+    "manager_name": "Vũ Hoàng My",
+    "phone": "0922284653"
+  },
+  {
+    "plant_id": "1207",
+    "name_plant": "Nhà máy 1207 - TP. Hồ Chí Minh",
+    "address": "KCN trung tâm, TP. Hồ Chí Minh",
+    "manager_name": "Nguyễn Thị Thảo",
+    "phone": "0973575781"
+  },
+  {
+    "plant_id": "1208",
+    "name_plant": "Nhà máy 1208 - Đà Nẵng",
+    "address": "KCN trung tâm, Đà Nẵng",
+    "manager_name": "Hoàng Văn Đức",
+    "phone": "0927478707"
+  },
+  {
+    "plant_id": "1209",
+    "name_plant": "Nhà máy 1209 - Cần Thơ",
+    "address": "KCN trung tâm, Cần Thơ",
+    "manager_name": "Phan Thanh Sơn",
+    "phone": "0910615561"
+  },
+  {
+    "plant_id": "1210",
+    "name_plant": "Nhà máy 1210 - Vĩnh Phúc",
+    "address": "KCN trung tâm, Vĩnh Phúc",
+    "manager_name": "Trịnh Kim Chi",
+    "phone": "0963060163"
+  },
+  {
+    "plant_id": "1211",
+    "name_plant": "Nhà máy 1211 - Hưng Yên",
+    "address": "KCN trung tâm, Hưng Yên",
+    "manager_name": "Mai Đức Chung",
+    "phone": "0964022597"
+  },
+  {
+    "plant_id": "1212",
+    "name_plant": "Nhà máy 1212 - Hải Dương",
+    "address": "KCN trung tâm, Hải Dương",
+    "manager_name": "Lý Hải",
+    "phone": "0938192981"
+  },
+  {
+    "plant_id": "1213",
+    "name_plant": "Nhà máy 1213 - Quảng Nam",
+    "address": "KCN trung tâm, Quảng Nam",
+    "manager_name": "Trần Anh Khoa",
+    "phone": "0953791103"
+  },
+  {
+    "plant_id": "1214",
+    "name_plant": "Nhà máy 1214 - Bà Rịa - Vũng Tàu",
+    "address": "KCN trung tâm, Bà Rịa - Vũng Tàu",
+    "manager_name": "Nguyễn Tiến Dũng",
+    "phone": "0961706281"
+  },
+  {
+    "plant_id": "1215",
+    "name_plant": "Nhà máy 1215 - Hà Nội",
+    "address": "KCN trung tâm, Hà Nội",
+    "manager_name": "Lê Thị Mai",
+    "phone": "0979421804"
+  },
+  {
+    "plant_id": "1216",
+    "name_plant": "Nhà máy 1216 - Bắc Ninh",
+    "address": "KCN trung tâm, Bắc Ninh",
+    "manager_name": "Phạm Xuân Trường",
+    "phone": "0953875190"
+  },
+  {
+    "plant_id": "1217",
+    "name_plant": "Nhà máy 1217 - Hải Phòng",
+    "address": "KCN trung tâm, Hải Phòng",
+    "manager_name": "Nguyễn Văn Hùng",
+    "phone": "0953715895"
+  },
+  {
+    "plant_id": "1218",
+    "name_plant": "Nhà máy 1218 - Bình Dương",
+    "address": "KCN trung tâm, Bình Dương",
+    "manager_name": "Trần Thị Lan",
+    "phone": "0929443947"
+  },
+  {
+    "plant_id": "1219",
+    "name_plant": "Nhà máy 1219 - Đồng Nai",
+    "address": "KCN trung tâm, Đồng Nai",
+    "manager_name": "Lê Hoàng Nam",
+    "phone": "0918883726"
+  },
+  {
+    "plant_id": "1220",
+    "name_plant": "Nhà máy 1220 - Long An",
+    "address": "KCN trung tâm, Long An",
+    "manager_name": "Phạm Minh Tuấn",
+    "phone": "0976321776"
+  },
+  {
+    "plant_id": "1221",
+    "name_plant": "Nhà máy 1221 - TP. Hồ Chí Minh",
+    "address": "KCN trung tâm, TP. Hồ Chí Minh",
+    "manager_name": "Đỗ Quốc Bảo",
+    "phone": "0942346721"
+  },
+  {
+    "plant_id": "1222",
+    "name_plant": "Nhà máy 1222 - Đà Nẵng",
+    "address": "KCN trung tâm, Đà Nẵng",
+    "manager_name": "Vũ Hoàng My",
+    "phone": "0944089165"
+  },
+  {
+    "plant_id": "1223",
+    "name_plant": "Nhà máy 1223 - Cần Thơ",
+    "address": "KCN trung tâm, Cần Thơ",
+    "manager_name": "Nguyễn Thị Thảo",
+    "phone": "0942387012"
+  },
+  {
+    "plant_id": "1224",
+    "name_plant": "Nhà máy 1224 - Vĩnh Phúc",
+    "address": "KCN trung tâm, Vĩnh Phúc",
+    "manager_name": "Hoàng Văn Đức",
+    "phone": "0941143637"
+  },
+  {
+    "plant_id": "1225",
+    "name_plant": "Nhà máy 1225 - Hưng Yên",
+    "address": "KCN trung tâm, Hưng Yên",
+    "manager_name": "Phan Thanh Sơn",
+    "phone": "0944002335"
+  },
+  {
+    "plant_id": "1226",
+    "name_plant": "Nhà máy 1226 - Hải Dương",
+    "address": "KCN trung tâm, Hải Dương",
+    "manager_name": "Trịnh Kim Chi",
+    "phone": "0922027401"
+  },
+  {
+    "plant_id": "1227",
+    "name_plant": "Nhà máy 1227 - Quảng Nam",
+    "address": "KCN trung tâm, Quảng Nam",
+    "manager_name": "Mai Đức Chung",
+    "phone": "0926687453"
+  },
+  {
+    "plant_id": "1228",
+    "name_plant": "Nhà máy 1228 - Bà Rịa - Vũng Tàu",
+    "address": "KCN trung tâm, Bà Rịa - Vũng Tàu",
+    "manager_name": "Lý Hải",
+    "phone": "0999811922"
+  },
+  {
+    "plant_id": "1229",
+    "name_plant": "Nhà máy 1229 - Hà Nội",
+    "address": "KCN trung tâm, Hà Nội",
+    "manager_name": "Trần Anh Khoa",
+    "phone": "0955959579"
+  },
+  {
+    "plant_id": "1230",
+    "name_plant": "Nhà máy 1230 - Bắc Ninh",
+    "address": "KCN trung tâm, Bắc Ninh",
+    "manager_name": "Nguyễn Tiến Dũng",
+    "phone": "0974883170"
+  },
+  {
+    "plant_id": "1299",
+    "name_plant": "Nhà máy 1299 - Bình Phước",
+    "address": "KCN Minh Hưng, Bình Phước",
+    "manager_name": "Vương Đình Toàn",
+    "phone": "0988998899"
+  }
+]

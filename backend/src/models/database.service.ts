@@ -1,15 +1,12 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import { createPool, Pool, PoolConnection } from 'mysql2/promise';
 import {
   checkDatabaseConnection,
   initializeDatabaseSchema,
   seedMockAccounts,
+  seedMockPlants,
+  seedMockStores,
 } from './database-bootstrap';
 
 dotenv.config();
@@ -33,12 +30,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     // 1. Kiểm tra kết nối & 2. Khởi tạo Database nếu chưa tồn tại
     try {
-      const connection = await checkDatabaseConnection(
-        host,
-        port,
-        user,
-        password,
-      );
+      const connection = await checkDatabaseConnection(host, port, user, password);
       await initializeDatabaseSchema(connection, dbName);
       await connection.end();
     } catch (err: any) {
@@ -65,6 +57,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     // 3. Tự động kiểm tra và import dữ liệu seed nếu bảng account trống
     await seedMockAccounts(this.pool);
+    
+    // 4. Tự động kiểm tra và import dữ liệu seed nếu bảng plant trống
+    await seedMockPlants(this.pool);
+
+    // 5. Tự động kiểm tra và import dữ liệu seed nếu bảng storeBranch trống
+    await seedMockStores(this.pool);
   }
 
   async onModuleDestroy() {

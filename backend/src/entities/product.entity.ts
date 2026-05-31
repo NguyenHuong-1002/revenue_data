@@ -19,17 +19,7 @@ export class ProductEntity {
 
   @Column({
     type: 'enum',
-    enum: [
-      'SANTD',
-      'DEPTD',
-      'GTTPC',
-      'GTTCD',
-      'SANTR',
-      'GIATR',
-      'PKIEN',
-      'TBLTH',
-      'TBLTR',
-    ],
+    enum: ['SANTD', 'DEPTD', 'GTTPC', 'GTTCD', 'SANTR', 'GIATR', 'PKIEN', 'TBLTH', 'TBLTR'],
   })
   detail_product_group!:
     | 'SANTD'
@@ -42,12 +32,13 @@ export class ProductEntity {
     | 'TBLTH'
     | 'TBLTR';
 
-  @Column({ type: 'varchar', length: 20 })
-  size!: string;
+  @Column({ type: 'int', default: 0 })
+  size!: number;
 
   @Column({
     type: 'enum',
     enum: [
+      '16 đến <24 tuổi',
       '24 đến <40 tuổi',
       '40 đến <60 tuổi',
       '0 đến <3 tuổi',
@@ -59,6 +50,7 @@ export class ProductEntity {
     ],
   })
   age_group!:
+    | '16 đến <24 tuổi'
     | '24 đến <40 tuổi'
     | '40 đến <60 tuổi'
     | '0 đến <3 tuổi'
@@ -70,20 +62,9 @@ export class ProductEntity {
 
   @Column({
     type: 'enum',
-    enum: [
-      'Thường nhật/Trường học',
-      'Thể thao',
-      'Văn phòng',
-      'Chuyên biệt',
-      'Khác',
-    ],
+    enum: ['Thường nhật/Trường học', 'Thể thao', 'Văn phòng', 'Chuyên biệt', 'Khác'],
   })
-  activity_group!:
-    | 'Thường nhật/Trường học'
-    | 'Thể thao'
-    | 'Văn phòng'
-    | 'Chuyên biệt'
-    | 'Khác';
+  activity_group!: 'Thường nhật/Trường học' | 'Thể thao' | 'Văn phòng' | 'Chuyên biệt' | 'Khác';
 
   @Column({
     type: 'enum',

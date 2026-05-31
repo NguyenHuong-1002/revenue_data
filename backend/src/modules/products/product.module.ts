@@ -10,5 +10,4 @@ import { NotificationModule } from '../notifications/notification.module';
   providers: [ProductService],
   exports: [ProductService],
 })
-// eslint-disable-next-line prettier/prettier
-export class ProductModule { }
+export class ProductModule {}

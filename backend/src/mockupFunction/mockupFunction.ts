@@ -1,9 +1,6 @@
 import * as ExcelJS from 'exceljs';
 
-export async function mockupFunction(
-  filePath: string,
-  columnName: string,
-): Promise<unknown[]> {
+export async function mockupFunction(filePath: string, columnName: string): Promise<unknown[]> {
   try {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(filePath);
