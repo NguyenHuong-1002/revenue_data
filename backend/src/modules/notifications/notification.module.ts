@@ -5,6 +5,7 @@ import { AccountNotificationEntity } from 'src/entities/account-notification.ent
 import { AccountEntity } from 'src/entities/account.entity';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
+import { AccountNotificationService } from './account-notification.service';
 
 @Module({
   imports: [
@@ -15,8 +16,8 @@ import { NotificationService } from './notification.service';
     ]),
   ],
   controllers: [NotificationController],
-  providers: [NotificationService],
-  exports: [NotificationService],
+  providers: [NotificationService, AccountNotificationService],
+  exports: [NotificationService, AccountNotificationService],
 })
 export class NotificationModule {}
 

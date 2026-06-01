@@ -1,0 +1,40 @@
+meta {
+  name: SearchAccounts
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/accounts/search?keyword=lan&role=STAFF&page=1&limit=10
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status, 'search accounts should return 200').to.equal(200);
+  expect(response, 'search accounts response should have data').to.have.property('data');
+  expect(response, 'search accounts response should have meta').to.have.property('meta');
+  expect(response.meta, 'search accounts meta should include page').to.have.property('page', 1);
+  expect(response.meta, 'search accounts meta should include limit').to.have.property('limit', 10);
+  expect(response.meta, 'search accounts meta should include total').to.have.property('total');
+  expect(response.meta, 'search accounts meta should include totalPages').to.have.property('totalPages');
+  expect(Array.isArray(response.data), 'search accounts data should be an array').to.be.true;
+  expect(response.data.length, 'search accounts should return at most 10 items').to.be.at.most(10);
+
+  response.data.forEach(account => {
+    expect(account, 'search accounts item should have account_id').to.have.property('account_id');
+    expect(account, 'search accounts item should have username').to.have.property('username');
+    expect(account, 'search accounts item should be STAFF').to.have.property('role', 'STAFF');
+    expect(account, 'search accounts item should have fullname').to.have.property('fullname');
+    expect(account, 'search accounts item should have mail').to.have.property('mail');
+    expect(account, 'search accounts item should have avatarURL').to.have.property('avatarURL');
+    expect(account, 'search accounts item should have created_at').to.have.property('created_at');
+    expect(account, 'search accounts item should have updated_at').to.have.property('updated_at');
+    expect(account, 'search accounts item should not leak passwordHash').to.not.have.property('passwordHash');
+  });
+}

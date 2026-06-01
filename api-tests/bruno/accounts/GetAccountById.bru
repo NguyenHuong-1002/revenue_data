@@ -1,0 +1,28 @@
+meta {
+  name: GetAccountById
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/accounts/{{currentListUserId}}
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status, 'get account by id should return 200').to.equal(200);
+  expect(response, 'get account by id should match selected id').to.have.property('account_id', bru.getEnvVar('currentListUserId'));
+  expect(response, 'get account by id should include username').to.have.property('username');
+  expect(response, 'get account by id should include role').to.have.property('role');
+  expect(response, 'get account by id should include fullname').to.have.property('fullname');
+  expect(response, 'get account by id should include mail').to.have.property('mail');
+  expect(response, 'get account by id should include created_at').to.have.property('created_at');
+  expect(response, 'get account by id should include updated_at').to.have.property('updated_at');
+  expect(response, 'get account by id should not leak passwordHash').to.not.have.property('passwordHash');
+}

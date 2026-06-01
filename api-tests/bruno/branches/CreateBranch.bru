@@ -1,0 +1,33 @@
+meta {
+  name: CreateBranch (Admin)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/branches
+  body: json
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "store_id": "9999",
+    "name": "Chi Nhánh Thử Nghiệm",
+    "city": "Hồ Chí Minh"
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(201);
+  expect(response).to.have.property('store_id', '9999');
+  expect(response).to.have.property('name', 'Chi Nhánh Thử Nghiệm');
+  expect(response).to.have.property('city', 'Hồ Chí Minh');
+
+  bru.setEnvVar('currentBranchId', response.store_id);
+}

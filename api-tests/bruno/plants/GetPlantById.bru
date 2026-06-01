@@ -1,0 +1,25 @@
+meta {
+  name: GetPlantById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/plants/{{currentPlantId}}
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('plant_id', bru.getEnvVar('currentPlantId'));
+  expect(response).to.have.property('name_plant');
+  expect(response).to.have.property('address');
+  expect(response).to.have.property('manager_name');
+  expect(response).to.have.property('phone');
+}

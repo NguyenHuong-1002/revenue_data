@@ -1,0 +1,22 @@
+meta {
+  name: Import Inventory (Excel)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/import/inventory
+  body: multipart-form
+  headers: {
+    Authorization: Bearer {{adminToken}}
+  }
+}
+
+body:multipart-form {
+  file: @file(../../data/inventorys/2022-01-InventoryReport.xlsx)
+}
+
+tests {
+  // Requires a valid InventoryReport Excel file
+  // expect(res.status).to.equal(200);
+}

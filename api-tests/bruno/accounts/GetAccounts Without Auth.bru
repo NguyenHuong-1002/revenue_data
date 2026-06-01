@@ -1,0 +1,23 @@
+meta {
+  name: GET /accounts - Without Auth (401)
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/accounts
+  body: none
+  headers: {
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(401);
+  expect(response).to.have.property('statusCode', 401);
+  expect(response).to.have.property('message', 'Unauthorized');
+  expect(response).to.have.property('path', '/accounts');
+  expect(response).to.have.property('method', 'GET');
+}

@@ -26,18 +26,24 @@ import {
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import sharp from 'sharp';
+import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import type { Request } from 'express';
 
 export const avatarMulterOptions = {
   storage: diskStorage({
-    destination: './public/uploads/avatars',
+    destination: (req: Request, file, callback) => {
+      const accountId = req.user!.sub;
+      const dir = join(process.cwd(), 'public', 'uploads', 'avatars', accountId);
+      mkdirSync(dir, { recursive: true });
+      callback(null, dir);
+    },
     filename: (
       req: Request,
       file: Express.Multer.File,
       callback: (error: Error | null, filename: string) => void,
     ) => {
       const ext = extname(file.originalname);
-      callback(null, `avatar-${req.user!.sub}${ext}`);
+      callback(null, `upload-${Date.now()}${ext}`);
     },
   }),
   fileFilter: (
@@ -62,6 +68,7 @@ export class AccountService {
     private readonly accountRepository: Repository<AccountEntity>,
     private readonly jwtService: JwtService,
     private readonly notificationService: NotificationService,
+    // eslint-disable-next-line prettier/prettier
   ) { }
 
   /**
@@ -347,16 +354,27 @@ export class AccountService {
   async updateAvatar(id: string, filename: string) {
     await this.getAccountById(id);
 
-    const filePath = join(process.cwd(), 'public', 'uploads', 'avatars', filename);
-    const compressedName = `avatar-${id}.webp`;
-    const compressedPath = join(process.cwd(), 'public', 'uploads', 'avatars', compressedName);
+    const userAvatarDir = join(process.cwd(), 'public', 'uploads', 'avatars', id);
+    const filePath = join(userAvatarDir, filename);
+    const compressedName = 'avatar.webp';
+    const compressedPath = join(userAvatarDir, compressedName);
 
-    await sharp(filePath)
-      .resize(500, 500, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 80 })
-      .toFile(compressedPath);
+    if (!existsSync(userAvatarDir)) {
+      mkdirSync(userAvatarDir, { recursive: true });
+    }
 
-    const avatarURL = `/public/uploads/avatars/${compressedName}`;
+    try {
+      await sharp(filePath)
+        .resize(500, 500, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toFile(compressedPath);
+    } finally {
+      if (existsSync(filePath)) {
+        unlinkSync(filePath);
+      }
+    }
+
+    const avatarURL = `/public/uploads/avatars/${id}/${compressedName}`;
     await this.accountRepository.update({ account_id: id }, { avatarURL });
 
     return {

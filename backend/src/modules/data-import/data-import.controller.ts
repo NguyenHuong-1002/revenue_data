@@ -14,7 +14,7 @@ import { DataImportService } from './data-import.service';
 @ApiTags('Data Import')
 @Controller('import')
 export class DataImportController {
-  constructor(private readonly dataImportService: DataImportService) {}
+  constructor(private readonly dataImportService: DataImportService) { }
 
   @Post('products')
   @HttpCode(HttpStatus.OK)

@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -11,8 +13,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
-import { AuthGuard, Roles, CurrentUser } from 'src/middlewares/auth.guard';
-import type { JwtPayload } from 'src/middlewares/auth.guard';
+import * as authGuard from 'src/middlewares/auth.guard';
 import { IProduct, IPaginatedProducts } from './interfaces/product.interface';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './DTO/create-product.dto';
@@ -28,27 +29,29 @@ import {
 
 @ApiTags('Sản phẩm (Products)')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(authGuard.AuthGuard)
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
   @ApiGetProductsSwagger()
   @Get()
+  @HttpCode(HttpStatus.OK)
   getProductsController(
     @Query(new ValidationPipe({ transform: true })) query: GetProductAllDto,
   ): Promise<IPaginatedProducts> {
     return this.productService.getProductsAll(query);
   }
 
-  @Roles('ADMIN')
+  @authGuard.Roles('ADMIN')
   @ApiPostProductSwagger()
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   postProduct(
-    @CurrentUser() user: any,
+    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Body(new ValidationPipe({ transform: true })) productDTO: CreateProductDto,
   ): Promise<IProduct> {
-    return this.productService.createProduct(productDTO, user.username);
+    return this.productService.createProduct(productDTO, admin.username);
   }
 
   @ApiGetDetailProductSwagger()
@@ -57,21 +60,26 @@ export class ProductController {
     return this.productService.getDetailProduct(id);
   }
 
-  @Roles('ADMIN')
+  @authGuard.Roles('ADMIN')
   @ApiUpdateProductSwagger()
   @Put('/:id')
+  @HttpCode(HttpStatus.OK)
   updateProduct(
-    @CurrentUser() user: any,
+    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Body(new ValidationPipe({ transform: true })) productDTO: CreateProductDto,
     @Param('id') id: string,
   ): Promise<IProduct> {
-    return this.productService.updateProduct(productDTO, id, user.username);
+    return this.productService.updateProduct(productDTO, id, admin.username);
   }
 
-  @Roles('ADMIN')
+  @authGuard.Roles('ADMIN')
   @ApiDeleteProductSwagger()
   @Delete('/:id')
-  deleteProduct(@CurrentUser() user: JwtPayload, @Param('id') id: string): Promise<boolean> {
-    return this.productService.deleteProduct(id, user.username);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteProduct(
+    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
+    @Param('id') id: string,
+  ): Promise<boolean> {
+    return this.productService.deleteProduct(id, admin.username);
   }
 }

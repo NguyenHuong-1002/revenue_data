@@ -11,7 +11,8 @@ export class ProductService {
   constructor(
     private readonly db: DatabaseService,
     private readonly notificationService: NotificationService,
-  ) {}
+    // eslint-disable-next-line prettier/prettier
+  ) { }
 
   async getProductsAll(filters: GetProductAllDto): Promise<IPaginatedProducts> {
     const whereClauses: string[] = [];
@@ -19,11 +20,11 @@ export class ProductService {
 
     if (filters.product_id) {
       whereClauses.push('product_id = ?');
-      values.push(filters.product_id);
+      values.push(filters.product_id.trim());
     }
     if (filters.color) {
       whereClauses.push('color LIKE ?');
-      values.push(`%${filters.color}%`);
+      values.push(`%${filters.color.trim()}%`);
     }
     if (filters.listing_price !== undefined) {
       whereClauses.push('listing_price = ?');
@@ -34,12 +35,16 @@ export class ProductService {
       values.push(filters.price_cost);
     }
     if (filters.gender) {
-      whereClauses.push('gender = ?');
-      values.push(filters.gender);
+      const normalizedGender = this.normalizeGenderFilter(filters.gender);
+
+      if (normalizedGender) {
+        whereClauses.push('gender = ?');
+        values.push(normalizedGender);
+      }
     }
     if (filters.detail_product_group) {
       whereClauses.push('detail_product_group = ?');
-      values.push(filters.detail_product_group);
+      values.push(filters.detail_product_group.trim());
     }
     if (filters.size !== undefined) {
       whereClauses.push('size = ?');
@@ -47,15 +52,15 @@ export class ProductService {
     }
     if (filters.age_group !== undefined) {
       whereClauses.push('age_group = ?');
-      values.push(filters.age_group);
+      values.push(filters.age_group.trim());
     }
     if (filters.activity_group) {
       whereClauses.push('activity_group = ?');
-      values.push(filters.activity_group);
+      values.push(filters.activity_group.trim());
     }
     if (filters.lifestyle_group) {
       whereClauses.push('lifestyle_group = ?');
-      values.push(filters.lifestyle_group);
+      values.push(filters.lifestyle_group.trim());
     }
 
     const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
@@ -64,24 +69,45 @@ export class ProductService {
     const [countRows] = await this.db.client.query<RowDataPacket[]>(countSQL, values);
     const total = Number(countRows[0].total);
 
-    const { page, limit } = filters;
-    const offset = (page - 1) * limit;
+    const { skip, limit } = filters;
     const dataSQL = `SELECT * FROM product ${whereSQL} ORDER BY product_id ASC LIMIT ? OFFSET ?`;
     const [dataRows] = await this.db.client.query<RowDataPacket[]>(dataSQL, [
       ...values,
       limit,
-      offset,
+      skip,
     ]);
 
     return {
       data: dataRows as IProduct[],
       meta: {
-        page,
+        skip,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  private normalizeGenderFilter(value: string): string | null {
+    const normalized = value.trim().toLowerCase();
+
+    if (['men', 'nam'].includes(normalized)) {
+      return 'MEN';
+    }
+
+    if (['wom', 'nu', 'nữ'].includes(normalized)) {
+      return 'WOM';
+    }
+
+    if (normalized === 'boy') {
+      return 'BOY';
+    }
+
+    if (normalized === 'gir') {
+      return 'GIR';
+    }
+
+    return value.trim();
   }
 
   async getDetailProduct(id: string): Promise<IProduct> {

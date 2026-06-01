@@ -28,14 +28,7 @@ import {
   ILoginResponse,
   IPaginatedAccounts,
 } from './interfaces/account.interface';
-import {
-  ApiTags,
-  ApiBearerAuth,
-  ApiConsumes,
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiConsumes, ApiBody, ApiOperation } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiGetUsersAllSwagger,

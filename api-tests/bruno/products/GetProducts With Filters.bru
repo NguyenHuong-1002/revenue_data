@@ -1,0 +1,22 @@
+meta {
+  name: GetProducts - With Filters
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/products?gender=Nam&skip=0&limit=10
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('data');
+  expect(Array.isArray(response.data)).to.be.true;
+}

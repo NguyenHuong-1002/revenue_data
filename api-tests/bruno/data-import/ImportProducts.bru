@@ -1,0 +1,22 @@
+meta {
+  name: Import Products (Excel)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/import/products
+  body: multipart-form
+  headers: {
+    Authorization: Bearer {{adminToken}}
+  }
+}
+
+body:multipart-form {
+  file: @file(../../data/product/Productmaster.xlsx)
+}
+
+tests {
+  // Requires Productmaster.xlsx to exist at the specified path
+  // expect(res.status).to.equal(200);
+}

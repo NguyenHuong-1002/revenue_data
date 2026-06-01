@@ -1,0 +1,30 @@
+meta {
+  name: GetProductById
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/products/{{currentProductId}}
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('product_id', bru.getEnvVar('currentProductId'));
+  expect(response).to.have.property('color');
+  expect(response).to.have.property('listing_price');
+  expect(response).to.have.property('price_cost');
+  expect(response).to.have.property('gender');
+  expect(response).to.have.property('size');
+  expect(response).to.have.property('detail_product_group');
+  expect(response).to.have.property('age_group');
+  expect(response).to.have.property('activity_group');
+  expect(response).to.have.property('lifestyle_group');
+}

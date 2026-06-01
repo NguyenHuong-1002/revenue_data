@@ -71,7 +71,7 @@ export class PaginatedProductsResponseDto {
 
   @ApiProperty({
     example: {
-      page: 1,
+      skip: 0,
       limit: 10,
       total: 120,
       totalPages: 12,
@@ -79,7 +79,7 @@ export class PaginatedProductsResponseDto {
     description: 'Siêu dữ liệu phân trang (Metadata)',
   })
   meta!: {
-    page: number;
+    skip: number;
     limit: number;
     total: number;
     totalPages: number;

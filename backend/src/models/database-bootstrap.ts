@@ -79,6 +79,40 @@ function findStoreJsonPath(): string {
 }
 
 /**
+ * Tìm đường dẫn chính xác của tệp notification.init.json
+ */
+function findNotificationJsonPath(): string {
+  const possiblePaths = [
+    path.resolve(process.cwd(), 'src/data/notification.init.json'),
+    path.resolve(__dirname, '../data/notification.init.json'),
+    path.resolve(__dirname, '../../../src/data/notification.init.json'),
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return path.resolve(process.cwd(), 'src/data/notification.init.json');
+}
+
+/**
+ * Tìm đường dẫn chính xác của tệp account_notification.init.json
+ */
+function findAccountNotificationJsonPath(): string {
+  const possiblePaths = [
+    path.resolve(process.cwd(), 'src/data/account_notification.init.json'),
+    path.resolve(__dirname, '../data/account_notification.init.json'),
+    path.resolve(__dirname, '../../../src/data/account_notification.init.json'),
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return path.resolve(process.cwd(), 'src/data/account_notification.init.json');
+}
+
+/**
  * 1. Kiểm tra kết nối cơ sở dữ liệu MySQL
  */
 export async function checkDatabaseConnection(
@@ -259,5 +293,89 @@ export async function seedMockStores(pool: Pool): Promise<void> {
     }
   } catch (err: any) {
     logger.error(`Lỗi khi nạp dữ liệu chi nhánh mẫu: ${err.message}`);
+  }
+}
+
+/**
+ * 6. Nạp (Seed) dữ liệu notification mẫu từ file JSON
+ */
+export async function seedMockNotifications(pool: Pool): Promise<void> {
+  try {
+    const [rows] = await pool.query<any[]>(`SELECT COUNT(*) AS cnt FROM notification`);
+    const count = Number(rows[0].cnt);
+
+    if (count === 0) {
+      const jsonPath = findNotificationJsonPath();
+      logger.log(`Bảng notification trống. Bắt đầu nạp dữ liệu mẫu từ notification.init.json tại: ${jsonPath}`);
+      if (fs.existsSync(jsonPath)) {
+        const notificationJson = fs.readFileSync(jsonPath, 'utf-8');
+        const notifications = JSON.parse(notificationJson);
+
+        for (const noti of notifications) {
+          await pool.query(
+            `INSERT INTO notification (notification_id, title, content, type, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              noti.notification_id,
+              noti.title,
+              noti.content,
+              noti.type || 'SYSTEM',
+              noti.created_at ? new Date(noti.created_at) : new Date(),
+              noti.updated_at ? new Date(noti.updated_at) : new Date(),
+            ],
+          );
+        }
+        logger.log(`Đã nạp thành công ${notifications.length} thông báo mẫu vào bảng notification!`);
+      } else {
+        logger.error(`Không tìm thấy tệp notification JSON tại ${jsonPath}`);
+      }
+    } else {
+      logger.log('Bảng notification đã có dữ liệu, bỏ qua bước seeding.');
+    }
+  } catch (err: any) {
+    logger.error(`Lỗi khi nạp dữ liệu notification mẫu: ${err.message}`);
+  }
+}
+
+/**
+ * 7. Nạp (Seed) dữ liệu account_notification mẫu từ file JSON
+ */
+export async function seedMockAccountNotifications(pool: Pool): Promise<void> {
+  try {
+    const [rows] = await pool.query<any[]>(`SELECT COUNT(*) AS cnt FROM account_notification`);
+    const count = Number(rows[0].cnt);
+
+    if (count === 0) {
+      const jsonPath = findAccountNotificationJsonPath();
+      logger.log(
+        `Bảng account_notification trống. Bắt đầu nạp dữ liệu mẫu từ account_notification.init.json tại: ${jsonPath}`,
+      );
+      if (fs.existsSync(jsonPath)) {
+        const mappingsJson = fs.readFileSync(jsonPath, 'utf-8');
+        const mappings = JSON.parse(mappingsJson);
+
+        for (const mapping of mappings) {
+          await pool.query(
+            `INSERT INTO account_notification (account_id, notification_id, is_read, read_at, is_deleted, deleted_at)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              mapping.account_id,
+              mapping.notification_id,
+              mapping.is_read ?? 0,
+              mapping.read_at ? new Date(mapping.read_at) : null,
+              mapping.is_deleted ?? 0,
+              mapping.deleted_at ? new Date(mapping.deleted_at) : null,
+            ],
+          );
+        }
+        logger.log(`Đã nạp thành công ${mappings.length} mapping vào bảng account_notification!`);
+      } else {
+        logger.error(`Không tìm thấy tệp account_notification JSON tại ${jsonPath}`);
+      }
+    } else {
+      logger.log('Bảng account_notification đã có dữ liệu, bỏ qua bước seeding.');
+    }
+  } catch (err: any) {
+    logger.error(`Lỗi khi nạp dữ liệu account_notification mẫu: ${err.message}`);
   }
 }

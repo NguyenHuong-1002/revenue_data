@@ -1,0 +1,22 @@
+meta {
+  name: GetPlants - Filter by Manager
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/plants?manager_name=Nguyễn Văn Hùng
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('data');
+  expect(Array.isArray(response.data)).to.be.true;
+}

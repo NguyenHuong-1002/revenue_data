@@ -1,0 +1,22 @@
+meta {
+  name: UploadAvatar
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/accounts/avatar
+  body: multipart-form
+  headers: {
+    Authorization: Bearer {{adminToken}}
+  }
+}
+
+body:multipart-form {
+  file: @file(upload-avatar.jpg)
+}
+
+tests {
+  // Requires a valid image file at the specified path
+  // expect(res.status).to.equal(200);
+}

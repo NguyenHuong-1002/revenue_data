@@ -1,0 +1,31 @@
+meta {
+  name: GetProducts
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/products?skip=0&limit=10
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('data');
+  expect(response).to.have.property('meta');
+  expect(response.meta).to.have.property('skip');
+  expect(response.meta).to.have.property('limit');
+  expect(response.meta).to.have.property('total');
+  expect(response.meta).to.have.property('totalPages');
+  expect(Array.isArray(response.data)).to.be.true;
+
+  if (response.data.length > 0) {
+    bru.setEnvVar('currentProductId', response.data[0].product_id);
+  }
+}

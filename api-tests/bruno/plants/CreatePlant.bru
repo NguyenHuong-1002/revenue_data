@@ -1,0 +1,35 @@
+meta {
+  name: CreatePlant (Admin)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/plants
+  body: json
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "plant_id": "9999",
+    "name_plant": "Nhà máy Thử Nghiệm",
+    "address": "KCN Thử Nghiệm, Hà Nội",
+    "manager_name": "Nguyễn Thử Nghiệm",
+    "phone": "0900000000"
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(201);
+  expect(response).to.have.property('plant_id', '9999');
+  expect(response).to.have.property('name_plant', 'Nhà máy Thử Nghiệm');
+  expect(response).to.have.property('manager_name', 'Nguyễn Thử Nghiệm');
+
+  bru.setEnvVar('currentPlantId', response.plant_id);
+}

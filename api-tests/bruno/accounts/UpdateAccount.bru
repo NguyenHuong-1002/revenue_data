@@ -1,0 +1,30 @@
+meta {
+  name: UpdateAccount
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/accounts/{{currentTestUserId}}
+  body: json
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "fullname": "Nguyen Van B (Updated)",
+    "role": "ADMIN"
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('fullname', 'Nguyen Van B (Updated)');
+  expect(response).to.have.property('role', 'ADMIN');
+  expect(response).to.not.have.property('passwordHash');
+}

@@ -1,0 +1,30 @@
+meta {
+  name: Login - Invalid Credentials
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/accounts/login
+  body: json
+  headers: {
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "username": "admin",
+    "password": "wrong_password"
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status, 'login invalid should return 401').to.equal(401);
+  expect(response, 'login invalid should include statusCode').to.have.property('statusCode', 401);
+  expect(response, 'login invalid should include error message').to.have.property('message', 'Username hoac password khong dung');
+  expect(response, 'login invalid should include request path').to.have.property('path', '/accounts/login');
+  expect(response, 'login invalid should include request method').to.have.property('method', 'POST');
+}

@@ -1,0 +1,32 @@
+meta {
+  name: Register - Duplicate Email
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/accounts/register
+  body: json
+  headers: {
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "fullname": "Duplicate Email User",
+    "username": "duplicate_email_" + $randomUUID,
+    "password": "Test@123",
+    "mail": "admin@revenue.com"
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(409);
+  expect(response).to.have.property('statusCode', 409);
+  expect(response).to.have.property('message', 'Email da ton tai');
+  expect(response).to.have.property('path', '/accounts/register');
+  expect(response).to.have.property('method', 'POST');
+}

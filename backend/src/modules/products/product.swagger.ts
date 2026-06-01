@@ -7,7 +7,7 @@ export function ApiGetProductsSwagger() {
     ApiOperation({
       summary: 'Lấy danh sách tất cả sản phẩm phân trang',
       description:
-        'API này trả về danh sách tất cả các sản phẩm hiện có trên hệ thống với bộ lọc linh hoạt và hỗ trợ phân trang.',
+        'API này trả về danh sách tất cả các sản phẩm hiện có trên hệ thống với bộ lọc linh hoạt và hỗ trợ phân trang theo `limit` và `skip`.',
     }),
     ApiResponse({
       status: 200,

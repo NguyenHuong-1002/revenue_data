@@ -1,0 +1,83 @@
+[
+  {
+    "notification_id": "noti_seed_01",
+    "title": "Bao cao doanh thu thang nay",
+    "content": "Tong doanh thu thang nay dat 150.000.000 VNĐ va tang 12% so voi thang truoc.",
+    "type": "SYSTEM",
+    "created_at": "2026-05-27T08:00:00.000Z",
+    "updated_at": "2026-05-27T08:00:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_02",
+    "title": "Canh bao ton kho SANTD-01",
+    "content": "San pham SANTD-01 chi con 50 chiec, can xem xet nhap hang som.",
+    "type": "INVENTORY_ALERT",
+    "created_at": "2026-05-27T08:05:00.000Z",
+    "updated_at": "2026-05-27T08:05:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_03",
+    "title": "Import du lieu thanh cong",
+    "content": "He thong da cap nhat xong du lieu sales va inventory vao co so du lieu.",
+    "type": "SYSTEM",
+    "created_at": "2026-05-27T08:10:00.000Z",
+    "updated_at": "2026-05-27T08:10:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_04",
+    "title": "Top san pham ban chay",
+    "content": "Ao so mi nam la san pham ban chay nhat trong ky hien tai.",
+    "type": "NEW_SALE",
+    "created_at": "2026-05-27T08:15:00.000Z",
+    "updated_at": "2026-05-27T08:15:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_05",
+    "title": "Can cap nhat bao cao chi nhanh",
+    "content": "Mot so chi nhanh chua dong bo du lieu moi, vui long kiem tra lai.",
+    "type": "OTHER",
+    "created_at": "2026-05-27T08:20:00.000Z",
+    "updated_at": "2026-05-27T08:20:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_06",
+    "title": "So lieu ton kho can xem xet",
+    "content": "Mot so san pham co muc ton kho thap hon nguong an toan.",
+    "type": "INVENTORY_ALERT",
+    "created_at": "2026-05-27T08:25:00.000Z",
+    "updated_at": "2026-05-27T08:25:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_07",
+    "title": "Thong bao doanh thu theo chi nhanh",
+    "content": "Bao cao doanh thu theo chi nhanh da san sang de xem.",
+    "type": "SYSTEM",
+    "created_at": "2026-05-27T08:30:00.000Z",
+    "updated_at": "2026-05-27T08:30:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_08",
+    "title": "Khach hang moi da phat sinh",
+    "content": "He thong ghi nhan mot luong giao dich moi can theo doi.",
+    "type": "CUSTOMER_NEW",
+    "created_at": "2026-05-27T08:35:00.000Z",
+    "updated_at": "2026-05-27T08:35:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_09",
+    "title": "Nhap hang de xuat",
+    "content": "Can uu tien nhap them SANTD-01 de dam bao muc phuc vu.",
+    "type": "INVENTORY_ALERT",
+    "created_at": "2026-05-27T08:40:00.000Z",
+    "updated_at": "2026-05-27T08:40:00.000Z"
+  },
+  {
+    "notification_id": "noti_seed_10",
+    "title": "Cap nhat ho so tai khoan",
+    "content": "Mot so tai khoan can hoan thien avatar hoac thong tin ca nhan.",
+    "type": "SYSTEM",
+    "created_at": "2026-05-27T08:45:00.000Z",
+    "updated_at": "2026-05-27T08:45:00.000Z"
+  }
+]
+

@@ -1,0 +1,33 @@
+meta {
+  name: CreateNotification (Admin)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/notifications
+  body: json
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "title": "Thông báo kiểm tra",
+    "content": "Đây là nội dung thông báo kiểm tra từ Bruno",
+    "type": "SYSTEM",
+    "account_id": null
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(201);
+  expect(response).to.have.property('notification_id');
+  expect(response).to.have.property('title', 'Thông báo kiểm tra');
+  expect(response).to.have.property('type', 'SYSTEM');
+  expect(response).to.have.property('read_at', null);
+}

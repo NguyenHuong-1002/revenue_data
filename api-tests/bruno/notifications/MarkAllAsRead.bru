@@ -1,0 +1,21 @@
+meta {
+  name: MarkAllAsRead
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/notifications/read-all
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(201);
+  expect(response).to.have.property('success', true);
+}

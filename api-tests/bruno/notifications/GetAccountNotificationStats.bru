@@ -1,0 +1,32 @@
+meta {
+  name: GetAccountNotificationStats (Admin)
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/notifications/accounts/{{staffAccountId}}/stats
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status, 'get account notification stats should return 200').to.equal(200);
+  expect(response, 'stats should include account_id').to.have.property('account_id', bru.getEnvVar('staffAccountId'));
+  expect(response, 'stats should include total').to.have.property('total');
+  expect(response, 'stats should include active_total').to.have.property('active_total');
+  expect(response, 'stats should include unread').to.have.property('unread');
+  expect(response, 'stats should include read').to.have.property('read');
+  expect(response, 'stats should include deleted').to.have.property('deleted');
+  expect(response.total, 'stats total should be a number').to.be.a('number');
+  expect(response.active_total, 'stats active_total should be a number').to.be.a('number');
+  expect(response.unread, 'stats unread should be a number').to.be.a('number');
+  expect(response.read, 'stats read should be a number').to.be.a('number');
+  expect(response.deleted, 'stats deleted should be a number').to.be.a('number');
+  expect(response.unread + response.read, 'active_total should equal unread plus read').to.equal(response.active_total);
+}

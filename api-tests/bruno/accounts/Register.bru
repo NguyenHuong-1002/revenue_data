@@ -1,0 +1,26 @@
+meta {
+  name: Register
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/accounts/register
+  body: json
+  headers: {
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "fullname": "Nguyen Van A",
+    "username": "testuser_" + $randomUUID,
+    "password": "Test@123",
+    "mail": "testuser_" + $randomUUID + "@example.com"
+  }
+}
+
+tests {
+  expect(res.status).to.equal(201);
+}

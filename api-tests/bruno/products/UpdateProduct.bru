@@ -1,0 +1,37 @@
+meta {
+  name: UpdateProduct
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/products/{{currentProductId}}
+  body: json
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "color": "Trắng",
+    "listing_price": 500000,
+    "price_cost": 350000,
+    "gender": "Unisex",
+    "detail_product_group": "Giày thể thao cao cấp",
+    "size": 41,
+    "age_group": "24 đến <40 tuổi",
+    "activity_group": "Thể thao",
+    "lifestyle_group": "Sport"
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('color', 'Trắng');
+  expect(response).to.have.property('listing_price', 500000);
+  expect(response).to.have.property('gender', 'Unisex');
+}

@@ -1,0 +1,23 @@
+meta {
+  name: GetBranchById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/branches/{{currentBranchId}}
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('store_id', bru.getEnvVar('currentBranchId'));
+  expect(response).to.have.property('name');
+  expect(response).to.have.property('city');
+}

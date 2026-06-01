@@ -14,7 +14,7 @@ export interface IProduct {
 export interface IPaginatedProducts {
   data: IProduct[];
   meta: {
-    page: number;
+    skip: number;
     limit: number;
     total: number;
     totalPages: number;

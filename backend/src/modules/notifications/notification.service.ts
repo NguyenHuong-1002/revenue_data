@@ -1,13 +1,13 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { NotificationEntity } from 'src/entities/notification.entity';
 import { AccountNotificationEntity } from 'src/entities/account-notification.entity';
-import { AccountEntity } from 'src/entities/account.entity';
 import { CreateNotificationDto } from './DTO/create-notification.dto';
 import { GetNotificationsDto } from './DTO/get-notifications.dto';
 import { INotification, IPaginatedNotifications } from './interfaces/notification.interface';
+import { AccountNotificationService } from './account-notification.service';
 
 @Injectable()
 export class NotificationService {
@@ -18,12 +18,10 @@ export class NotificationService {
     @InjectRepository(AccountNotificationEntity)
     private readonly accountNotificationRepository: Repository<AccountNotificationEntity>,
 
-    @InjectRepository(AccountEntity)
-    private readonly accountRepository: Repository<AccountEntity>,
+    private readonly accountNotificationService: AccountNotificationService,
   ) {}
 
   async createNotification(dto: CreateNotificationDto): Promise<INotification> {
-    // 1. Lưu thông báo vào bảng notification
     const notiId = uuidv4();
     const noti = this.notificationRepository.create({
       notification_id: notiId,
@@ -33,30 +31,24 @@ export class NotificationService {
     });
     const savedNoti = await this.notificationRepository.save(noti);
 
-    // 2. Liên kết thông báo tới người dùng
     if (dto.account_id) {
-      // Gửi cho một tài khoản cụ thể
-      const accountExists = await this.accountRepository.findOne({
-        where: { account_id: dto.account_id },
+      await this.accountNotificationService.assertAccountExists(dto.account_id);
+      await this.accountNotificationRepository.save({
+        account_id: dto.account_id,
+        notification_id: notiId,
+        is_read: 0,
+        is_deleted: 0,
       });
-      if (accountExists) {
-        await this.accountNotificationRepository.save({
-          account_id: dto.account_id,
-          notification_id: notiId,
-          is_read: 0,
-          is_deleted: 0,
-        });
-      }
     } else {
-      // Gửi hệ thống (cho tất cả tài khoản active)
-      const accounts = await this.accountRepository.find({ select: { account_id: true } });
+      const accounts = await this.accountNotificationService.getAllAccountIds();
       if (accounts.length > 0) {
-        const records = accounts.map((acc) => ({
-          account_id: acc.account_id,
+        const records = accounts.map((accountId) => ({
+          account_id: accountId,
           notification_id: notiId,
           is_read: 0,
           is_deleted: 0,
         }));
+
         await this.accountNotificationRepository.insert(records);
       }
     }
@@ -113,18 +105,7 @@ export class NotificationService {
   }
 
   async markAsRead(notificationId: string, accountId: string): Promise<INotification> {
-    const an = await this.accountNotificationRepository.findOne({
-      where: { notification_id: notificationId, account_id: accountId },
-      relations: { notification: true },
-    });
-
-    if (!an) {
-      throw new NotFoundException(`Không tìm thấy thông báo có ID '${notificationId}' cho tài khoản của bạn.`);
-    }
-
-    an.is_read = 1;
-    an.read_at = new Date();
-    const savedAn = await this.accountNotificationRepository.save(an);
+    const savedAn = await this.accountNotificationService.markAsRead(notificationId, accountId);
 
     return {
       notification_id: savedAn.notification.notification_id,
@@ -139,12 +120,6 @@ export class NotificationService {
   }
 
   async markAllAsRead(accountId: string): Promise<void> {
-    await this.accountNotificationRepository
-      .createQueryBuilder()
-      .update(AccountNotificationEntity)
-      .set({ is_read: 1, read_at: new Date() })
-      .where('account_id = :accountId AND is_read = 0', { accountId })
-      .execute();
+    await this.accountNotificationService.markAllAsRead(accountId);
   }
 }
-

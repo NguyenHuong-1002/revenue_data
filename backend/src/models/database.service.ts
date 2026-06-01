@@ -4,7 +4,9 @@ import { createPool, Pool, PoolConnection } from 'mysql2/promise';
 import {
   checkDatabaseConnection,
   initializeDatabaseSchema,
+  seedMockAccountNotifications,
   seedMockAccounts,
+  seedMockNotifications,
   seedMockPlants,
   seedMockStores,
 } from './database-bootstrap';
@@ -57,11 +59,19 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     // 3. Tự động kiểm tra và import dữ liệu seed nếu bảng account trống
     await seedMockAccounts(this.pool);
-    
-    // 4. Tự động kiểm tra và import dữ liệu seed nếu bảng plant trống
+
+    // 4. Tự động kiểm tra và import dữ liệu seed nếu bảng notification trống
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await seedMockNotifications(this.pool);
+
+    // 5. Tự động kiểm tra và import dữ liệu seed nếu bảng account_notification trống
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await seedMockAccountNotifications(this.pool);
+
+    // 6. Tự động kiểm tra và import dữ liệu seed nếu bảng plant trống
     await seedMockPlants(this.pool);
 
-    // 5. Tự động kiểm tra và import dữ liệu seed nếu bảng storeBranch trống
+    // 7. Tự động kiểm tra và import dữ liệu seed nếu bảng storeBranch trống
     await seedMockStores(this.pool);
   }
 

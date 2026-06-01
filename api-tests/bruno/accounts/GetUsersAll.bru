@@ -1,0 +1,49 @@
+meta {
+  name: GetUsersAll
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/accounts?page=1&limit=10
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status, 'get users all should return 200').to.equal(200);
+  expect(response, 'get users all response should have data').to.have.property('data');
+  expect(response, 'get users all response should have meta').to.have.property('meta');
+  expect(response.meta, 'get users all meta should include page').to.have.property('page', 1);
+  expect(response.meta, 'get users all meta should include limit').to.have.property('limit', 10);
+  expect(response.meta, 'get users all meta should include total').to.have.property('total');
+  expect(response.meta, 'get users all meta should include totalPages').to.have.property('totalPages');
+  expect(response.meta.total, 'get users all total should be a number').to.be.a('number');
+  expect(response.meta.totalPages, 'get users all totalPages should be a number').to.be.a('number');
+  expect(Array.isArray(response.data), 'get users all data should be an array').to.be.true;
+  expect(response.data.length, 'get users all should return at most 10 items').to.be.at.most(10);
+
+  response.data.forEach(account => {
+    expect(account, 'get users all item should have account_id').to.have.property('account_id');
+    expect(account, 'get users all item should have username').to.have.property('username');
+    expect(account, 'get users all item should have role').to.have.property('role');
+    expect(account, 'get users all item should have fullname').to.have.property('fullname');
+    expect(account, 'get users all item should have mail').to.have.property('mail');
+    expect(account, 'get users all item should have avatarURL').to.have.property('avatarURL');
+    expect(account, 'get users all item should have created_at').to.have.property('created_at');
+    expect(account, 'get users all item should have updated_at').to.have.property('updated_at');
+    expect(account, 'get users all item should not leak passwordHash').to.not.have.property('passwordHash');
+  });
+
+  const listUser = response.data.find(account => account.role === 'STAFF') || response.data[0];
+
+  if (listUser) {
+    bru.setEnvVar('currentListUserId', listUser.account_id);
+    bru.setEnvVar('currentTestUserId', listUser.account_id);
+  }
+}

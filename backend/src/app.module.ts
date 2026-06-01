@@ -10,6 +10,11 @@ import { typeOrmConfig } from './config/typeorm.config';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { ApiLoggerMiddleware } from './middlewares/api-logger.middleware';
 import { DataImportModule } from './modules/data-import/data-import.module';
+import { BranchModule } from './modules/branches/branch.module';
+import { PlantModule } from './modules/plants/plant.module';
+import { ForecastingModule } from './modules/forecasting/forecasting.module';
+import { AiInterpretationModule } from './modules/ai-interpretation/ai-interpretation.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 dotenv.config();
 
@@ -27,6 +32,11 @@ dotenv.config();
     DatabaseModule,
     NotificationModule,
     DataImportModule,
+    BranchModule,
+    PlantModule,
+    ForecastingModule,
+    AiInterpretationModule,
+    ReportsModule,
   ],
 })
 export class AppModule implements NestModule {

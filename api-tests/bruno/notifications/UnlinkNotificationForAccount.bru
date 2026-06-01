@@ -1,0 +1,21 @@
+meta {
+  name: UnlinkNotificationForAccount (Admin)
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/notifications/accounts/{{staffAccountId}}/notifications/{{currentNotificationId}}/unlink
+  body: none
+  headers: {
+    Authorization: Bearer {{adminToken}}
+    Content-Type: application/json
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status, 'unlink notification should return 200').to.equal(200);
+  expect(response, 'unlink notification should return success flag').to.have.property('success', true);
+}

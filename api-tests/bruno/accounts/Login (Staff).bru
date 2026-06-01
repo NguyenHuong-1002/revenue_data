@@ -1,0 +1,41 @@
+meta {
+  name: Login (Staff)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/accounts/login
+  body: json
+  headers: {
+    Content-Type: application/json
+  }
+}
+
+body:json {
+  {
+    "username": "{{staffUsername}}",
+    "password": "{{staffPassword}}"
+  }
+}
+
+tests {
+  const response = res.getBody();
+
+  expect(res.status, 'staff login should return 200').to.equal(200);
+  expect(response, 'staff login should include success message').to.have.property('message', 'Success');
+  expect(response, 'staff login should include accessToken').to.have.property('accessToken');
+  expect(response, 'staff login should include tokenType').to.have.property('tokenType', 'Bearer');
+  expect(response.accessToken, 'staff accessToken should be a non-empty string').to.be.a('string').and.not.empty;
+  expect(response.account, 'staff login should include account_id').to.have.property('account_id');
+  expect(response.account, 'staff login should return staff username').to.have.property('username', bru.getEnvVar('staffUsername'));
+  expect(response.account, 'staff login should return role STAFF').to.have.property('role', 'STAFF');
+  expect(response.account, 'staff login should include fullname').to.have.property('fullname');
+  expect(response.account, 'staff login should include mail').to.have.property('mail');
+  expect(response.account, 'staff login should include avatarURL').to.have.property('avatarURL');
+  expect(response.account, 'staff login should include created_at').to.have.property('created_at');
+  expect(response.account, 'staff login should include updated_at').to.have.property('updated_at');
+  expect(response.account, 'staff login should not leak passwordHash').to.not.have.property('passwordHash');
+
+  bru.setEnvVar('staffToken', response.accessToken);
+}
