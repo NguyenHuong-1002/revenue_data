@@ -4,7 +4,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SearchAccountsDto {
   @ApiPropertyOptional({
-    example: 'lan anh',
+    example: 'tran ngoc anh',
     description:
       'Từ khoá tìm kiếm — khớp một phần với fullname, username hoặc mail (không phân biệt hoa thường)',
   })

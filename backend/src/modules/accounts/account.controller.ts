@@ -48,6 +48,7 @@ import {
 @UseGuards(authGuard.AuthGuard)
 @Controller('accounts')
 export class AccountController {
+  // eslint-disable-next-line prettier/prettier
   constructor(private readonly accountService: AccountService) { }
 
   @authGuard.Roles('ADMIN')
@@ -60,11 +61,21 @@ export class AccountController {
     return this.accountService.getUsersAll(filters);
   }
 
+  @authGuard.Roles('ADMIN')
+  @ApiSearchAccountsSwagger()
+  @Get('/search')
+  @HttpCode(HttpStatus.OK)
+  searchAccounts(
+    @Query(new ValidationPipe({ transform: true })) dto: SearchAccountsDto,
+  ): Promise<IPaginatedAccounts> {
+    return this.accountService.searchAccounts(dto);
+  }
+
   @ApiGetMeSwagger()
   @Get('/me')
   @HttpCode(HttpStatus.OK)
-  getMe(@authGuard.CurrentUser() currentUser: authGuard.JwtPayload): Promise<IAccount> {
-    return this.accountService.getAccountById(currentUser.sub);
+  getMe(@authGuard.CurrentUser() AdminUser: authGuard.JwtPayload): Promise<IAccount> {
+    return this.accountService.getAccountById(AdminUser.sub);
   }
 
   @authGuard.Roles('ADMIN')
@@ -80,10 +91,10 @@ export class AccountController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   createAccount(
-    @authGuard.CurrentUser() adminUser: authGuard.JwtPayload,
+    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Body(new ValidationPipe({ transform: true })) dto: CreateAccountDto,
   ): Promise<AccountResponse> {
-    return this.accountService.createAccount(dto, adminUser.username);
+    return this.accountService.createAccount(dto, admin.username);
   }
 
   @authGuard.Public()
@@ -111,11 +122,11 @@ export class AccountController {
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
   updateAccount(
-    @authGuard.CurrentUser() adminUser: authGuard.JwtPayload,
+    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,
     @Body(new ValidationPipe({ transform: true })) dto: UpdateAccountDto,
   ): Promise<IAccount> {
-    return this.accountService.updateAccount(id, dto, adminUser.username);
+    return this.accountService.updateAccount(id, dto, admin.username);
   }
 
   @authGuard.Roles('ADMIN')
@@ -123,31 +134,21 @@ export class AccountController {
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteAccount(
-    @authGuard.CurrentUser() adminUser: authGuard.JwtPayload,
+    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.accountService.deleteAccount(id, adminUser.username);
+    return this.accountService.deleteAccount(id, admin.username);
   }
 
   @authGuard.Roles('ADMIN')
   @ApiSoftDeleteAccountSwagger()
   @Delete('/:id/soft')
   @HttpCode(HttpStatus.OK)
-  async softDeleteAccount(
-    @authGuard.CurrentUser() adminUser: authGuard.JwtPayload,
+  softDeleteAccount(
+    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,
   ): Promise<void> {
-    await this.accountService.softDeleteAccount(id, adminUser.username);
-  }
-
-  @authGuard.Roles('ADMIN')
-  @ApiSearchAccountsSwagger()
-  @Get('/search')
-  @HttpCode(HttpStatus.OK)
-  searchAccounts(
-    @Query(new ValidationPipe({ transform: true })) dto: SearchAccountsDto,
-  ): Promise<IPaginatedAccounts> {
-    return this.accountService.searchAccounts(dto);
+    return this.accountService.softDeleteAccount(id, admin.username);
   }
 
   @Post('/avatar')
@@ -167,12 +168,12 @@ export class AccountController {
     },
   })
   async updateAvatar(
-    @authGuard.CurrentUser() currentUser: authGuard.JwtPayload,
-    @UploadedFile() file: any,
+    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
       throw new BadRequestException('Vui lòng tải lên file ảnh đại diện!');
     }
-    return this.accountService.updateAvatar(currentUser.sub, file.filename);
+    return this.accountService.updateAvatar(admin.sub, file.filename);
   }
 }

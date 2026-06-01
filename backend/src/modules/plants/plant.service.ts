@@ -1,109 +1,84 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from 'src/models/database.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Like, FindOptionsWhere } from 'typeorm';
+import { PlantEntity } from 'src/entities/plant.entity';
 import { CreatePlantDto } from './DTO/create-plant.dto';
 import { GetPlantAllDto } from './DTO/get-plant-all.dto';
 import { UpdatePlantDto } from './DTO/update-plant.dto';
 import { IPlant, IPaginatedPlants } from './interfaces/plant.interface';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class PlantService {
   constructor(
-    private readonly db: DatabaseService,
+    @InjectRepository(PlantEntity)
+    private readonly plantRepository: Repository<PlantEntity>,
     private readonly notificationService: NotificationService,
-  ) {}
+    // eslint-disable-next-line prettier/prettier
+  ) { }
 
   async getAll(filters: GetPlantAllDto): Promise<IPaginatedPlants> {
-    const whereClauses: string[] = [];
-    const values: unknown[] = [];
+    const { page, limit, address, manager_name } = filters;
+    const skip = (page - 1) * limit;
 
-    if (filters.address) {
-      whereClauses.push('address LIKE ?');
-      values.push(`%${filters.address}%`);
-    }
-    if (filters.manager_name) {
-      whereClauses.push('manager_name LIKE ?');
-      values.push(`%${filters.manager_name}%`);
-    }
+    const where: FindOptionsWhere<PlantEntity> = {};
+    if (address) where.address = Like(`%${address}%`);
+    if (manager_name) where.manager_name = Like(`%${manager_name}%`);
 
-    const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
-
-    const [countRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT COUNT(*) as total FROM Plant ${whereSQL}`,
-      values,
-    );
-    const total = Number(countRows[0].total);
-
-    const { page, limit } = filters;
-    const offset = (page - 1) * limit;
-    const [dataRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT * FROM Plant ${whereSQL} ORDER BY plant_id ASC LIMIT ? OFFSET ?`,
-      [...values, limit, offset],
-    );
+    const [data, total] = await this.plantRepository.findAndCount({
+      where,
+      order: { plant_id: 'ASC' },
+      skip,
+      take: limit,
+    });
 
     return {
-      data: dataRows as IPlant[],
+      data: data,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
 
   async getById(id: string): Promise<IPlant> {
-    const [rows] = await this.db.client.query<RowDataPacket[]>(
-      'SELECT * FROM Plant WHERE plant_id = ?',
-      [id],
-    );
-    if (rows.length === 0) {
+    const plant = await this.plantRepository.findOneBy({ plant_id: id });
+    if (!plant) {
       throw new NotFoundException(`Nhà máy với mã '${id}' không tồn tại`);
     }
-    return rows[0] as IPlant;
+    return plant;
   }
 
   async create(dto: CreatePlantDto, adminUsername?: string): Promise<IPlant> {
-    await this.db.client.query<ResultSetHeader>(
-      'INSERT INTO Plant (plant_id, name_plant, address, manager_name, phone) VALUES (?, ?, ?, ?, ?)',
-      [dto.plant_id, dto.name_plant, dto.address, dto.manager_name, dto.phone],
-    );
+    const id = uuidv4();
+    const plant = this.plantRepository.create({
+      plant_id: id,
+      name_plant: dto.name_plant,
+      address: dto.address,
+      manager_name: dto.manager_name,
+      phone: dto.phone,
+    });
+    await this.plantRepository.save(plant);
 
     await this.notificationService.createNotification({
       title: 'Tạo nhà máy mới',
-      content: `Admin ${adminUsername || 'hệ thống'} đã tạo nhà máy ${dto.plant_id} - ${dto.name_plant}.`,
+      content: `Admin ${adminUsername || 'hệ thống'} đã tạo nhà máy ${id} - ${dto.name_plant}.`,
       type: 'SYSTEM',
     });
 
-    return this.getById(dto.plant_id);
+    return plant;
   }
 
   async update(id: string, dto: UpdatePlantDto, adminUsername?: string): Promise<IPlant> {
-    await this.getById(id);
-
-    const fields: string[] = [];
-    const values: unknown[] = [];
-
-    if (dto.name_plant !== undefined) {
-      fields.push('name_plant = ?');
-      values.push(dto.name_plant);
-    }
-    if (dto.address !== undefined) {
-      fields.push('address = ?');
-      values.push(dto.address);
-    }
-    if (dto.manager_name !== undefined) {
-      fields.push('manager_name = ?');
-      values.push(dto.manager_name);
-    }
-    if (dto.phone !== undefined) {
-      fields.push('phone = ?');
-      values.push(dto.phone);
+    const plant = await this.plantRepository.findOneBy({ plant_id: id });
+    if (!plant) {
+      throw new NotFoundException(`Nhà máy với mã '${id}' không tồn tại`);
     }
 
-    if (fields.length > 0) {
-      values.push(id);
-      await this.db.client.query<ResultSetHeader>(
-        `UPDATE Plant SET ${fields.join(', ')} WHERE plant_id = ?`,
-        values,
-      );
-    }
+    if (dto.name_plant !== undefined) plant.name_plant = dto.name_plant;
+    if (dto.address !== undefined) plant.address = dto.address;
+    if (dto.manager_name !== undefined) plant.manager_name = dto.manager_name;
+    if (dto.phone !== undefined) plant.phone = dto.phone;
+
+    await this.plantRepository.save(plant);
 
     await this.notificationService.createNotification({
       title: 'Cập nhật nhà máy',
@@ -111,26 +86,21 @@ export class PlantService {
       type: 'SYSTEM',
     });
 
-    return this.getById(id);
+    return plant;
   }
 
-  async delete(id: string, adminUsername?: string): Promise<boolean> {
-    await this.getById(id);
-
-    const [result] = await this.db.client.query<ResultSetHeader>(
-      'DELETE FROM Plant WHERE plant_id = ?',
-      [id],
-    );
-    const success = result.affectedRows > 0;
-
-    if (success) {
-      await this.notificationService.createNotification({
-        title: 'Xóa nhà máy',
-        content: `Admin ${adminUsername || 'hệ thống'} đã xóa nhà máy ${id} khỏi hệ thống.`,
-        type: 'SYSTEM',
-      });
+  async delete(id: string, adminUsername?: string): Promise<void> {
+    const plant = await this.plantRepository.findOneBy({ plant_id: id });
+    if (!plant) {
+      throw new NotFoundException(`Nhà máy với mã '${id}' không tồn tại`);
     }
 
-    return success;
+    await this.plantRepository.remove(plant);
+
+    await this.notificationService.createNotification({
+      title: 'Xóa nhà máy',
+      content: `Admin ${adminUsername || 'hệ thống'} đã xóa nhà máy ${id} khỏi hệ thống.`,
+      type: 'SYSTEM',
+    });
   }
 }

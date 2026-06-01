@@ -15,19 +15,19 @@ export class AccountItemDto {
   role!: 'ADMIN' | 'STAFF';
 
   @ApiProperty({
-    example: 'Nguyễn Thị Lan Anh',
+    example: 'Trần Ngọc Anh',
     description: 'Họ và tên đầy đủ của người dùng',
   })
   fullname!: string;
 
   @ApiProperty({
-    example: 'lananh',
+    example: 'tranngocanh',
     description: 'Tên tài khoản dùng để đăng nhập',
   })
   username!: string;
 
   @ApiProperty({
-    example: 'lananh@revenue.com',
+    example: 'tranngocanh@revenue.com',
     description: 'Địa chỉ thư điện tử Email',
   })
   mail!: string;

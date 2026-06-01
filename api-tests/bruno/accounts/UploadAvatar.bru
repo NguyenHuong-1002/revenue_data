@@ -13,10 +13,14 @@ post {
 }
 
 body:multipart-form {
-  file: @file(upload-avatar.jpg)
+  file: @file(test-avatar.jpg)
 }
 
 tests {
-  // Requires a valid image file at the specified path
-  // expect(res.status).to.equal(200);
+  const response = res.getBody();
+
+  expect(res.status).to.equal(200);
+  expect(response).to.have.property('success', true);
+  expect(response).to.have.property('message', 'Cập nhật ảnh đại diện thành công!');
+  expect(response).to.have.property('avatarURL').that.is.a('string');
 }

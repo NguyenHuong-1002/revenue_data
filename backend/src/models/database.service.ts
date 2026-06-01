@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import { createPool, Pool, PoolConnection } from 'mysql2/promise';
@@ -24,16 +25,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    const host = process.env.MYSQL_HOST ?? 'localhost';
-    const port = Number(process.env.MYSQL_PORT ?? 3306);
-    const user = process.env.MYSQL_USER ?? 'root';
-    const password = process.env.MYSQL_PASSWORD ?? '';
-    const dbName = process.env.MYSQL_DATABASE ?? 'revenue';
+    const host = process.env.MYSQL_HOST;
+    const port = Number(process.env.MYSQL_PORT);
+    const user = process.env.MYSQL_USER;
+    const password = process.env.MYSQL_PASSWORD;
+    const dbName = process.env.MYSQL_DATABASE;
 
     // 1. Kiểm tra kết nối & 2. Khởi tạo Database nếu chưa tồn tại
     try {
-      const connection = await checkDatabaseConnection(host, port, user, password);
-      await initializeDatabaseSchema(connection, dbName);
+      const connection = await checkDatabaseConnection(host!, port, user!, password);
+      await initializeDatabaseSchema(connection, dbName!);
       await connection.end();
     } catch (err: any) {
       this.logger.error(
@@ -65,7 +66,6 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     await seedMockNotifications(this.pool);
 
     // 5. Tự động kiểm tra và import dữ liệu seed nếu bảng account_notification trống
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await seedMockAccountNotifications(this.pool);
 
     // 6. Tự động kiểm tra và import dữ liệu seed nếu bảng plant trống

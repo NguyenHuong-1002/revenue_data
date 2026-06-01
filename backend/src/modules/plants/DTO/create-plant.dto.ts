@@ -1,10 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreatePlantDto {
-  @IsNotEmpty({ message: 'plant_id không được để trống!' })
-  @IsString({ message: 'plant_id phải là chuỗi ký tự!' })
-  plant_id!: string;
-
   @IsNotEmpty({ message: 'Tên nhà máy (name_plant) không được để trống!' })
   @IsString({ message: 'Tên nhà máy (name_plant) phải là chuỗi ký tự!' })
   name_plant!: string;

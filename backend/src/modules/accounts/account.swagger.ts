@@ -516,7 +516,7 @@ export function ApiSearchAccountsSwagger() {
       name: 'keyword',
       required: false,
       type: String,
-      example: 'lan anh',
+      example: 'tran ngoc anh',
       description:
         'Từ khoá tìm kiếm (khớp với fullname, username, mail — không phân biệt hoa thường)',
     }),

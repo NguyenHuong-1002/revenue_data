@@ -3,7 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateAccountDto {
   @ApiProperty({
-    example: 'Nguyễn Thị Lan Anh',
+    example: 'Trần Ngọc Anh',
     description: 'Họ và tên đầy đủ của người dùng',
   })
   @IsNotEmpty({ message: 'Fullname khong duoc de trong!' })
@@ -11,7 +11,7 @@ export class CreateAccountDto {
   fullname!: string;
 
   @ApiProperty({
-    example: 'lananh',
+    example: 'tranngocanh',
     description: 'Tên tài khoản dùng để đăng nhập (không trùng lặp trong hệ thống)',
   })
   @IsNotEmpty({ message: 'Username khong duoc de trong!' })
@@ -29,7 +29,7 @@ export class CreateAccountDto {
   password!: string;
 
   @ApiProperty({
-    example: 'lananh@revenue.com',
+    example: 'tranngocanh@revenue.com',
     description: 'Địa chỉ email (không trùng lặp trong hệ thống)',
     format: 'email',
   })

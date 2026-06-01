@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginAccountDto {
   @ApiProperty({
-    example: 'lananh',
+    example: 'tranngocanh',
     description: 'Tên tài khoản dùng để đăng nhập',
   })
   @IsNotEmpty({ message: 'Username khong duoc de trong!' })

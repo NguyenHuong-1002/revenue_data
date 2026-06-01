@@ -1,97 +1,78 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from 'src/models/database.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Like } from 'typeorm';
+import { StoreBranchEntity } from 'src/entities/branch.entity';
 import { CreateBranchDto } from './DTO/create-branch.dto';
 import { GetBranchAllDto } from './DTO/get-branch-all.dto';
 import { UpdateBranchDto } from './DTO/update-branch.dto';
 import { IBranch, IPaginatedBranches } from './interfaces/branch.interface';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class BranchService {
   constructor(
-    private readonly db: DatabaseService,
+    @InjectRepository(StoreBranchEntity)
+    private readonly branchRepository: Repository<StoreBranchEntity>,
     private readonly notificationService: NotificationService,
-  ) {}
+    // eslint-disable-next-line prettier/prettier
+  ) { }
 
   async getAll(filters: GetBranchAllDto): Promise<IPaginatedBranches> {
-    const whereClauses: string[] = [];
-    const values: unknown[] = [];
+    const { page, limit, city } = filters;
+    const skip = (page - 1) * limit;
 
-    if (filters.city) {
-      whereClauses.push('city LIKE ?');
-      values.push(`%${filters.city}%`);
-    }
+    const where = city ? { city: Like(`%${city}%`) } : {};
 
-    const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
-
-    const [countRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT COUNT(*) as total FROM storeBranch ${whereSQL}`,
-      values,
-    );
-    const total = Number(countRows[0].total);
-
-    const { page, limit } = filters;
-    const offset = (page - 1) * limit;
-    const [dataRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT * FROM storeBranch ${whereSQL} ORDER BY store_id ASC LIMIT ? OFFSET ?`,
-      [...values, limit, offset],
-    );
+    const [data, total] = await this.branchRepository.findAndCount({
+      where,
+      order: { store_id: 'ASC' },
+      skip,
+      take: limit,
+    });
 
     return {
-      data: dataRows as IBranch[],
+      data: data as IBranch[],
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
 
   async getById(id: string): Promise<IBranch> {
-    const [rows] = await this.db.client.query<RowDataPacket[]>(
-      'SELECT * FROM storeBranch WHERE store_id = ?',
-      [id],
-    );
-    if (rows.length === 0) {
+    const branch = await this.branchRepository.findOneBy({ store_id: id });
+    if (!branch) {
       throw new NotFoundException(`Chi nhánh với mã '${id}' không tồn tại`);
     }
-    return rows[0] as IBranch;
+    return branch as IBranch;
   }
 
   async create(dto: CreateBranchDto, adminUsername?: string): Promise<IBranch> {
-    await this.db.client.query<ResultSetHeader>(
-      'INSERT INTO storeBranch (store_id, name, city) VALUES (?, ?, ?)',
-      [dto.store_id, dto.name, dto.city],
-    );
+    const id = uuidv4();
+    const branch = this.branchRepository.create({
+      store_id: id,
+      name: dto.name,
+      city: dto.city,
+    });
+    await this.branchRepository.save(branch);
 
     await this.notificationService.createNotification({
       title: 'Tạo chi nhánh mới',
-      content: `Admin ${adminUsername || 'hệ thống'} đã tạo chi nhánh ${dto.store_id} - ${dto.name}.`,
+      content: `Admin ${adminUsername || 'hệ thống'} đã tạo chi nhánh ${id} - ${dto.name}.`,
       type: 'SYSTEM',
     });
 
-    return this.getById(dto.store_id);
+    return branch as IBranch;
   }
 
   async update(id: string, dto: UpdateBranchDto, adminUsername?: string): Promise<IBranch> {
-    await this.getById(id);
-
-    const fields: string[] = [];
-    const values: unknown[] = [];
-
-    if (dto.name !== undefined) {
-      fields.push('name = ?');
-      values.push(dto.name);
-    }
-    if (dto.city !== undefined) {
-      fields.push('city = ?');
-      values.push(dto.city);
+    const branch = await this.branchRepository.findOneBy({ store_id: id });
+    if (!branch) {
+      throw new NotFoundException(`Chi nhánh với mã '${id}' không tồn tại`);
     }
 
-    if (fields.length > 0) {
-      values.push(id);
-      await this.db.client.query<ResultSetHeader>(
-        `UPDATE storeBranch SET ${fields.join(', ')} WHERE store_id = ?`,
-        values,
-      );
-    }
+    if (dto.name !== undefined) branch.name = dto.name;
+    if (dto.city !== undefined) branch.city = dto.city;
+
+    await this.branchRepository.save(branch);
 
     await this.notificationService.createNotification({
       title: 'Cập nhật chi nhánh',
@@ -99,26 +80,21 @@ export class BranchService {
       type: 'SYSTEM',
     });
 
-    return this.getById(id);
+    return branch as IBranch;
   }
 
-  async delete(id: string, adminUsername?: string): Promise<boolean> {
-    await this.getById(id);
-
-    const [result] = await this.db.client.query<ResultSetHeader>(
-      'DELETE FROM storeBranch WHERE store_id = ?',
-      [id],
-    );
-    const success = result.affectedRows > 0;
-
-    if (success) {
-      await this.notificationService.createNotification({
-        title: 'Xóa chi nhánh',
-        content: `Admin ${adminUsername || 'hệ thống'} đã xóa chi nhánh ${id} khỏi hệ thống.`,
-        type: 'SYSTEM',
-      });
+  async delete(id: string, adminUsername?: string): Promise<void> {
+    const branch = await this.branchRepository.findOneBy({ store_id: id });
+    if (!branch) {
+      throw new NotFoundException(`Chi nhánh với mã '${id}' không tồn tại`);
     }
 
-    return success;
+    await this.branchRepository.remove(branch);
+
+    await this.notificationService.createNotification({
+      title: 'Xóa chi nhánh',
+      content: `Admin ${adminUsername || 'hệ thống'} đã xóa chi nhánh ${id} khỏi hệ thống.`,
+      type: 'SYSTEM',
+    });
   }
 }

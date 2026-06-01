@@ -12,12 +12,12 @@ export class StoreBranchEntity {
   city!: string;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  created_at!: string;
+  created_at!: Date;
 
   @Column({
     type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updated_at!: string;
+  updated_at!: Date;
 }

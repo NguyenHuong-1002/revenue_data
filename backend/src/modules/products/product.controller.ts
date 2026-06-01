@@ -32,6 +32,7 @@ import {
 @UseGuards(authGuard.AuthGuard)
 @Controller('products')
 export class ProductController {
+  // eslint-disable-next-line prettier/prettier
   constructor(private readonly productService: ProductService) { }
 
   @ApiGetProductsSwagger()

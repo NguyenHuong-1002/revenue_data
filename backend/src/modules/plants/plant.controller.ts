@@ -6,8 +6,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
-  Put,
   Query,
   UseGuards,
   ValidationPipe,
@@ -35,6 +35,7 @@ export class PlantController {
   // eslint-disable-next-line prettier/prettier
   constructor(private readonly plantService: PlantService) { }
 
+  @authGuard.Public()
   @ApiGetPlantsSwagger()
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -43,7 +44,7 @@ export class PlantController {
   ): Promise<IPaginatedPlants> {
     return this.plantService.getAll(query);
   }
-
+  @authGuard.Public()
   @ApiGetPlantByIdSwagger()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
@@ -64,7 +65,7 @@ export class PlantController {
 
   @authGuard.Roles('ADMIN')
   @ApiUpdatePlantSwagger()
-  @Put('/:id')
+  @Patch('/:id')
   @HttpCode(HttpStatus.OK)
   update(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
@@ -77,11 +78,11 @@ export class PlantController {
   @authGuard.Roles('ADMIN')
   @ApiDeletePlantSwagger()
   @Delete('/:id')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   delete(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,
-  ): Promise<boolean> {
+  ): Promise<void> {
     return this.plantService.delete(id, admin.username);
   }
 }
