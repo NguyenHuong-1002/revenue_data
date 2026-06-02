@@ -1,5 +1,5 @@
 # 📊 Hệ Thống Quản Lý Doanh Thu & Tài Khoản (Revenue Management System)
-
+Thành Viên : Nguyễn Thị Hường
 Chào mừng bạn đến với tài liệu hướng dẫn và vận hành tổng thể của **Hệ Thống Quản Lý Doanh Thu & Tài Khoản**. Dự án được xây dựng và nâng cấp toàn diện theo mô hình chuẩn **Clean Architecture**, tích hợp đồng bộ từ Cơ sở dữ liệu, Backend (NestJS), Frontend (Next.js) cho tới bộ kiểm thử API tự động chuyên nghiệp (Postman & Bruno).
 
 ---
