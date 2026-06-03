@@ -28,11 +28,13 @@ export function ApiGetBranchesSwagger() {
       type: 'string',
       required: false,
       example: 'Hà Nội',
-      description: 'Lọc chi nhánh theo thành phố (tìm kiếm không phân biệt hoa thường, khớp một phần)',
+      description:
+        'Lọc chi nhánh theo thành phố (tìm kiếm không phân biệt hoa thường, khớp một phần)',
     }),
     ApiResponse({
       status: 200,
-      description: 'Lấy danh sách chi nhánh thành công. Trả về mảng dữ liệu kèm metadata phân trang.',
+      description:
+        'Lấy danh sách chi nhánh thành công. Trả về mảng dữ liệu kèm metadata phân trang.',
       type: PaginatedBranchesResponseDto,
     }),
     ApiResponse({

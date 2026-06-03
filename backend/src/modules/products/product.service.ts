@@ -12,7 +12,7 @@ export class ProductService {
     private readonly db: DatabaseService,
     private readonly notificationService: NotificationService,
     // eslint-disable-next-line prettier/prettier
-  ) { }
+  ) {}
 
   async getProductsAll(filters: GetProductAllDto): Promise<IPaginatedProducts> {
     const whereClauses: string[] = [];
@@ -88,7 +88,7 @@ export class ProductService {
     };
   }
 
-  private normalizeGenderFilter(value: string): string | null {
+  private normalizeGenderFilter(value: string): string {
     const normalized = value.trim().toLowerCase();
 
     if (['men', 'nam'].includes(normalized)) {
@@ -99,15 +99,42 @@ export class ProductService {
       return 'WOM';
     }
 
-    if (normalized === 'boy') {
+    if (['boy', 'bé trai', 'be trai'].includes(normalized)) {
       return 'BOY';
     }
 
-    if (normalized === 'gir') {
+    if (['gir', 'bé gái', 'be gai', 'girl'].includes(normalized)) {
       return 'GIR';
     }
 
-    return value.trim();
+    return 'MEN'; // fallback default
+  }
+
+  async getProductStats(): Promise<{
+    gender: { name: string; count: number }[];
+    age_group: { name: string; count: number }[];
+    activity_group: { name: string; count: number }[];
+    lifestyle_group: { name: string; count: number }[];
+  }> {
+    const [genderRows] = await this.db.client.query<RowDataPacket[]>(
+      'SELECT gender as name, COUNT(*) as count FROM product GROUP BY gender',
+    );
+    const [ageRows] = await this.db.client.query<RowDataPacket[]>(
+      'SELECT age_group as name, COUNT(*) as count FROM product GROUP BY age_group',
+    );
+    const [activityRows] = await this.db.client.query<RowDataPacket[]>(
+      'SELECT activity_group as name, COUNT(*) as count FROM product GROUP BY activity_group',
+    );
+    const [lifestyleRows] = await this.db.client.query<RowDataPacket[]>(
+      'SELECT lifestyle_group as name, COUNT(*) as count FROM product GROUP BY lifestyle_group',
+    );
+
+    return {
+      gender: genderRows as { name: string; count: number }[],
+      age_group: ageRows as { name: string; count: number }[],
+      activity_group: activityRows as { name: string; count: number }[],
+      lifestyle_group: lifestyleRows as { name: string; count: number }[],
+    };
   }
 
   async getDetailProduct(id: string): Promise<IProduct> {
@@ -130,7 +157,7 @@ export class ProductService {
         dto.color,
         dto.listing_price,
         dto.price_cost,
-        dto.gender,
+        this.normalizeGenderFilter(dto.gender),
         dto.detail_product_group,
         dto.size,
         dto.age_group,
@@ -161,7 +188,7 @@ export class ProductService {
         dto.color,
         dto.listing_price,
         dto.price_cost,
-        dto.gender,
+        this.normalizeGenderFilter(dto.gender),
         dto.detail_product_group,
         dto.size,
         dto.age_group,

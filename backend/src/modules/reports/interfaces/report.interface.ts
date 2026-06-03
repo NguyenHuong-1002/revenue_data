@@ -43,4 +43,3 @@ export interface IRevenueReportData extends IGrowthReportData {
   topProducts: ITopProductRevenue[];
   topBranches: ITopBranchRevenue[];
 }
-

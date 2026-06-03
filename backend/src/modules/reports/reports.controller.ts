@@ -1,4 +1,15 @@
-import { Controller, Get, Header, HttpCode, HttpStatus, Query, Res, StreamableFile, ValidationPipe, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Header,
+  HttpCode,
+  HttpStatus,
+  Query,
+  Res,
+  StreamableFile,
+  ValidationPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import * as authGuard from 'src/middlewares/auth.guard';
@@ -87,4 +98,3 @@ export class ReportsController {
     return new StreamableFile(buffer);
   }
 }
-

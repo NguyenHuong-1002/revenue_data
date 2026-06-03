@@ -45,7 +45,9 @@ export function validateExcelHeaders(
   const missingFields = requiredFields.filter((field) => {
     const f = field.toLowerCase();
     if (f === 'calendar_year_week') {
-      return !lowerHeaders.includes('calendar_year_week') && !lowerHeaders.includes('calendar_yeer_week');
+      return (
+        !lowerHeaders.includes('calendar_year_week') && !lowerHeaders.includes('calendar_yeer_week')
+      );
     }
     return !lowerHeaders.includes(f);
   });

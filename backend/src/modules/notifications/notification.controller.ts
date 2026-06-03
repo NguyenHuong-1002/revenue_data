@@ -42,7 +42,7 @@ export class NotificationController {
     private readonly notificationService: NotificationService,
     private readonly accountNotificationService: AccountNotificationService,
     // eslint-disable-next-line prettier/prettier
-  ) { }
+  ) {}
 
   /**
    * Lấy danh sách thông báo phân trang cho tài khoản đang đăng nhập.

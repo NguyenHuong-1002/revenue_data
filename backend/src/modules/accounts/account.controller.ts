@@ -14,6 +14,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import * as authGuard from 'src/middlewares/auth.guard';
 import { AccountService, avatarMulterOptions } from './account.service';
@@ -49,7 +50,7 @@ import {
 @Controller('accounts')
 export class AccountController {
   // eslint-disable-next-line prettier/prettier
-  constructor(private readonly accountService: AccountService) { }
+  constructor(private readonly accountService: AccountService) {}
 
   @authGuard.Roles('ADMIN')
   @ApiGetUsersAllSwagger()
@@ -117,16 +118,21 @@ export class AccountController {
     return this.accountService.login(dto);
   }
 
-  @authGuard.Roles('ADMIN')
   @ApiUpdateAccountSwagger()
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
   updateAccount(
-    @authGuard.CurrentUser() admin: authGuard.JwtPayload,
+    @authGuard.CurrentUser() currentUser: authGuard.JwtPayload,
     @Param('id') id: string,
     @Body(new ValidationPipe({ transform: true })) dto: UpdateAccountDto,
   ): Promise<IAccount> {
-    return this.accountService.updateAccount(id, dto, admin.username);
+    if (currentUser.role !== 'ADMIN' && currentUser.sub !== id) {
+      throw new ForbiddenException('Bạn không có quyền chỉnh sửa tài khoản của người khác!');
+    }
+    if (currentUser.role !== 'ADMIN' && dto.role !== undefined) {
+      throw new ForbiddenException('Chỉ quản trị viên mới có thể thay đổi vai trò tài khoản!');
+    }
+    return this.accountService.updateAccount(id, dto, currentUser.username);
   }
 
   @authGuard.Roles('ADMIN')

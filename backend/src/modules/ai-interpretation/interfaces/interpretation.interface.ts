@@ -9,4 +9,3 @@ export interface IInterpretationResponse {
   content: IInterpretationSummary;
   rawContent: string;
 }
-

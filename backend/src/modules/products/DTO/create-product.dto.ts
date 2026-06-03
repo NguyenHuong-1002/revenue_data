@@ -20,8 +20,8 @@ export class CreateProductDto {
 
   @IsNotEmpty({ message: 'Giới tính (gender) không được để trống!' })
   @IsString({ message: 'Giới tính (gender) phải là một chuỗi ký tự!' })
-  @IsIn(['Nam', 'Nu', 'Nữ', 'Unisex'], {
-    message: 'Giới tính (gender) chỉ chấp nhận: Nam, Nu, Nữ, Unisex!',
+  @IsIn(['Nam', 'Nu', 'Nữ', 'Unisex', 'Bé trai', 'Bé gái', 'MEN', 'WOM', 'BOY', 'GIR'], {
+    message: 'Giới tính (gender) chỉ chấp nhận: Nam, Nữ, Bé trai, Bé gái, MEN, WOM, BOY, GIR!',
   })
   gender!: string;
 

@@ -23,6 +23,34 @@ export class SearchAccountsDto {
   role?: 'ADMIN' | 'STAFF';
 
   @ApiPropertyOptional({
+    example: 'ACTIVE',
+    enum: ['ACTIVE', 'INACTIVE', 'LOCKED'],
+    description: 'Lọc theo trạng thái tài khoản',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['ACTIVE', 'INACTIVE', 'LOCKED'], {
+    message: 'Trạng thái chỉ chấp nhận: ACTIVE, INACTIVE, LOCKED',
+  })
+  status_account?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
+
+  @ApiPropertyOptional({
+    example: '2024-04-01',
+    description: 'Lọc tài khoản tạo từ ngày (YYYY-MM-DD)',
+  })
+  @IsOptional()
+  @IsString()
+  startDate?: string;
+
+  @ApiPropertyOptional({
+    example: '2024-06-30',
+    description: 'Lọc tài khoản tạo đến ngày (YYYY-MM-DD)',
+  })
+  @IsOptional()
+  @IsString()
+  endDate?: string;
+
+  @ApiPropertyOptional({
     example: 1,
     default: 1,
     description: 'Số trang hiện tại (tối thiểu: 1)',

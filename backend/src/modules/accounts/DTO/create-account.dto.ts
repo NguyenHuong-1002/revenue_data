@@ -57,4 +57,17 @@ export class CreateAccountDto {
     message: 'Role chi chap nhan: ADMIN, STAFF!',
   })
   role?: 'ADMIN' | 'STAFF';
+
+  @ApiPropertyOptional({
+    example: 'ACTIVE',
+    enum: ['ACTIVE', 'INACTIVE', 'LOCKED'],
+    default: 'ACTIVE',
+    description: 'Trạng thái hoạt động của tài khoản (mặc định: ACTIVE)',
+  })
+  @IsOptional()
+  @IsString({ message: 'Status_account phai la chuoi ky tu!' })
+  @IsIn(['ACTIVE', 'INACTIVE', 'LOCKED'], {
+    message: 'Status_account chi chap nhan: ACTIVE, INACTIVE, LOCKED!',
+  })
+  status_account?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
 }

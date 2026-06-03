@@ -28,4 +28,3 @@ export class NotificationEntity {
   })
   updated_at!: Date;
 }
-

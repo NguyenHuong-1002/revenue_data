@@ -1,10 +1,18 @@
 export type ForecastSource = 'saleReport' | 'InventoryReport';
 
-export type ForecastGranularity = 'month' | 'day';
+export type ForecastGranularity = 'month' | 'week' | 'quarter' | 'day';
 
 export interface IForecastPoint {
   period: string;
   value: number;
+}
+
+// ─── Diem du lieu san sang cho ve bieu do ─────────────────────────────────
+export interface IChartPoint {
+  period: string;
+  value: number;
+  type: 'actual' | 'forecast'; // actual = lich su, forecast = du bao
+  algorithm: 'actual' | 'ema' | 'linearRegression'; // thuat toan tao ra diem nay
 }
 
 export interface IForecastAlgorithmResult {
@@ -25,6 +33,9 @@ export interface IForecastDatasetResult {
     slope: number;
     intercept: number;
   };
+  // Mang phang tat ca diem du lieu, moi diem da danh nhan type + algorithm
+  // => frontend co the truc tiep ve bieu do ma khong can xu ly them
+  chartData: IChartPoint[];
 }
 
 export interface IForecastCombinedResponse {
@@ -40,4 +51,3 @@ export interface IForecastCombinedResponse {
   inventory: IForecastDatasetResult | null;
   warnings: string[];
 }
-

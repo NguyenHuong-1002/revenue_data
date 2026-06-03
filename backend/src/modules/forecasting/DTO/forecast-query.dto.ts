@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsIn, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsDateString, IsIn, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class ForecastQueryDto {
   @ApiPropertyOptional({
@@ -40,7 +40,7 @@ export class ForecastQueryDto {
   distributionChannel?: string;
 
   @ApiPropertyOptional({
-    description: 'Forecast horizon',
+    description: 'Forecast horizon (so ky du bao)',
     example: 3,
     default: 3,
   })
@@ -52,7 +52,7 @@ export class ForecastQueryDto {
   horizon = 3;
 
   @ApiPropertyOptional({
-    description: 'EMA smoothing factor',
+    description: 'EMA smoothing factor (he so lam muot)',
     example: 0.3,
     default: 0.3,
   })
@@ -64,6 +64,32 @@ export class ForecastQueryDto {
   alpha = 0.3;
 
   @ApiPropertyOptional({
+    description: 'Start date for historical data filter (YYYY-MM-DD)',
+    example: '2025-01-01',
+  })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'End date for historical data filter (YYYY-MM-DD)',
+    example: '2025-12-31',
+  })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'Period type for grouping (thang/tuan/quy)',
+    example: 'month',
+    enum: ['month', 'week', 'quarter'],
+    default: 'month',
+  })
+  @IsOptional()
+  @IsIn(['month', 'week', 'quarter'])
+  periodType: 'month' | 'week' | 'quarter' = 'month';
+
+  @ApiPropertyOptional({
     description: 'Choose source scope',
     example: 'all',
     enum: ['all', 'sales', 'inventory'],
@@ -73,4 +99,3 @@ export class ForecastQueryDto {
   @IsIn(['all', 'sales', 'inventory'])
   scope: 'all' | 'sales' | 'inventory' = 'all';
 }
-

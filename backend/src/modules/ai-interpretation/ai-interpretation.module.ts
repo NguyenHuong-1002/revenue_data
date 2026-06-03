@@ -7,4 +7,3 @@ import { AiInterpretationService } from './ai-interpretation.service';
   providers: [AiInterpretationService],
 })
 export class AiInterpretationModule {}
-

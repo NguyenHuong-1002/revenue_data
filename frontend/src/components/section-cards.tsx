@@ -1,6 +1,7 @@
-"use client"
+'use client';
 
-import { Badge } from "@/components/ui/badge"
+import { TrendingUpIcon, TrendingDownIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardAction,
@@ -8,8 +9,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { TrendingUpIcon, TrendingDownIcon } from "lucide-react"
+} from '@/components/ui/card';
 
 export function SectionCards() {
   return (
@@ -22,20 +22,16 @@ export function SectionCards() {
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingUpIcon
-              />
+              <TrendingUpIcon />
               +12.5%
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Đang tăng trưởng tháng này{" "}
-            <TrendingUpIcon className="size-4" />
+            Đang tăng trưởng tháng này <TrendingUpIcon className="size-4" />
           </div>
-          <div className="text-muted-foreground">
-            Lượt truy cập trong 6 tháng qua
-          </div>
+          <div className="text-muted-foreground">Lượt truy cập trong 6 tháng qua</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -46,20 +42,16 @@ export function SectionCards() {
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingDownIcon
-              />
+              <TrendingDownIcon />
               -20%
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Giảm 20% trong kỳ này{" "}
-            <TrendingDownIcon className="size-4" />
+            Giảm 20% trong kỳ này <TrendingDownIcon className="size-4" />
           </div>
-          <div className="text-muted-foreground">
-            Khả năng thu hút cần chú ý
-          </div>
+          <div className="text-muted-foreground">Khả năng thu hút cần chú ý</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -70,18 +62,16 @@ export function SectionCards() {
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingUpIcon
-              />
+              <TrendingUpIcon />
               +12.5%
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Giữ chân người dùng tốt{" "}
-            <TrendingUpIcon className="size-4" />
+            Giữ chân người dùng tốt <TrendingUpIcon className="size-4" />
           </div>
-          <div className="text-muted-foreground">            Mức độ tương tác vượt mục tiêu</div>
+          <div className="text-muted-foreground"> Mức độ tương tác vượt mục tiêu</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -92,20 +82,18 @@ export function SectionCards() {
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendingUpIcon
-              />
+              <TrendingUpIcon />
               +4.5%
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Hiệu suất tăng ổn định{" "}
-            <TrendingUpIcon className="size-4" />
+            Hiệu suất tăng ổn định <TrendingUpIcon className="size-4" />
           </div>
-          <div className="text-muted-foreground">            Đáp ứng dự báo tăng trưởng</div>
+          <div className="text-muted-foreground"> Đáp ứng dự báo tăng trưởng</div>
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

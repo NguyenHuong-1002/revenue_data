@@ -9,15 +9,10 @@ import { AccountNotificationService } from './account-notification.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      NotificationEntity,
-      AccountNotificationEntity,
-      AccountEntity,
-    ]),
+    TypeOrmModule.forFeature([NotificationEntity, AccountNotificationEntity, AccountEntity]),
   ],
   controllers: [NotificationController],
   providers: [NotificationService, AccountNotificationService],
   exports: [NotificationService, AccountNotificationService],
 })
 export class NotificationModule {}
-

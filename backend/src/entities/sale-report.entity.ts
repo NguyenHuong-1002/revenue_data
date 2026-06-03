@@ -18,7 +18,14 @@ export class SaleReportEntity {
     type: 'enum',
     enum: ['Online', 'Bán lẻ', 'Phát sinh', 'Bán sỉ', 'Siêu thị', 'Hợp đồng', 'Chi nhánh'],
   })
-  distribution_channel!: 'Online' | 'Bán lẻ' | 'Phát sinh' | 'Bán sỉ' | 'Siêu thị' | 'Hợp đồng' | 'Chi nhánh';
+  distribution_channel!:
+    | 'Online'
+    | 'Bán lẻ'
+    | 'Phát sinh'
+    | 'Bán sỉ'
+    | 'Siêu thị'
+    | 'Hợp đồng'
+    | 'Chi nhánh';
 
   @Column({ type: 'varchar', length: 50 })
   branch_id!: string;

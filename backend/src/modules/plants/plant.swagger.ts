@@ -35,7 +35,8 @@ export function ApiGetPlantsSwagger() {
       type: 'string',
       required: false,
       example: 'Nguyễn Văn Hùng',
-      description: 'Lọc nhà máy theo tên người quản lý (tìm kiếm không phân biệt hoa thường, khớp một phần)',
+      description:
+        'Lọc nhà máy theo tên người quản lý (tìm kiếm không phân biệt hoa thường, khớp một phần)',
     }),
     ApiResponse({
       status: 200,

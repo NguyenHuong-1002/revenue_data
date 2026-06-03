@@ -189,16 +189,18 @@ export async function seedMockAccounts(pool: Pool): Promise<void> {
 
         for (const acc of accounts) {
           await pool.query(
-            `INSERT INTO account (account_id, role, fullname, username, password_hash, mail, avatarURL, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO account (account_id, role_account, fullname, username, password_hash, mail, avatarURL, status_account, last_login_at, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               acc.account_id,
-              acc.role,
+              acc.role || 'STAFF',
               acc.fullname,
               acc.username,
               acc.password_hash,
               acc.mail,
               acc.avatarURL || '',
+              acc.status_account || 'ACTIVE',
+              acc.last_login_at ? new Date(acc.last_login_at) : null,
               acc.created_at ? new Date(acc.created_at) : new Date(),
               acc.updated_at ? new Date(acc.updated_at) : new Date(),
             ],
@@ -226,9 +228,7 @@ export async function seedMockPlants(pool: Pool): Promise<void> {
       const plantsJson = fs.readFileSync(jsonPath, 'utf-8');
       const plants = JSON.parse(plantsJson);
 
-      logger.log(
-        `Bắt đầu đồng bộ ${plants.length} nhà máy từ plant.init.json tại: ${jsonPath}`,
-      );
+      logger.log(`Bắt đầu đồng bộ ${plants.length} nhà máy từ plant.init.json tại: ${jsonPath}`);
 
       let syncCount = 0;
       for (const pl of plants) {
@@ -279,11 +279,7 @@ export async function seedMockStores(pool: Pool): Promise<void> {
           `INSERT INTO storeBranch (store_id, name, city)
            VALUES (?, ?, ?)
            ON DUPLICATE KEY UPDATE name = VALUES(name), city = VALUES(city)`,
-          [
-            st.store_id,
-            st.name,
-            st.city || 'Chưa xác định',
-          ],
+          [st.store_id, st.name, st.city || 'Chưa xác định'],
         );
         syncCount++;
       }
@@ -306,7 +302,9 @@ export async function seedMockNotifications(pool: Pool): Promise<void> {
 
     if (count === 0) {
       const jsonPath = findNotificationJsonPath();
-      logger.log(`Bảng notification trống. Bắt đầu nạp dữ liệu mẫu từ notification.init.json tại: ${jsonPath}`);
+      logger.log(
+        `Bảng notification trống. Bắt đầu nạp dữ liệu mẫu từ notification.init.json tại: ${jsonPath}`,
+      );
       if (fs.existsSync(jsonPath)) {
         const notificationJson = fs.readFileSync(jsonPath, 'utf-8');
         const notifications = JSON.parse(notificationJson);
@@ -325,7 +323,9 @@ export async function seedMockNotifications(pool: Pool): Promise<void> {
             ],
           );
         }
-        logger.log(`Đã nạp thành công ${notifications.length} thông báo mẫu vào bảng notification!`);
+        logger.log(
+          `Đã nạp thành công ${notifications.length} thông báo mẫu vào bảng notification!`,
+        );
       } else {
         logger.error(`Không tìm thấy tệp notification JSON tại ${jsonPath}`);
       }

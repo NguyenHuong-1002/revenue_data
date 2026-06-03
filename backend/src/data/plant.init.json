@@ -210,6 +210,230 @@
     "phone": "0974883170"
   },
   {
+    "plant_id": "1231",
+    "name_plant": "Nhà máy 1231 - Hà Nam",
+    "address": "KCN Đồng Văn, Hà Nam",
+    "manager_name": "Lê Văn Tám",
+    "phone": "0981112233"
+  },
+  {
+    "plant_id": "1233",
+    "name_plant": "Nhà máy 1233 - Nam Định",
+    "address": "KCN Hòa Xá, Nam Định",
+    "manager_name": "Phan Văn Trị",
+    "phone": "0982223344"
+  },
+  {
+    "plant_id": "1234",
+    "name_plant": "Nhà máy 1234 - Thái Bình",
+    "address": "KCN Nguyễn Đức Cảnh, Thái Bình",
+    "manager_name": "Đặng Thái Thân",
+    "phone": "0983334455"
+  },
+  {
+    "plant_id": "1235",
+    "name_plant": "Nhà máy 1235 - Ninh Bình",
+    "address": "KCN Gián Khẩu, Ninh Bình",
+    "manager_name": "Đinh Bộ Lĩnh",
+    "phone": "0984445566"
+  },
+  {
+    "plant_id": "1236",
+    "name_plant": "Nhà máy 1236 - Thanh Hóa",
+    "address": "KCN Lễ Môn, Thanh Hóa",
+    "manager_name": "Lê Lợi",
+    "phone": "0985556677"
+  },
+  {
+    "plant_id": "1237",
+    "name_plant": "Nhà máy 1237 - Nghệ An",
+    "address": "KCN Bắc Vinh, Nghệ An",
+    "manager_name": "Phan Bội Châu",
+    "phone": "0986667788"
+  },
+  {
+    "plant_id": "1239",
+    "name_plant": "Nhà máy 1239 - Hà Tĩnh",
+    "address": "KCN Vũng Áng, Hà Tĩnh",
+    "manager_name": "Trần Phú",
+    "phone": "0987778899"
+  },
+  {
+    "plant_id": "1240",
+    "name_plant": "Nhà máy 1240 - Quảng Bình",
+    "address": "KCN Tây Bắc Đồng Hới, Quảng Bình",
+    "manager_name": "Võ Nguyên Giáp",
+    "phone": "0988889900"
+  },
+  {
+    "plant_id": "1241",
+    "name_plant": "Nhà máy 1241 - Quảng Trị",
+    "address": "KCN Quán Ngang, Quảng Trị",
+    "manager_name": "Lê Duẩn",
+    "phone": "0989990011"
+  },
+  {
+    "plant_id": "1242",
+    "name_plant": "Nhà máy 1242 - Thừa Thiên Huế",
+    "address": "KCN Phú Bài, Thừa Thiên Huế",
+    "manager_name": "Nguyễn Huệ",
+    "phone": "0981234567"
+  },
+  {
+    "plant_id": "1243",
+    "name_plant": "Nhà máy 1243 - Quảng Ngãi",
+    "address": "KCN Tịnh Phong, Quảng Ngãi",
+    "manager_name": "Phạm Văn Đồng",
+    "phone": "0982345678"
+  },
+  {
+    "plant_id": "1244",
+    "name_plant": "Nhà máy 1244 - Bình Định",
+    "address": "KCN Nhơn Hòa, Bình Định",
+    "manager_name": "Trần Quang Diệu",
+    "phone": "0983456789"
+  },
+  {
+    "plant_id": "1245",
+    "name_plant": "Nhà máy 1245 - Phú Yên",
+    "address": "KCN Hòa Hiệp, Phú Yên",
+    "manager_name": "Lương Văn Chánh",
+    "phone": "0984567890"
+  },
+  {
+    "plant_id": "1246",
+    "name_plant": "Nhà máy 1246 - Khánh Hòa",
+    "address": "KCN Suối Dầu, Khánh Hòa",
+    "manager_name": "Trần Đường",
+    "phone": "0985678901"
+  },
+  {
+    "plant_id": "1247",
+    "name_plant": "Nhà máy 1247 - Ninh Thuận",
+    "address": "KCN Thành Hải, Ninh Thuận",
+    "manager_name": "Nguyễn Ánh",
+    "phone": "0986789012"
+  },
+  {
+    "plant_id": "1248",
+    "name_plant": "Nhà máy 1248 - Bình Thuận",
+    "address": "KCN Phan Thiết, Bình Thuận",
+    "manager_name": "Nguyễn Thông",
+    "phone": "0987890123"
+  },
+  {
+    "plant_id": "1249",
+    "name_plant": "Nhà máy 1249 - Kon Tum",
+    "address": "KCN Hòa Bình, Kon Tum",
+    "manager_name": "U Re",
+    "phone": "0988901234"
+  },
+  {
+    "plant_id": "1250",
+    "name_plant": "Nhà máy 1250 - Gia Lai",
+    "address": "KCN Trà Đa, Gia Lai",
+    "manager_name": "Anh hùng Núp",
+    "phone": "0989012345"
+  },
+  {
+    "plant_id": "1251",
+    "name_plant": "Nhà máy 1251 - Đắk Lắk",
+    "address": "KCN Hòa Phú, Đắk Lắk",
+    "manager_name": "Y Ngông Niê Kđăm",
+    "phone": "0980123456"
+  },
+  {
+    "plant_id": "1252",
+    "name_plant": "Nhà máy 1252 - Đắk Nông",
+    "address": "KCN Tâm Thắng, Đắk Nông",
+    "manager_name": "N'Trang Lơng",
+    "phone": "0911234567"
+  },
+  {
+    "plant_id": "1253",
+    "name_plant": "Nhà máy 1253 - Lâm Đồng",
+    "address": "KCN Lộc Sơn, Lâm Đồng",
+    "manager_name": "Alexandre Yersin",
+    "phone": "0912234568"
+  },
+  {
+    "plant_id": "1254",
+    "name_plant": "Nhà máy 1254 - Tây Ninh",
+    "address": "KCN Trảng Bàng, Tây Ninh",
+    "manager_name": "Trần Văn Trà",
+    "phone": "0913234569"
+  },
+  {
+    "plant_id": "1255",
+    "name_plant": "Nhà máy 1255 - Bình Dương II",
+    "address": "KCN VSIP II, Bình Dương",
+    "manager_name": "Huỳnh Văn Nghệ",
+    "phone": "0914234570"
+  },
+  {
+    "plant_id": "1256",
+    "name_plant": "Nhà máy 1256 - Đồng Nai II",
+    "address": "KCN Amata, Đồng Nai",
+    "manager_name": "Võ Thị Sáu",
+    "phone": "0915234571"
+  },
+  {
+    "plant_id": "1257",
+    "name_plant": "Nhà máy 1257 - Bà Rịa - Vũng Tàu II",
+    "address": "KCN Phú Mỹ, Bà Rịa - Vũng Tàu",
+    "manager_name": "Lê Thành Duy",
+    "phone": "0916234572"
+  },
+  {
+    "plant_id": "1258",
+    "name_plant": "Nhà máy 1258 - Long An II",
+    "address": "KCN Thuận Đạo, Long An",
+    "manager_name": "Nguyễn Hữu Thọ",
+    "phone": "0917234573"
+  },
+  {
+    "plant_id": "1259",
+    "name_plant": "Nhà máy 1259 - Tiền Giang",
+    "address": "KCN Mỹ Tho, Tiền Giang",
+    "manager_name": "Trương Định",
+    "phone": "0918234574"
+  },
+  {
+    "plant_id": "1260",
+    "name_plant": "Nhà máy 1260 - Bến Tre",
+    "address": "KCN Giao Long, Bến Tre",
+    "manager_name": "Nguyễn Thị Định",
+    "phone": "0919234575"
+  },
+  {
+    "plant_id": "1261",
+    "name_plant": "Nhà máy 1261 - Trà Vinh",
+    "address": "KCN Long Đức, Trà Vinh",
+    "manager_name": "Dương Quang Đông",
+    "phone": "0910234576"
+  },
+  {
+    "plant_id": "1262",
+    "name_plant": "Nhà máy 1262 - Vĩnh Long",
+    "address": "KCN Hòa Phú, Vĩnh Long",
+    "manager_name": "Phạm Hùng",
+    "phone": "0911334577"
+  },
+  {
+    "plant_id": "1263",
+    "name_plant": "Nhà máy 1263 - Đồng Đồng Tháp",
+    "address": "KCN Sông Hậu, Đồng Tháp",
+    "manager_name": "Nguyễn Sinh Sắc",
+    "phone": "0912344578"
+  },
+  {
+    "plant_id": "1264",
+    "name_plant": "Nhà máy 1264 - An Giang",
+    "address": "KCN Bình Hòa, An Giang",
+    "manager_name": "Tôn Đức Thắng",
+    "phone": "0913454579"
+  },
+  {
     "plant_id": "1299",
     "name_plant": "Nhà máy 1299 - Bình Phước",
     "address": "KCN Minh Hưng, Bình Phước",

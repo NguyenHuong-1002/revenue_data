@@ -21,8 +21,9 @@ async function bootstrap() {
     password,
     multipleStatements: true,
   });
-  console.log('Connected. Executing database/init.sql...');
+  console.log('Connected. Resetting database and executing database/init.sql...');
 
+  await conn.query('DROP DATABASE IF EXISTS revenue;');
   await conn.query(sql);
 
   await conn.end();

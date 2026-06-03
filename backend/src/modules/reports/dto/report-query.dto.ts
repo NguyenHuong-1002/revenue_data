@@ -33,4 +33,3 @@ export class ReportQueryDto {
   @Max(50)
   topN = 10;
 }
-

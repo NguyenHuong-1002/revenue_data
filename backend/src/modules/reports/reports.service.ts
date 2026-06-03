@@ -131,7 +131,10 @@ export class ReportsService {
     }));
   }
 
-  private async loadTopProducts(query: ReportQueryDto, limit: number): Promise<ITopProductRevenue[]> {
+  private async loadTopProducts(
+    query: ReportQueryDto,
+    limit: number,
+  ): Promise<ITopProductRevenue[]> {
     const params: Array<string | number> = [];
     const where: string[] = [];
     const range = this.resolveMonthRange(query.fromMonth, query.toMonth);
@@ -170,7 +173,10 @@ export class ReportsService {
     }));
   }
 
-  private async loadTopBranches(query: ReportQueryDto, limit: number): Promise<ITopBranchRevenue[]> {
+  private async loadTopBranches(
+    query: ReportQueryDto,
+    limit: number,
+  ): Promise<ITopBranchRevenue[]> {
     const params: Array<string | number> = [];
     const where: string[] = [];
     const range = this.resolveMonthRange(query.fromMonth, query.toMonth);
@@ -214,10 +220,14 @@ export class ReportsService {
     const totalRevenue = monthly.reduce((sum, row) => sum + row.revenue, 0);
     const totalQuantity = monthly.reduce((sum, row) => sum + row.quantity, 0);
     const currentMonthRevenue = monthly.at(-1)?.revenue ?? 0;
-    const previousMonthRevenue = monthly.length > 1 ? monthly.at(-2)?.revenue ?? 0 : 0;
+    const previousMonthRevenue = monthly.length > 1 ? (monthly.at(-2)?.revenue ?? 0) : 0;
     const growthPercent =
       previousMonthRevenue > 0
-        ? Number((((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(2))
+        ? Number(
+            (((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(
+              2,
+            ),
+          )
         : null;
 
     return {
@@ -226,8 +236,10 @@ export class ReportsService {
       currentMonthRevenue,
       previousMonthRevenue,
       growthPercent,
-      averageMonthlyRevenue: monthly.length > 0 ? Number((totalRevenue / monthly.length).toFixed(2)) : 0,
-      averageMonthlyQuantity: monthly.length > 0 ? Number((totalQuantity / monthly.length).toFixed(2)) : 0,
+      averageMonthlyRevenue:
+        monthly.length > 0 ? Number((totalRevenue / monthly.length).toFixed(2)) : 0,
+      averageMonthlyQuantity:
+        monthly.length > 0 ? Number((totalQuantity / monthly.length).toFixed(2)) : 0,
     };
   }
 
@@ -278,20 +290,34 @@ export class ReportsService {
 
     doc.fontSize(18).text('Bao cao tang truong he thong', { align: 'center' });
     doc.moveDown();
-    doc.fontSize(11).text(`Ky bao cao: ${report.period.from ?? 'dau du lieu'} -> ${report.period.to ?? 'cuoi du lieu'}`);
+    doc
+      .fontSize(11)
+      .text(
+        `Ky bao cao: ${report.period.from ?? 'dau du lieu'} -> ${report.period.to ?? 'cuoi du lieu'}`,
+      );
     doc.text(`Tong doanh thu: ${this.formatNumber(report.summary.totalRevenue)} VNĐ`);
     doc.text(`Tong so luong ban: ${this.formatNumber(report.summary.totalQuantity)} chiec`);
-    doc.text(`Doanh thu thang hien tai: ${this.formatNumber(report.summary.currentMonthRevenue)} VNĐ`);
-    doc.text(`Doanh thu thang truoc: ${this.formatNumber(report.summary.previousMonthRevenue)} VNĐ`);
+    doc.text(
+      `Doanh thu thang hien tai: ${this.formatNumber(report.summary.currentMonthRevenue)} VNĐ`,
+    );
+    doc.text(
+      `Doanh thu thang truoc: ${this.formatNumber(report.summary.previousMonthRevenue)} VNĐ`,
+    );
     doc.text(`Tang truong MoM: ${report.summary.growthPercent ?? 0}%`);
-    doc.text(`Trung binh doanh thu thang: ${this.formatNumber(report.summary.averageMonthlyRevenue)} VNĐ`);
-    doc.text(`Trung binh so luong thang: ${this.formatNumber(report.summary.averageMonthlyQuantity)} chiec`);
+    doc.text(
+      `Trung binh doanh thu thang: ${this.formatNumber(report.summary.averageMonthlyRevenue)} VNĐ`,
+    );
+    doc.text(
+      `Trung binh so luong thang: ${this.formatNumber(report.summary.averageMonthlyQuantity)} chiec`,
+    );
 
     doc.moveDown();
     doc.fontSize(13).text('Top noi bat', { underline: true });
-    doc.fontSize(11).text(
-      `San pham top 1: ${report.highlights.topProduct?.product_name ?? '-'} (${report.highlights.topProduct?.product_id ?? '-'})`,
-    );
+    doc
+      .fontSize(11)
+      .text(
+        `San pham top 1: ${report.highlights.topProduct?.product_name ?? '-'} (${report.highlights.topProduct?.product_id ?? '-'})`,
+      );
     doc.text(
       `Chi nhanh top 1: ${report.highlights.topBranch?.branch_name ?? '-'} (${report.highlights.topBranch?.branch_id ?? '-'})`,
     );
@@ -299,9 +325,11 @@ export class ReportsService {
     doc.moveDown();
     doc.fontSize(13).text('Doanh thu theo thang', { underline: true });
     report.monthly.forEach((row) => {
-      doc.fontSize(10).text(
-        `${row.month}: ${this.formatNumber(row.revenue)} VNĐ, ${this.formatNumber(row.quantity)} chiec`,
-      );
+      doc
+        .fontSize(10)
+        .text(
+          `${row.month}: ${this.formatNumber(row.revenue)} VNĐ, ${this.formatNumber(row.quantity)} chiec`,
+        );
     });
 
     doc.end();
@@ -314,7 +342,10 @@ export class ReportsService {
     const wsMonthly = workbook.addWorksheet('Monthly');
 
     wsSummary.addRows([
-      ['Ky bao cao', `${report.period.from ?? 'dau du lieu'} -> ${report.period.to ?? 'cuoi du lieu'}`],
+      [
+        'Ky bao cao',
+        `${report.period.from ?? 'dau du lieu'} -> ${report.period.to ?? 'cuoi du lieu'}`,
+      ],
       ['Tong doanh thu', report.summary.totalRevenue],
       ['Tong so luong ban', report.summary.totalQuantity],
       ['Doanh thu thang hien tai', report.summary.currentMonthRevenue],
@@ -347,7 +378,11 @@ export class ReportsService {
 
     doc.fontSize(18).text('Bao cao doanh thu he thong', { align: 'center' });
     doc.moveDown();
-    doc.fontSize(11).text(`Ky bao cao: ${report.period.from ?? 'dau du lieu'} -> ${report.period.to ?? 'cuoi du lieu'}`);
+    doc
+      .fontSize(11)
+      .text(
+        `Ky bao cao: ${report.period.from ?? 'dau du lieu'} -> ${report.period.to ?? 'cuoi du lieu'}`,
+      );
     doc.text(`Tong doanh thu: ${this.formatNumber(report.summary.totalRevenue)} VNĐ`);
     doc.text(`Tong so luong ban: ${this.formatNumber(report.summary.totalQuantity)} chiec`);
     doc.text(`Tang truong MoM: ${report.summary.growthPercent ?? 0}%`);
@@ -355,25 +390,31 @@ export class ReportsService {
     doc.moveDown();
     doc.fontSize(13).text('Top san pham', { underline: true });
     report.topProducts.forEach((item, index) => {
-      doc.fontSize(10).text(
-        `${index + 1}. ${item.product_name} (${item.product_id}) - ${this.formatNumber(item.revenue)} VNĐ, ${this.formatNumber(item.quantity)} chiec`,
-      );
+      doc
+        .fontSize(10)
+        .text(
+          `${index + 1}. ${item.product_name} (${item.product_id}) - ${this.formatNumber(item.revenue)} VNĐ, ${this.formatNumber(item.quantity)} chiec`,
+        );
     });
 
     doc.moveDown();
     doc.fontSize(13).text('Top chi nhanh', { underline: true });
     report.topBranches.forEach((item, index) => {
-      doc.fontSize(10).text(
-        `${index + 1}. ${item.branch_name} (${item.branch_id}) - ${this.formatNumber(item.revenue)} VNĐ, ${this.formatNumber(item.quantity)} chiec`,
-      );
+      doc
+        .fontSize(10)
+        .text(
+          `${index + 1}. ${item.branch_name} (${item.branch_id}) - ${this.formatNumber(item.revenue)} VNĐ, ${this.formatNumber(item.quantity)} chiec`,
+        );
     });
 
     doc.moveDown();
     doc.fontSize(13).text('Doanh thu theo thang', { underline: true });
     report.monthly.forEach((row) => {
-      doc.fontSize(10).text(
-        `${row.month}: ${this.formatNumber(row.revenue)} VNĐ, ${this.formatNumber(row.quantity)} chiec`,
-      );
+      doc
+        .fontSize(10)
+        .text(
+          `${row.month}: ${this.formatNumber(row.revenue)} VNĐ, ${this.formatNumber(row.quantity)} chiec`,
+        );
     });
 
     doc.end();
@@ -388,7 +429,10 @@ export class ReportsService {
     const wsBranches = workbook.addWorksheet('Top Branches');
 
     wsSummary.addRows([
-      ['Ky bao cao', `${report.period.from ?? 'dau du lieu'} -> ${report.period.to ?? 'cuoi du lieu'}`],
+      [
+        'Ky bao cao',
+        `${report.period.from ?? 'dau du lieu'} -> ${report.period.to ?? 'cuoi du lieu'}`,
+      ],
       ['Tong doanh thu', report.summary.totalRevenue],
       ['Tong so luong ban', report.summary.totalQuantity],
       ['Doanh thu thang hien tai', report.summary.currentMonthRevenue],

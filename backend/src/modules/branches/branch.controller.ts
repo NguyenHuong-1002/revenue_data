@@ -33,7 +33,7 @@ import {
 @Controller('branches')
 export class BranchController {
   // eslint-disable-next-line prettier/prettier
-  constructor(private readonly branchService: BranchService) { }
+  constructor(private readonly branchService: BranchService) {}
 
   @authGuard.Public()
   @ApiGetBranchesSwagger()

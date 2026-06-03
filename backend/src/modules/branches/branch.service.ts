@@ -16,7 +16,7 @@ export class BranchService {
     private readonly branchRepository: Repository<StoreBranchEntity>,
     private readonly notificationService: NotificationService,
     // eslint-disable-next-line prettier/prettier
-  ) { }
+  ) {}
 
   async getAll(filters: GetBranchAllDto): Promise<IPaginatedBranches> {
     const { page, limit, city } = filters;

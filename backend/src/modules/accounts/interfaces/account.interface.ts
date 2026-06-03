@@ -6,6 +6,8 @@ export interface IAccount {
   passwordHash?: string;
   mail: string;
   avatarURL?: string | null;
+  status_account?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
+  last_login_at?: Date | null;
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date | null;

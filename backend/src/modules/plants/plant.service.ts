@@ -16,7 +16,7 @@ export class PlantService {
     private readonly plantRepository: Repository<PlantEntity>,
     private readonly notificationService: NotificationService,
     // eslint-disable-next-line prettier/prettier
-  ) { }
+  ) {}
 
   async getAll(filters: GetPlantAllDto): Promise<IPaginatedPlants> {
     const { page, limit, address, manager_name } = filters;

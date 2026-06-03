@@ -19,7 +19,7 @@ export function ApiGetUsersAllSwagger() {
       summary: 'Lấy danh sách tất cả tài khoản (có phân trang)',
       description:
         'Trả về danh sách tất cả tài khoản (Admin & Staff) trong hệ thống với hỗ trợ phân trang theo tham số `page` và `limit`. ' +
-        'Kết quả được sắp xếp tăng dần theo `account_id`. API này được **công khai** (không yêu cầu đăng nhập).',
+        'Kết quả được sắp xếp tăng dần theo `account_id`. **Yêu cầu**: Bearer Token với quyền ADMIN.',
     }),
     ApiQuery({
       name: 'page',
@@ -92,7 +92,7 @@ export function ApiGetAccountByIdSwagger() {
       summary: 'Lấy thông tin chi tiết tài khoản theo ID',
       description:
         'Trả về thông tin đầy đủ của một tài khoản cụ thể dựa trên mã định danh UUID. ' +
-        'API này được **công khai** (không yêu cầu đăng nhập).',
+        '**Yêu cầu**: Bearer Token với quyền ADMIN.',
     }),
     ApiParam({
       name: 'id',

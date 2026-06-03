@@ -1,13 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import {
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export enum InterpretationLanguage {
   VI = 'vi',
@@ -111,4 +104,3 @@ export class InterpretationRequestDto {
   @IsEnum(InterpretationLanguage)
   language: InterpretationLanguage = InterpretationLanguage.VI;
 }
-

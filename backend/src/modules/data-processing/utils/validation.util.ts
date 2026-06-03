@@ -92,5 +92,3 @@ export function normalizeDistributionChannel(channel: string): string {
   if (c === 'chi nhánh' || c === 'chi nhanh') return 'Chi nhánh';
   return channel;
 }
-
-

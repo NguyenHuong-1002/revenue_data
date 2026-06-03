@@ -75,39 +75,43 @@ export class AuthGuard implements CanActivate {
    * @throws ForbiddenException Khi tài khoản không đủ quyền hạn truy cập (Sai vai trò - Role)
    */
   canActivate(context: ExecutionContext): boolean {
-    // 1. Kiểm tra xem API hiện tại (Hàm hoặc Controller) có được đánh dấu là `@Public()` hay không
-    // Hàm getAllAndOverride sẽ ưu tiên đọc ở cấp Hàm trước, nếu không có mới tìm lên cấp Class Controller
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(), // Cấp độ hàm xử lý API
-      context.getClass(), // Cấp độ Class Controller
+      context.getHandler(),
+      context.getClass(),
     ]);
 
-    // Nếu là API công khai, cho phép đi qua ngay lập tức, không cần kiểm tra Token
     if (isPublic) {
       return true;
     }
-    // 2. Chuyển đổi ngữ cảnh sang HTTP và trích xuất đối tượng Request
     const request = context.switchToHttp().getRequest<Request>();
-    // 3. Gọi hàm nội bộ để lấy chuỗi Token ra khỏi Header
-
     const token = this.extractToken(request);
-    // Nếu không tìm thấy Token ở Header, từ chối truy cập và báo lỗi 401
-    if (!token) {
-      throw new UnauthorizedException('Missing access token');
-    }
 
+    const fs = require('fs');
+    const path = require('path');
+    const logDir = path.join(process.cwd(), 'logs');
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+    const logPath = path.join(logDir, 'auth-debug.log');
+
+    let user: JwtPayload;
     try {
-      // 4. Sử dụng JwtService để giải mã và kiểm tra tính hợp lệ (chữ ký, thời gian hết hạn) của Token
-      const user = this.jwtService.verify<JwtPayload>(token);
-      // 5. Nếu Token hợp lệ, đính kèm thông tin user vào Request để các Controller/Decorator phía sau sử dụng
+      user = this.jwtService.verify<JwtPayload>(token || '');
       request.user = user;
-      // 6. Gọi hàm nội bộ để kiểm tra xem User này có vai trò (Role) phù hợp với API yêu cầu không
-      this.checkRoles(context, user);
-      return true; // Vượt qua tất cả rào cản, cho phép truy cập API
-    } catch {
-      // Bắt toàn bộ các lỗi liên quan đến Token (Token sai chữ ký, Token giả, Token hết hạn) và báo lỗi 401
+      fs.appendFileSync(
+        logPath,
+        `[SUCCESS] ${request.method} ${request.url} | Token: ${token ? token.substring(0, 15) + '...' : 'NONE'} | User: ${user.username} | Role: ${user.role}\n`,
+      );
+    } catch (err: any) {
+      fs.appendFileSync(
+        logPath,
+        `[FAILED] ${request.method} ${request.url} | Token: ${token ? token.substring(0, 20) + '...' : 'NONE'} | Raw Token Length: ${token ? token.length : 0} | Error: ${err.message}\n`,
+      );
       throw new UnauthorizedException('Invalid or expired token');
     }
+
+    this.checkRoles(context, user);
+    return true;
   }
 
   /**

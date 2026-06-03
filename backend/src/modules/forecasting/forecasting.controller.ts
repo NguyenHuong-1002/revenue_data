@@ -1,3 +1,4 @@
+// NestJS core: Controller, GET, query params, validation pipe
 import {
   Controller,
   Get,
@@ -7,15 +8,19 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import * as authGuard from 'src/middlewares/auth.guard';
 import { ForecastQueryDto } from './DTO/forecast-query.dto';
-import {
-  IForecastCombinedResponse,
-  IForecastDatasetResult,
-} from './interfaces/forecast.interface';
+import { IForecastCombinedResponse, IForecastDatasetResult } from './interfaces/forecast.interface';
+// Service layer: business logic
 import { ForecastingService } from './forecasting.service';
+import {
+  ApiGetCombinedForecastSwagger,
+  ApiGetSalesForecastSwagger,
+  ApiGetInventoryForecastSwagger,
+} from './forecasting.swagger';
 
+// ─── Controller Metadata ──────────────────────────────────────────────────────
 @ApiTags('Du bao (Forecasting)')
 @ApiBearerAuth()
 @UseGuards(authGuard.AuthGuard)
@@ -24,52 +29,33 @@ import { ForecastingService } from './forecasting.service';
 export class ForecastingController {
   constructor(private readonly forecastingService: ForecastingService) {}
 
+  // ─── GET /forecast — kết hợp doanh số + tồn kho ──────────────────────────
+  @ApiGetCombinedForecastSwagger()
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Get combined sales and inventory forecasts',
-  })
-  @ApiQuery({ name: 'productId', required: false })
-  @ApiQuery({ name: 'branchId', required: false })
-  @ApiQuery({ name: 'plantId', required: false })
-  @ApiQuery({ name: 'distributionChannel', required: false })
-  @ApiQuery({ name: 'horizon', required: false, example: 3 })
-  @ApiQuery({ name: 'alpha', required: false, example: 0.3 })
   getCombinedForecast(
     @Query(new ValidationPipe({ transform: true })) query: ForecastQueryDto,
   ): Promise<IForecastCombinedResponse> {
     return this.forecastingService.getCombinedForecast(query);
   }
 
+  // ─── GET /forecast/sales — dự báo doanh số ──────────────────────────────
+  @ApiGetSalesForecastSwagger()
   @Get('sales')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Get sales forecast based on saleReport',
-  })
-  @ApiQuery({ name: 'productId', required: false })
-  @ApiQuery({ name: 'branchId', required: false })
-  @ApiQuery({ name: 'distributionChannel', required: false })
-  @ApiQuery({ name: 'horizon', required: false, example: 3 })
-  @ApiQuery({ name: 'alpha', required: false, example: 0.3 })
   getSalesForecast(
     @Query(new ValidationPipe({ transform: true })) query: ForecastQueryDto,
   ): Promise<IForecastDatasetResult> {
     return this.forecastingService.getSalesForecast(query);
   }
 
+  // ─── GET /forecast/inventory — dự báo tồn kho ───────────────────────────
+  @ApiGetInventoryForecastSwagger()
   @Get('inventory')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Get inventory forecast based on InventoryReport',
-  })
-  @ApiQuery({ name: 'productId', required: false })
-  @ApiQuery({ name: 'plantId', required: false })
-  @ApiQuery({ name: 'horizon', required: false, example: 3 })
-  @ApiQuery({ name: 'alpha', required: false, example: 0.3 })
   getInventoryForecast(
     @Query(new ValidationPipe({ transform: true })) query: ForecastQueryDto,
   ): Promise<IForecastDatasetResult> {
     return this.forecastingService.getInventoryForecast(query);
   }
 }
-

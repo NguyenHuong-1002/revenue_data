@@ -1,0 +1,47 @@
+export const pricing = [
+  {
+    name: 'Cơ bản',
+    price: '499.000',
+    period: '/tháng',
+    description: 'Dành cho doanh nghiệp nhỏ',
+    features: [
+      'Nhập dữ liệu Excel (sản phẩm, doanh số, tồn kho)',
+      'Dashboard theo dõi doanh thu',
+      'Quản lý sản phẩm & chi nhánh',
+      'Xuất báo cáo PDF/Excel',
+      'Tối đa 3 người dùng',
+    ],
+    popular: false,
+  },
+  {
+    name: 'Chuyên nghiệp',
+    price: '1.499.000',
+    period: '/tháng',
+    description: 'Dành cho đội ngũ đang mở rộng',
+    features: [
+      'Tất cả tính năng Cơ bản',
+      'Dự báo doanh thu & tồn kho',
+      'AI phân tích chỉ số kinh doanh',
+      'Quản lý nhà máy & đa chi nhánh',
+      'Thông báo thông minh',
+      'Tối đa 15 người dùng',
+      'Hỗ trợ ưu tiên 24/7',
+    ],
+    popular: true,
+  },
+  {
+    name: 'Doanh nghiệp',
+    price: 'Liên hệ',
+    period: '',
+    description: 'Dành cho tổ chức lớn',
+    features: [
+      'Tất cả tính năng Chuyên nghiệp',
+      'Không giới hạn người dùng',
+      'Tùy chỉnh dashboard theo yêu cầu',
+      'Tích hợp API tùy chỉnh',
+      'Đào tạo đội ngũ',
+      'Quản lý tài khoản riêng',
+    ],
+    popular: false,
+  },
+];

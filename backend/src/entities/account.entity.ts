@@ -5,7 +5,7 @@ export class AccountEntity {
   @PrimaryColumn({ type: 'varchar', length: 50 })
   account_id!: string;
 
-  @Column({ type: 'enum', enum: ['ADMIN', 'STAFF'], default: 'STAFF' })
+  @Column({ name: 'role_account', type: 'enum', enum: ['ADMIN', 'STAFF'], default: 'STAFF' })
   role!: 'ADMIN' | 'STAFF';
 
   @Column({ type: 'varchar', length: 255 })
@@ -27,6 +27,17 @@ export class AccountEntity {
 
   @Column({ type: 'varchar', length: 255 })
   avatarURL!: string;
+
+  @Column({
+    name: 'status_account',
+    type: 'enum',
+    enum: ['ACTIVE', 'INACTIVE', 'LOCKED'],
+    default: 'ACTIVE',
+  })
+  status_account!: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
+
+  @Column({ type: 'datetime', nullable: true, default: null })
+  last_login_at!: Date | null;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at!: Date;

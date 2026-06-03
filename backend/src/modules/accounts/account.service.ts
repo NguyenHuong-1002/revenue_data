@@ -69,7 +69,7 @@ export class AccountService {
     private readonly jwtService: JwtService,
     private readonly notificationService: NotificationService,
     // eslint-disable-next-line prettier/prettier
-  ) { }
+  ) {}
 
   /**
    * Lấy danh sách toàn bộ tài khoản trong hệ thống có phân trang và sắp xếp tăng dần theo ID
@@ -142,6 +142,7 @@ export class AccountService {
       mail: dto.mail,
       avatarURL: dto.avatarURL ?? '',
       role: dto.role ?? 'STAFF',
+      status_account: dto.status_account ?? 'ACTIVE',
     });
 
     await this.accountRepository.save(account);
@@ -210,7 +211,20 @@ export class AccountService {
       throw new UnauthorizedException('Username hoac password khong dung');
     }
 
+    if (account.status_account === 'INACTIVE') {
+      throw new UnauthorizedException('Tài khoản đã bị tạm ngưng kích hoạt (INACTIVE)');
+    }
+    if (account.status_account === 'LOCKED') {
+      throw new UnauthorizedException('Tài khoản đã bị khóa (LOCKED)');
+    }
+
+    const loginTime = new Date();
+    await this.accountRepository.update(account.account_id, {
+      last_login_at: loginTime,
+    });
+
     const { passwordHash: _passwordHash, ...accountResponse } = account;
+    accountResponse.last_login_at = loginTime;
 
     const accessToken = this.jwtService.sign({
       sub: account.account_id,
@@ -248,12 +262,13 @@ export class AccountService {
     if (dto.mail !== undefined) updateData.mail = dto.mail;
     if (dto.avatarURL !== undefined) updateData.avatarURL = dto.avatarURL;
     if (dto.role !== undefined) updateData.role = dto.role;
+    if (dto.status_account !== undefined) updateData.status_account = dto.status_account;
     await this.accountRepository.update({ account_id: id }, updateData);
 
     // Tự động tạo thông báo
     await this.notificationService.createNotification({
       title: 'Cập nhật tài khoản',
-      content: `Admin ${adminUsername || 'hệ thống'} đã cập nhật thông tin tài khoản ${existingAccount.username} (${existingAccount.fullname}).`,
+      content: `Tài khoản ${existingAccount.username} (${existingAccount.fullname}) đã được cập nhật bởi ${adminUsername || 'hệ thống'}.`,
       type: 'SYSTEM',
     });
 
@@ -311,7 +326,7 @@ export class AccountService {
    * @returns Danh sách tài khoản phân trang thoả mãn điều kiện tìm kiếm
    */
   async searchAccounts(dto: SearchAccountsDto): Promise<IPaginatedAccounts> {
-    const { keyword, role, page, limit } = dto;
+    const { keyword, role, status_account, startDate, endDate, page, limit } = dto;
     const skip = (page - 1) * limit;
 
     const qb = this.accountRepository
@@ -330,6 +345,18 @@ export class AccountService {
 
     if (role) {
       qb.andWhere('account.role = :role', { role });
+    }
+
+    if (status_account) {
+      qb.andWhere('account.status_account = :status_account', { status_account });
+    }
+
+    if (startDate) {
+      qb.andWhere('account.created_at >= :startDate', { startDate: `${startDate} 00:00:00` });
+    }
+
+    if (endDate) {
+      qb.andWhere('account.created_at <= :endDate', { endDate: `${endDate} 23:59:59` });
     }
 
     const [accounts, total] = await qb.getManyAndCount();

@@ -142,7 +142,9 @@ export class AccountNotificationService {
     });
 
     if (!an) {
-      throw new NotFoundException(`Không tìm thấy thông báo có ID '${notificationId}' cho tài khoản của bạn.`);
+      throw new NotFoundException(
+        `Không tìm thấy thông báo có ID '${notificationId}' cho tài khoản của bạn.`,
+      );
     }
 
     an.is_read = 1;
@@ -170,4 +172,3 @@ export class AccountNotificationService {
       .execute();
   }
 }
-

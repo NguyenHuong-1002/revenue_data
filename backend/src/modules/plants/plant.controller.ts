@@ -33,7 +33,7 @@ import {
 @Controller('plants')
 export class PlantController {
   // eslint-disable-next-line prettier/prettier
-  constructor(private readonly plantService: PlantService) { }
+  constructor(private readonly plantService: PlantService) {}
 
   @authGuard.Public()
   @ApiGetPlantsSwagger()

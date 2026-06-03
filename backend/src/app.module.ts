@@ -15,6 +15,11 @@ import { PlantModule } from './modules/plants/plant.module';
 import { ForecastingModule } from './modules/forecasting/forecasting.module';
 import { AiInterpretationModule } from './modules/ai-interpretation/ai-interpretation.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { LandingModule } from './modules/landing/landing.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { SaleReportsModule } from './modules/sale-reports/sale-reports.module';
+import { InventoryReportsModule } from './modules/inventory-reports/inventory-reports.module';
 
 dotenv.config();
 
@@ -37,6 +42,11 @@ dotenv.config();
     ForecastingModule,
     AiInterpretationModule,
     ReportsModule,
+    LandingModule,
+    ChatModule,
+    SettingsModule,
+    SaleReportsModule,
+    InventoryReportsModule,
   ],
 })
 export class AppModule implements NestModule {

@@ -33,7 +33,7 @@ import {
 @Controller('products')
 export class ProductController {
   // eslint-disable-next-line prettier/prettier
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @ApiGetProductsSwagger()
   @Get()
@@ -53,6 +53,12 @@ export class ProductController {
     @Body(new ValidationPipe({ transform: true })) productDTO: CreateProductDto,
   ): Promise<IProduct> {
     return this.productService.createProduct(productDTO, admin.username);
+  }
+
+  @Get('/stats')
+  @HttpCode(HttpStatus.OK)
+  getProductStats(): Promise<any> {
+    return this.productService.getProductStats();
   }
 
   @ApiGetDetailProductSwagger()
