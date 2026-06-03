@@ -58,7 +58,7 @@ Phần Backend NestJS đã được tái cấu trúc mạnh mẽ nhằm đạt h
 
 ---
 
-## 🛠️ Hướng Dẫn Khởi Động Nhanh (Getting Started)
+## 🛠️ Hướng Dẫn Khởi Động Nhanh (Getting Started),
 
 ### Bước 1: Khởi chạy Backend NestJS
 ```bash
