@@ -8,9 +8,6 @@ export class SaleReportEntity {
   @Column({ type: 'varchar', length: 50 })
   product_id!: string;
 
-  @Column({ type: 'varchar', length: 50 })
-  customer_id!: string;
-
   @Column({ type: 'int', default: 0 })
   sold_quantity!: number;
 

@@ -1,7 +1,11 @@
 'use client';
 
-import * as React from 'react';
+// ===== Component Modal dùng chung =====
+// Overlay + box modal với tiêu đề, nút đóng, và nội dung children
+// Hỗ trợ đóng bằng phím Escape, khóa scroll khi mở
+
 import { XIcon } from 'lucide-react';
+import * as React from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,16 +15,17 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  // Bắt sự kiện phím Escape để đóng modal
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden'; // Khóa scroll nền
       window.addEventListener('keydown', handleEscape);
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = 'unset'; // Phục hồi scroll
       window.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
@@ -29,13 +34,15 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      {/* Lớp nền mờ (backdrop) */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
         onClick={onClose}
       />
-      {/* Modal box */}
+
+      {/* Hộp modal */}
       <div className="relative w-full max-w-md rounded-xl bg-card border border-border shadow-2xl p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10">
+        {/* Header: Tiêu đề + Nút đóng */}
         <div className="flex items-center justify-between border-b border-border pb-4 mb-5">
           <h2 className="text-lg font-bold text-foreground">{title}</h2>
           <button
@@ -46,6 +53,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             <XIcon className="size-5" />
           </button>
         </div>
+        {/* Nội dung bên trong modal */}
         {children}
       </div>
     </div>

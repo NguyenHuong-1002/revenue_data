@@ -13,7 +13,6 @@ export interface SaleReportQueryDto {
 export interface ISaleReport {
   sale_id: string;
   product_id: string;
-  customer_id: string;
   sold_quantity: number;
   distribution_channel: 'Online' | 'Bán lẻ' | 'Phát sinh' | 'Bán sỉ' | 'Siêu thị' | 'Hợp đồng' | 'Chi nhánh';
   branch_id: string;
@@ -59,5 +58,41 @@ export const saleReportService = {
       monthly_sales: { name: string; count: number }[];
       top_branches: { name: string; count: number }[];
     }>('/sale-reports/stats');
+  },
+
+  getRevenueStats() {
+    return api.get<{
+      totalRevenue: number;
+      growthRate: number;
+      topProductByRevenue: {
+        id: string;
+        name: string;
+        revenue: number;
+        detail_product_group: string;
+        gender: string;
+        color: string;
+        size: number;
+      };
+      topProductByQuantity: {
+        id: string;
+        name: string;
+        quantity: number;
+        detail_product_group: string;
+        gender: string;
+        color: string;
+        size: number;
+      };
+    }>('/sale-reports/revenue-stats');
+  },
+
+  getHighlightProductsStats() {
+    return api.get<{
+      topRevenue: any[];
+      bottomRevenue: any[];
+      topQuantity: any[];
+      bottomQuantity: any[];
+      topGrowth: any[];
+      bottomGrowth: any[];
+    }>('/sale-reports/highlight-products-stats');
   },
 };

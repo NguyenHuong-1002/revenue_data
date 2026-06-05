@@ -13,7 +13,6 @@ export const REQUIRED_FIELDS = {
   ],
   'sale-report': [
     'product_id',
-    'customer_id',
     'sold_quantity',
     'distribution_channel',
     'branch_id',

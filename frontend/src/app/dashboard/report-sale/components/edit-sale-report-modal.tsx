@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal } from './modal';
+import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -63,7 +63,6 @@ export function EditSaleReportModal({ isOpen, onClose, onSubmit, report }: EditS
 
       reset({
         product_id: report.product_id,
-        customer_id: report.customer_id,
         sold_quantity: report.sold_quantity,
         distribution_channel: report.distribution_channel,
         branch_id: report.branch_id,
@@ -139,31 +138,17 @@ export function EditSaleReportModal({ isOpen, onClose, onSubmit, report }: EditS
                 <FieldError errors={[errors.branch_id]} />
               </Field>
 
-              <div className="grid grid-cols-2 gap-3">
-                {/* Mã khách hàng */}
-                <Field>
-                  <FieldLabel htmlFor="edit-sale-customer">Mã khách hàng</FieldLabel>
-                  <Input
-                    id="edit-sale-customer"
-                    placeholder="Ví dụ: CUS-1001"
-                    {...register('customer_id')}
-                    data-invalid={!!errors.customer_id}
-                  />
-                  <FieldError errors={[errors.customer_id]} />
-                </Field>
-
-                {/* Số lượng */}
-                <Field>
-                  <FieldLabel htmlFor="edit-sale-qty">Số lượng bán</FieldLabel>
-                  <Input
-                    id="edit-sale-qty"
-                    type="number"
-                    {...register('sold_quantity', { valueAsNumber: true })}
-                    data-invalid={!!errors.sold_quantity}
-                  />
-                  <FieldError errors={[errors.sold_quantity]} />
-                </Field>
-              </div>
+              {/* Số lượng */}
+              <Field>
+                <FieldLabel htmlFor="edit-sale-qty">Số lượng bán</FieldLabel>
+                <Input
+                  id="edit-sale-qty"
+                  type="number"
+                  {...register('sold_quantity', { valueAsNumber: true })}
+                  data-invalid={!!errors.sold_quantity}
+                />
+                <FieldError errors={[errors.sold_quantity]} />
+              </Field>
 
               <div className="grid grid-cols-2 gap-3">
                 {/* Kênh phân phối */}

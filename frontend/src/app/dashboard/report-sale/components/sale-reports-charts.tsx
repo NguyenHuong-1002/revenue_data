@@ -197,7 +197,7 @@ export function SaleReportsCharts({ reports }: SaleReportsChartsProps) {
                         cx="50%"
                         cy="50%"
                         outerRadius={70}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                         labelLine={false}
                         style={{ fontSize: '9px', fontWeight: 'bold' }}
                       >
@@ -224,15 +224,13 @@ export function SaleReportsCharts({ reports }: SaleReportsChartsProps) {
                   </div>
                 ) : (
                   <ChartContainer config={chartConfig} className="h-full w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={branchData} margin={{ left: -10, right: 10, top: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                        <XAxis dataKey="name" tickLine={false} axisLine={false} style={{ fontSize: '10px' }} />
-                        <YAxis tickLine={false} axisLine={false} style={{ fontSize: '10px' }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="count" fill="hsl(217.2, 91.2%, 59.8%)" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <BarChart data={branchData} margin={{ left: -10, right: 10, top: 10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                      <XAxis dataKey="name" tickLine={false} axisLine={false} style={{ fontSize: '10px' }} />
+                      <YAxis tickLine={false} axisLine={false} style={{ fontSize: '10px' }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="count" fill="hsl(217.2, 91.2%, 59.8%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
                   </ChartContainer>
                 )}
               </div>

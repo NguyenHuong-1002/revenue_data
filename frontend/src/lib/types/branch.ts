@@ -2,6 +2,9 @@ export interface IBranch {
   store_id: string;
   name: string;
   city: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,11 +22,17 @@ export interface IPaginatedBranches {
 export interface CreateBranchDto {
   name: string;
   city: string;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface UpdateBranchDto {
   name?: string;
   city?: string;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface GetBranchAllDto {

@@ -26,7 +26,7 @@ import { accountService } from '@/lib/services/account.service';
 import { toast } from 'sonner';
 import { CreateInventoryReportModal } from './components/create-inventory-report-modal';
 import { EditInventoryReportModal } from './components/edit-inventory-report-modal';
-import { Modal } from './components/modal';
+import { Modal } from '@/components/ui/modal';
 import { InventoryReportsCharts } from './components/inventory-reports-charts';
 import type { IInventoryReport } from '@/lib/services/inventory-report.service';
 import type { IAccount } from '@/lib/types/account';

@@ -44,6 +44,22 @@ export class SaleReportsController {
     return this.saleReportsService.getSaleReportStats();
   }
 
+  @Get('/revenue-stats')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Lấy thông tin thống kê doanh thu phục vụ hiển thị ở sidebar' })
+  @ApiResponse({ status: 200, description: 'Lấy thống kê thành công.' })
+  getRevenueDashboardStats(): Promise<any> {
+    return this.saleReportsService.getRevenueDashboardStats();
+  }
+
+  @Get('/highlight-products-stats')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Lấy danh sách top/bottom sản phẩm tiêu biểu theo nhiều tiêu chí' })
+  @ApiResponse({ status: 200, description: 'Lấy thống kê sản phẩm thành công.' })
+  getHighlightProductsStats(): Promise<any> {
+    return this.saleReportsService.getHighlightProductsStats();
+  }
+
   @Get('/:id')
   @ApiOperation({ summary: 'Lấy chi tiết báo cáo doanh số theo ID' })
   @ApiResponse({ status: 200, description: 'Lấy chi tiết thành công.' })

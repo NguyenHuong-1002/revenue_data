@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal } from './modal';
+import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -36,7 +36,6 @@ export function CreateSaleReportModal({ isOpen, onClose, onSubmit }: CreateSaleR
     resolver: zodResolver(createSaleReportSchema),
     defaultValues: {
       product_id: '',
-      customer_id: 'CUS-',
       sold_quantity: 1,
       distribution_channel: 'Online',
       branch_id: '',
@@ -69,7 +68,6 @@ export function CreateSaleReportModal({ isOpen, onClose, onSubmit }: CreateSaleR
 
       reset({
         product_id: '',
-        customer_id: `CUS-${Math.floor(1000 + Math.random() * 9000)}`,
         sold_quantity: 1,
         distribution_channel: 'Online',
         branch_id: '',
@@ -145,31 +143,17 @@ export function CreateSaleReportModal({ isOpen, onClose, onSubmit }: CreateSaleR
                 <FieldError errors={[errors.branch_id]} />
               </Field>
 
-              <div className="grid grid-cols-2 gap-3">
-                {/* Mã khách hàng */}
-                <Field>
-                  <FieldLabel htmlFor="create-sale-customer">Mã khách hàng</FieldLabel>
-                  <Input
-                    id="create-sale-customer"
-                    placeholder="Ví dụ: CUS-1001"
-                    {...register('customer_id')}
-                    data-invalid={!!errors.customer_id}
-                  />
-                  <FieldError errors={[errors.customer_id]} />
-                </Field>
-
-                {/* Số lượng */}
-                <Field>
-                  <FieldLabel htmlFor="create-sale-qty">Số lượng bán</FieldLabel>
-                  <Input
-                    id="create-sale-qty"
-                    type="number"
-                    {...register('sold_quantity', { valueAsNumber: true })}
-                    data-invalid={!!errors.sold_quantity}
-                  />
-                  <FieldError errors={[errors.sold_quantity]} />
-                </Field>
-              </div>
+              {/* Số lượng */}
+              <Field>
+                <FieldLabel htmlFor="create-sale-qty">Số lượng bán</FieldLabel>
+                <Input
+                  id="create-sale-qty"
+                  type="number"
+                  {...register('sold_quantity', { valueAsNumber: true })}
+                  data-invalid={!!errors.sold_quantity}
+                />
+                <FieldError errors={[errors.sold_quantity]} />
+              </Field>
 
               <div className="grid grid-cols-2 gap-3">
                 {/* Kênh phân phối */}

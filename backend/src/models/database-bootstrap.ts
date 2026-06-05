@@ -265,32 +265,68 @@ export async function seedMockPlants(pool: Pool): Promise<void> {
 export async function seedMockStores(pool: Pool): Promise<void> {
   try {
     const jsonPath = findStoreJsonPath();
-    if (fs.existsSync(jsonPath)) {
-      const storesJson = fs.readFileSync(jsonPath, 'utf-8');
-      const stores = JSON.parse(storesJson);
-
-      logger.log(
-        `Bắt đầu đồng bộ ${stores.length} chi nhánh từ storebranch.init.json tại: ${jsonPath}`,
-      );
-
-      let syncCount = 0;
-      for (const st of stores) {
-        await pool.query(
-          `INSERT INTO storeBranch (store_id, name, city)
-           VALUES (?, ?, ?)
-           ON DUPLICATE KEY UPDATE name = VALUES(name), city = VALUES(city)`,
-          [st.store_id, st.name, st.city || 'Chưa xác định'],
-        );
-        syncCount++;
-      }
-      logger.log(`Đã đồng bộ thành công ${syncCount} chi nhánh vào bảng storeBranch!`);
-    } else {
+    if (!fs.existsSync(jsonPath)) {
       logger.error(`Không tìm thấy tệp chi nhánh JSON tại ${jsonPath}`);
+      return;
     }
+
+    // Đảm bảo cột address, latitude, longitude tồn tại trước khi seed
+    try {
+      await pool.query(
+        `ALTER TABLE storeBranch ADD COLUMN IF NOT EXISTS address VARCHAR(255) DEFAULT NULL`,
+      );
+      await pool.query(
+        `ALTER TABLE storeBranch ADD COLUMN IF NOT EXISTS latitude DOUBLE DEFAULT NULL`,
+      );
+      await pool.query(
+        `ALTER TABLE storeBranch ADD COLUMN IF NOT EXISTS longitude DOUBLE DEFAULT NULL`,
+      );
+      logger.log('Đã kiểm tra / thêm cột address, latitude, longitude vào bảng storeBranch.');
+    } catch (alterErr: any) {
+      try {
+        // Fallback kiểm tra thông qua INFORMATION_SCHEMA
+        const checkAndAdd = async (col: string, ddl: string) => {
+          const [cols] = await pool.query<any[]>(
+            `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'storeBranch' AND COLUMN_NAME = ?`,
+            [col]
+          );
+          if ((cols as any[]).length === 0) {
+            await pool.query(ddl);
+            logger.log(`Đã thêm cột ${col} vào bảng storeBranch.`);
+          }
+        };
+        await checkAndAdd('address', `ALTER TABLE storeBranch ADD COLUMN address VARCHAR(255) DEFAULT NULL`);
+        await checkAndAdd('latitude', `ALTER TABLE storeBranch ADD COLUMN latitude DOUBLE DEFAULT NULL`);
+        await checkAndAdd('longitude', `ALTER TABLE storeBranch ADD COLUMN longitude DOUBLE DEFAULT NULL`);
+      } catch (innerErr: any) {
+        logger.warn(`Không thể thêm các cột tọa độ: ${innerErr.message}`);
+      }
+    }
+
+    const storesJson = fs.readFileSync(jsonPath, 'utf-8');
+    const stores = JSON.parse(storesJson);
+
+    logger.log(
+      `Bắt đầu đồng bộ ${stores.length} chi nhánh từ storebranch.init.json tại: ${jsonPath}`,
+    );
+
+    let syncCount = 0;
+    for (const st of stores) {
+      await pool.query(
+        `INSERT INTO storeBranch (store_id, name, city, address, latitude, longitude)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE name = VALUES(name), city = VALUES(city), address = VALUES(address), latitude = VALUES(latitude), longitude = VALUES(longitude)`,
+        [st.store_id, st.name, st.city || 'Chưa xác định', st.address ?? null, st.latitude ?? null, st.longitude ?? null],
+      );
+      syncCount++;
+    }
+    logger.log(`Đã đồng bộ thành công ${syncCount} chi nhánh vào bảng storeBranch!`);
   } catch (err: any) {
     logger.error(`Lỗi khi nạp dữ liệu chi nhánh mẫu: ${err.message}`);
   }
 }
+
 
 /**
  * 6. Nạp (Seed) dữ liệu notification mẫu từ file JSON

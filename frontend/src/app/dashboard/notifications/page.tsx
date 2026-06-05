@@ -121,31 +121,38 @@ function NotificationDetail({
   const Icon = cfg.icon;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background/50">
       {/* Detail header */}
-      <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
+      <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0 bg-background/90 backdrop-blur-md z-10">
         <div className="flex items-center gap-3">
-          <div className={cn('flex size-9 items-center justify-center rounded-xl', cfg.bg)}>
+          <div className={cn('flex size-10 items-center justify-center rounded-2xl border transition-all duration-300 shadow-sm bg-background', cfg.bg, cfg.border)}>
             <Icon className={cn('h-5 w-5', cfg.color)} />
           </div>
           <div>
-            <span
-              className={cn(
-                'text-[11px] font-semibold px-2 py-0.5 rounded-full',
-                cfg.bg,
-                cfg.color
-              )}
-            >
-              {cfg.label}
-            </span>
-            <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-              <Clock className="h-2.5 w-2.5" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={cn(
+                  'text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border',
+                  cfg.bg,
+                  cfg.color,
+                  cfg.border
+                )}
+              >
+                {cfg.label}
+              </span>
+              <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {formatRelative(notification.created_at)}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground/80 mt-1">
               {new Date(notification.created_at).toLocaleString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
+                second: '2-digit',
               })}
             </p>
           </div>
@@ -156,9 +163,9 @@ function NotificationDetail({
               size="sm"
               variant="outline"
               onClick={() => onMarkRead(notification.notification_id)}
-              className="h-8 gap-1.5 text-xs"
+              className="h-9 px-3 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 transition-all font-medium"
             >
-              <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+              <CheckCircle2 className="h-3.5 w-3.5" />
               Đánh dấu đã đọc
             </Button>
           )}
@@ -166,7 +173,7 @@ function NotificationDetail({
             size="icon"
             variant="ghost"
             onClick={onClose}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-xl transition-all"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -174,51 +181,86 @@ function NotificationDetail({
       </div>
 
       {/* Detail body */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-2xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 md:p-8">
+        <div className="max-w-2xl mx-auto space-y-6">
           {isUnread && (
-            <div className="flex items-center gap-2 text-xs text-primary font-medium bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
-              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              Thông báo chưa đọc
+            <div className="relative flex items-center gap-2.5 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 border border-amber-500/25 rounded-xl px-4 py-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span>Thông báo chưa được đọc</span>
             </div>
           )}
 
-          <h1 className="text-xl font-bold text-foreground leading-tight">{notification.title}</h1>
+          <div className="space-y-4">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground leading-snug">
+              {notification.title}
+            </h1>
+            
+            <div className="border-b border-border/80 pb-2" />
+          </div>
 
-          <Card className="border-border">
-            <CardContent className="p-5">
-              <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+          <div className="prose dark:prose-invert max-w-none">
+            <div className="bg-card border border-border/70 rounded-2xl p-6 shadow-sm backdrop-blur-sm">
+              <p className="text-sm md:text-base text-foreground/85 leading-relaxed whitespace-pre-wrap">
                 {notification.content}
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
-            <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border">
-              <span className="font-medium text-foreground/60">Loại thông báo</span>
-              <span className={cn('font-semibold', cfg.color)}>{cfg.label}</span>
+          {/* Metadata details block */}
+          <div className="rounded-2xl border border-border/80 bg-card/40 overflow-hidden backdrop-blur-sm shadow-sm transition-all duration-300 hover:shadow-md hover:border-border">
+            <div className="px-5 py-3 bg-muted/40 border-b border-border/60 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase">Thông tin chi tiết thông báo</span>
+              <span className="text-[10px] text-muted-foreground/60 font-mono">ID: #{notification.notification_id.slice(0, 8)}</span>
             </div>
-            <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border">
-              <span className="font-medium text-foreground/60">Trạng thái</span>
-              <span className={cn('font-semibold', isUnread ? 'text-amber-500' : 'text-green-500')}>
-                {isUnread ? 'Chưa đọc' : 'Đã đọc'}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border">
-              <span className="font-medium text-foreground/60">Thời gian tạo</span>
-              <span className="font-semibold text-foreground">
-                {new Date(notification.created_at).toLocaleString('vi-VN')}
-              </span>
-            </div>
-            {notification.read_at && (
-              <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border border-border">
-                <span className="font-medium text-foreground/60">Thời gian đọc</span>
-                <span className="font-semibold text-foreground">
-                  {new Date(notification.read_at).toLocaleString('vi-VN')}
+            <div className="p-5 divide-y divide-border/40 text-xs md:text-sm">
+              <div className="flex items-center justify-between py-3 first:pt-0">
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  <Icon className={cn("h-4 w-4", cfg.color)} />
+                  <span>Phân loại</span>
+                </div>
+                <span className={cn('font-semibold px-2.5 py-0.5 rounded-full text-[11px] border', cfg.bg, cfg.color, cfg.border)}>
+                  {cfg.label}
                 </span>
               </div>
-            )}
+
+              <div className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  {isUnread ? <Circle className="h-4 w-4 text-amber-500 fill-amber-500/20" /> : <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                  <span>Trạng thái</span>
+                </div>
+                <span className={cn('font-semibold flex items-center gap-1.5 text-xs', isUnread ? 'text-amber-500' : 'text-green-500')}>
+                  {isUnread && <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />}
+                  {isUnread ? 'Chưa đọc' : 'Đã đọc'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>Thời gian tạo</span>
+                </div>
+                <span className="font-semibold text-foreground text-xs md:text-sm">
+                  {new Date(notification.created_at).toLocaleString('vi-VN')}
+                </span>
+              </div>
+
+              {notification.read_at && (
+                <div className="flex items-center justify-between py-3 last:pb-0">
+                  <div className="flex items-center gap-2.5 text-muted-foreground">
+                    <CheckCheck className="h-4 w-4 text-primary" />
+                    <span>Thời gian đọc</span>
+                  </div>
+                  <span className="font-semibold text-foreground text-xs md:text-sm">
+                    {new Date(notification.read_at).toLocaleString('vi-VN')}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
+
         </div>
       </div>
     </div>

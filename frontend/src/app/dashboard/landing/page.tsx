@@ -1013,7 +1013,7 @@ export default function LandingManagerPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-colsu-3">
                     <div className="space-y-2">
                       <Label className="font-semibold">Tên gói dịch vụ</Label>
                       <Input

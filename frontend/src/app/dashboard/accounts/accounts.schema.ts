@@ -1,5 +1,9 @@
+// ===== Schema xác thực dữ liệu cho form tài khoản =====
+// Dùng Zod để validate dữ liệu đầu vào, hiển thị lỗi tiếng Việt tương ứng
+
 import { z } from 'zod';
 
+// Schema form TẠO tài khoản — tất cả các trường đều bắt buộc
 export const createAccountSchema = z.object({
   fullname: z.string().min(1, 'Vui lòng nhập Họ và tên'),
   username: z.string().min(3, 'Tên đăng nhập phải có ít nhất 3 ký tự'),
@@ -11,11 +15,12 @@ export const createAccountSchema = z.object({
 
 export type CreateAccountFormValues = z.infer<typeof createAccountSchema>;
 
+// Schema form SỬA tài khoản — password là optional (nếu để trống sẽ giữ mật khẩu cũ)
 export const editAccountSchema = z.object({
   fullname: z.string().min(1, 'Vui lòng nhập Họ và tên'),
   username: z.string().min(3, 'Tên đăng nhập phải có ít nhất 3 ký tự'),
   mail: z.string().min(1, 'Vui lòng nhập Email').email('Email không hợp lệ'),
-  password: z.string().optional().or(z.literal('')), // optional, if entered it will be updated
+  password: z.string().optional().or(z.literal('')),
   role: z.enum(['ADMIN', 'STAFF']),
   status_account: z.enum(['ACTIVE', 'INACTIVE', 'LOCKED']),
 });

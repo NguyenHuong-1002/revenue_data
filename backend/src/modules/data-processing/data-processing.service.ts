@@ -31,7 +31,7 @@ export class DataProcessingService {
   private readonly dataDir = path.resolve(__dirname, '../../../../data');
   private readonly batchSize = 500;
 
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DatabaseService) { }
 
   private async isTableEmpty(table: string): Promise<boolean> {
     const [rows] = await this.db.client.query<RowDataPacket[]>(
@@ -202,7 +202,6 @@ export class DataProcessingService {
    */
   transformSaleReportData(row: Record<string, any>): CleanedSaleReport | null {
     const product_id = s(row['product_id']);
-    const customer_id = s(row['customer_id']);
     const sold_quantity = n(row['sold_quantity']);
     const distribution_channel = normalizeDistributionChannel(s(row['distribution_channel']));
     const branch_id = s(row['branch_id']);
@@ -210,7 +209,6 @@ export class DataProcessingService {
 
     const missing: string[] = [];
     if (!isValidProduct(product_id)) missing.push(`product_id ('${row['product_id']}')`);
-    if (!isValidProduct(customer_id)) missing.push(`customer_id ('${row['customer_id']}')`);
     if (sold_quantity === null) missing.push(`sold_quantity ('${row['sold_quantity']}')`);
     if (!isValidProduct(distribution_channel))
       missing.push(`distribution_channel ('${row['distribution_channel']}')`);
@@ -228,7 +226,6 @@ export class DataProcessingService {
     return {
       sale_id: uuidv4(),
       product_id,
-      customer_id,
       sold_quantity: sold_quantity as number,
       distribution_channel,
       branch_id,
@@ -368,8 +365,8 @@ export class DataProcessingService {
 
     this.logger.log(
       `Kết quả import: Tổng số ${rows.length} dòng. ` +
-        `Dữ liệu sạch (100% hợp lệ): ${validProducts.length} dòng (Đã đẩy thành công: ${inserted}). ` +
-        `Bị loại bỏ do vi phạm định dạng hoặc bị null: ${skipped} dòng.`,
+      `Dữ liệu sạch (100% hợp lệ): ${validProducts.length} dòng (Đã đẩy thành công: ${inserted}). ` +
+      `Bị loại bỏ do vi phạm định dạng hoặc bị null: ${skipped} dòng.`,
     );
 
     return {
@@ -425,7 +422,6 @@ export class DataProcessingService {
     let inserted = 0;
     let skipped = 0;
     const validSaleRows: CleanedSaleReport[] = [];
-    const customerIds = new Set<string>();
     const branchIds = new Set<string>();
 
     const collectRows = async (rows: Record<string, any>[], sourceLabel?: string) => {
@@ -443,7 +439,6 @@ export class DataProcessingService {
           }
 
           validSaleRows.push(cleaned);
-          customerIds.add(cleaned.customer_id);
           branchIds.add(cleaned.branch_id);
         } catch (err) {
           skipped++;
@@ -472,11 +467,6 @@ export class DataProcessingService {
     }
 
     await this.bulkInsertIgnore(
-      'customer',
-      ['customer_id'],
-      Array.from(customerIds).map((customerId) => [customerId]),
-    );
-    await this.bulkInsertIgnore(
       'storeBranch',
       ['store_id', 'name'],
       Array.from(branchIds).map((branchId) => [branchId, branchId]),
@@ -486,15 +476,14 @@ export class DataProcessingService {
       const values = batch.flatMap((cleaned) => [
         cleaned.sale_id,
         cleaned.product_id,
-        cleaned.customer_id,
         cleaned.sold_quantity,
         cleaned.distribution_channel,
         cleaned.branch_id,
         cleaned.time_report,
       ]);
-      const placeholders = batch.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ');
+      const placeholders = batch.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
       await this.db.client.query<ResultSetHeader>(
-        `INSERT INTO saleReport (sale_id, product_id, customer_id, sold_quantity, distribution_channel, branch_id, time_report)
+        `INSERT INTO saleReport (sale_id, product_id, sold_quantity, distribution_channel, branch_id, time_report)
          VALUES ${placeholders}
          ON DUPLICATE KEY UPDATE
            sold_quantity = VALUES(sold_quantity),
@@ -619,12 +608,6 @@ export class DataProcessingService {
   // ───────────────────────────
   //  Helpers
   // ───────────────────────────
-  private async ensureCustomer(customerId: string): Promise<void> {
-    await this.db.client.query<ResultSetHeader>(
-      `INSERT IGNORE INTO customer (customer_id) VALUES (?)`,
-      [customerId],
-    );
-  }
 
   private async ensureStoreBranch(branchId: string): Promise<void> {
     await this.db.client.query<ResultSetHeader>(

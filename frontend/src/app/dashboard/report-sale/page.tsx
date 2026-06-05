@@ -33,7 +33,7 @@ import { accountService } from '@/lib/services/account.service';
 import { toast } from 'sonner';
 import { CreateSaleReportModal } from './components/create-sale-report-modal';
 import { EditSaleReportModal } from './components/edit-sale-report-modal';
-import { Modal } from './components/modal';
+import { Modal } from '@/components/ui/modal';
 import { SaleReportsCharts } from './components/sale-reports-charts';
 import type { ISaleReport } from '@/lib/services/sale-report.service';
 import type { IAccount } from '@/lib/types/account';
@@ -305,7 +305,6 @@ export default function SaleReportsPage() {
               <tr className="border-b border-border bg-muted/30 text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                 <th className="px-5 py-4">Mã Báo Cáo (ID)</th>
                 <th className="px-5 py-4">Sản Phẩm (Product)</th>
-                <th className="px-5 py-4">Khách Hàng (Customer)</th>
                 <th className="px-5 py-4 text-right">Số Lượng Bán</th>
                 <th className="px-5 py-4 text-center">Kênh Phân Phối</th>
                 <th className="px-5 py-4">Chi Nhánh</th>
@@ -316,7 +315,7 @@ export default function SaleReportsPage() {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isAdmin ? 8 : 7} className="px-6 py-20 text-center">
+                  <td colSpan={isAdmin ? 7 : 6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
                       <span>Đang tải danh sách báo cáo doanh số...</span>
@@ -325,7 +324,7 @@ export default function SaleReportsPage() {
                 </tr>
               ) : reports.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 8 : 7} className="px-6 py-20 text-center">
+                  <td colSpan={isAdmin ? 7 : 6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <ShieldAlert className="h-10 w-10 text-orange-500 opacity-60" />
                       <span className="font-semibold text-foreground">Không tìm thấy báo cáo doanh số nào</span>
@@ -372,10 +371,7 @@ export default function SaleReportsPage() {
                       </div>
                     </td>
 
-                    {/* Khách hàng */}
-                    <td className="px-5 py-3.5 font-mono text-xs text-muted-foreground">
-                      {report.customer_id}
-                    </td>
+
 
                     {/* Số lượng */}
                     <td className="px-5 py-3.5 text-right font-semibold text-foreground">

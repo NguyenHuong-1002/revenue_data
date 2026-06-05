@@ -51,6 +51,7 @@ export class BranchService {
       store_id: id,
       name: dto.name,
       city: dto.city,
+      address: dto.address ?? null,
     });
     await this.branchRepository.save(branch);
 
@@ -71,6 +72,7 @@ export class BranchService {
 
     if (dto.name !== undefined) branch.name = dto.name;
     if (dto.city !== undefined) branch.city = dto.city;
+    if (dto.address !== undefined) branch.address = dto.address ?? null;
 
     await this.branchRepository.save(branch);
 

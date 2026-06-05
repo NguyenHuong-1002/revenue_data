@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import './globals.css';
+import '@goongmaps/goong-js/dist/goong-js.css';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { ThemeProvider } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -31,7 +33,6 @@ export default function RootLayout({
     <html
       lang="vi"
       className={cn(
-        'dark',
         'h-full',
         'antialiased',
         geistSans.variable,
@@ -39,10 +40,18 @@ export default function RootLayout({
         'font-sans',
         inter.variable
       )}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <TooltipProvider>{children}</TooltipProvider>
-        <Toaster richColors />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster richColors />
+        </ThemeProvider>
       </body>
     </html>
   );

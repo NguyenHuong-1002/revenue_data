@@ -2,41 +2,201 @@
   {
     "store_id": "1100",
     "name": "Chi Nhánh Đống Đa - Royal City",
-    "city": "Hà Nội"
+    "city": "Hà Nội",
+    "address": "72 Nguyễn Trãi, Phường Thượng Đình, Quận Đống Đa, Hà Nội",
+    "latitude": 21.0029,
+    "longitude": 105.8152
   },
   {
     "store_id": "1200",
     "name": "Chi Nhánh Cầu Giấy",
-    "city": "Hà Nội"
+    "city": "Hà Nội",
+    "address": "144 Xuân Thủy, Phường Dịch Vọng, Quận Cầu Giấy, Hà Nội",
+    "latitude": 21.0366,
+    "longitude": 105.7820
+  },
+  {
+    "store_id": "1210",
+    "name": "Chi Nhánh Hoàn Kiếm",
+    "city": "Hà Nội",
+    "address": "26 Lý Thái Tổ, Phường Lý Thái Tổ, Quận Hoàn Kiếm, Hà Nội",
+    "latitude": 21.0298,
+    "longitude": 105.8569
+  },
+  {
+    "store_id": "1220",
+    "name": "Chi Nhánh Hai Bà Trưng",
+    "city": "Hà Nội",
+    "address": "192 Bà Triệu, Phường Lê Đại Hành, Quận Hai Bà Trưng, Hà Nội",
+    "latitude": 21.0118,
+    "longitude": 105.8492
   },
   {
     "store_id": "1300",
     "name": "Chi Nhánh Quận 1 - Bến Thành",
-    "city": "TP. Hồ Chí Minh"
+    "city": "TP. Hồ Chí Minh",
+    "address": "56 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+    "latitude": 10.7725,
+    "longitude": 106.6980
   },
   {
     "store_id": "1400",
     "name": "Chi Nhánh Quận 3 - Lê Văn Sỹ",
-    "city": "TP. Hồ Chí Minh"
+    "city": "TP. Hồ Chí Minh",
+    "address": "234 Lê Văn Sỹ, Phường 1, Quận 3, TP. Hồ Chí Minh",
+    "latitude": 10.7891,
+    "longitude": 106.6781
+  },
+  {
+    "store_id": "1410",
+    "name": "Chi Nhánh Bình Thạnh - Vincom",
+    "city": "TP. Hồ Chí Minh",
+    "address": "53 Lê Quang Định, Phường 14, Quận Bình Thạnh, TP. Hồ Chí Minh",
+    "latitude": 10.8037,
+    "longitude": 106.6953
+  },
+  {
+    "store_id": "1420",
+    "name": "Chi Nhánh Thủ Đức - Vinhomes",
+    "city": "TP. Hồ Chí Minh",
+    "address": "Khu đô thị Vinhomes Grand Park, Phường Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh",
+    "latitude": 10.8385,
+    "longitude": 106.8402
+  },
+  {
+    "store_id": "1430",
+    "name": "Chi Nhánh Quận 7 - Phú Mỹ Hưng",
+    "city": "TP. Hồ Chí Minh",
+    "address": "18 Nguyễn Đức Cảnh, Phường Tân Phong, Quận 7, TP. Hồ Chí Minh",
+    "latitude": 10.7291,
+    "longitude": 106.7212
   },
   {
     "store_id": "1500",
     "name": "Chi Nhánh Hải Châu",
-    "city": "Đà Nẵng"
+    "city": "Đà Nẵng",
+    "address": "88 Trần Phú, Phường Hải Châu 1, Quận Hải Châu, Đà Nẵng",
+    "latitude": 16.0678,
+    "longitude": 108.2238
   },
   {
     "store_id": "1600",
     "name": "Chi Nhánh Thanh Khê",
-    "city": "Đà Nẵng"
+    "city": "Đà Nẵng",
+    "address": "112 Điện Biên Phủ, Phường Thanh Khê Đông, Quận Thanh Khê, Đà Nẵng",
+    "latitude": 16.0645,
+    "longitude": 108.2045
+  },
+  {
+    "store_id": "1610",
+    "name": "Chi Nhánh Ngũ Hành Sơn",
+    "city": "Đà Nẵng",
+    "address": "45 Lê Văn Hiến, Phường Mỹ An, Quận Ngũ Hành Sơn, Đà Nẵng",
+    "latitude": 16.0315,
+    "longitude": 108.2452
+  },
+  {
+    "store_id": "1700",
+    "name": "Chi Nhánh Huế - Lê Lợi",
+    "city": "Huế",
+    "address": "16 Lê Lợi, Phường Phú Hội, TP. Huế, Tỉnh Thừa Thiên Huế",
+    "latitude": 16.4682,
+    "longitude": 107.5891
   },
   {
     "store_id": "1800",
     "name": "Chi Nhánh Ninh Kiều",
-    "city": "Cần Thơ"
+    "city": "Cần Thơ",
+    "address": "209 Trần Hưng Đạo, Phường An Phú, Quận Ninh Kiều, Cần Thơ",
+    "latitude": 10.0335,
+    "longitude": 105.7781
+  },
+  {
+    "store_id": "1810",
+    "name": "Chi Nhánh Cần Thơ - Bình Thủy",
+    "city": "Cần Thơ",
+    "address": "3 Cách Mạng Tháng Tám, Phường An Thới, Quận Bình Thủy, Cần Thơ",
+    "latitude": 10.0545,
+    "longitude": 105.7612
+  },
+  {
+    "store_id": "1900",
+    "name": "Chi Nhánh Nha Trang - Trần Phú",
+    "city": "Nha Trang",
+    "address": "32 Trần Phú, Phường Lộc Thọ, TP. Nha Trang, Khánh Hòa",
+    "latitude": 12.2455,
+    "longitude": 109.1955
   },
   {
     "store_id": "2000",
     "name": "Chi Nhánh Hồng Bàng",
-    "city": "Hải Phòng"
+    "city": "Hải Phòng",
+    "address": "1 Đinh Tiên Hoàng, Phường Minh Khai, Quận Hồng Bàng, Hải Phòng",
+    "latitude": 20.8625,
+    "longitude": 106.6821
+  },
+  {
+    "store_id": "2010",
+    "name": "Chi Nhánh Hải Phòng - Ngô Quyền",
+    "city": "Hải Phòng",
+    "address": "67 Quang Trung, Phường Máy Chai, Quận Ngô Quyền, Hải Phòng",
+    "latitude": 20.8585,
+    "longitude": 106.6885
+  },
+  {
+    "store_id": "2100",
+    "name": "Chi Nhánh Vinh - Nguyễn Thị Minh Khai",
+    "city": "Vinh",
+    "address": "55 Nguyễn Thị Minh Khai, Phường Quang Trung, TP. Vinh, Nghệ An",
+    "latitude": 18.6791,
+    "longitude": 105.6891
+  },
+  {
+    "store_id": "2200",
+    "name": "Chi Nhánh Đà Lạt - Hòa Bình",
+    "city": "Đà Lạt",
+    "address": "08 Khu Hòa Bình, Phường 1, TP. Đà Lạt, Lâm Đồng",
+    "latitude": 11.9431,
+    "longitude": 108.4371
+  },
+  {
+    "store_id": "2300",
+    "name": "Chi Nhánh Vũng Tàu - Thùy Vân",
+    "city": "Vũng Tàu",
+    "address": "128 Thùy Vân, Phường Thắng Tam, TP. Vũng Tàu, Bà Rịa - Vũng Tàu",
+    "latitude": 10.3392,
+    "longitude": 107.0981
+  },
+  {
+    "store_id": "2400",
+    "name": "Chi Nhánh Bình Dương - Thủ Dầu Một",
+    "city": "Bình Dương",
+    "address": "222 Yersin, Phường Phú Cường, TP. Thủ Dầu Một, Bình Dương",
+    "latitude": 10.9781,
+    "longitude": 106.6631
+  },
+  {
+    "store_id": "2500",
+    "name": "Chi Nhánh Biên Hòa - Đồng Nai",
+    "city": "Đồng Nai",
+    "address": "77 Đồng Khởi, Phường Tân Phong, TP. Biên Hòa, Đồng Nai",
+    "latitude": 10.9575,
+    "longitude": 106.8481
+  },
+  {
+    "store_id": "2600",
+    "name": "Chi Nhánh Cà Mau - Trung Tâm",
+    "city": "Cà Mau",
+    "address": "36 Phan Ngọc Hiển, Phường 4, TP. Cà Mau, Cà Mau",
+    "latitude": 9.1802,
+    "longitude": 105.1512
+  },
+  {
+    "store_id": "2700",
+    "name": "Chi Nhánh Lạng Sơn - Trung Tâm",
+    "city": "Lạng Sơn",
+    "address": "Phố Kỳ Lừa, Phường Vĩnh Trại, TP. Lạng Sơn, Lạng Sơn",
+    "latitude": 21.8591,
+    "longitude": 106.7581
   }
 ]

@@ -16,10 +16,6 @@ export class CreateSaleReportDto {
   @IsString({ message: 'Mã sản phẩm phải là chuỗi ký tự.' })
   product_id!: string;
 
-  @IsNotEmpty({ message: 'Mã khách hàng không được để trống.' })
-  @IsString({ message: 'Mã khách hàng phải là chuỗi ký tự.' })
-  customer_id!: string;
-
   @IsNotEmpty({ message: 'Số lượng bán không được để trống.' })
   @IsNumber({}, { message: 'Số lượng bán phải là một số.' })
   @Min(0, { message: 'Số lượng bán tối thiểu là 0.' })

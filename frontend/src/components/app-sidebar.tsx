@@ -17,13 +17,14 @@ import {
   Sparkles,
   Bell,
   Building2Icon,
+  CirclePlusIcon,
+  MailIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import * as React from 'react';
-import { NavDocuments } from '@/components/nav-documents';
-import { NavMain } from '@/components/nav-main';
 import { NavSecondary } from '@/components/nav-secondary';
 import { NavUser } from '@/components/nav-user';
+import { Button } from '@/components/ui/button';
 import {
   Sidebar,
   SidebarContent,
@@ -32,12 +33,15 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from '@/components/ui/sidebar';
 import { accountService } from '@/lib/services/account.service';
 import { notificationService } from '@/lib/services/notification.service';
 
 const data = {
-  navMain: [
+  features: [
     {
       title: 'Bảng điều khiển',
       url: '/dashboard',
@@ -49,19 +53,56 @@ const data = {
       icon: <Sparkles />,
     },
     {
-      title: 'Quản lý doanh thu',
-      url: '#',
-      icon: <ChartBarIcon />,
-    },
-    {
       title: 'Dự báo xu hướng',
-      url: '#',
+      url: '/dashboard/trend-forecast',
       icon: <TrendingUpIcon />,
     },
     {
       title: 'Quản lý Landing Page',
       url: '/dashboard/landing',
       icon: <Globe />,
+    },
+  ],
+  dataManagement: [
+    {
+      title: 'Thống kê doanh thu',
+      url: '/dashboard/revenue-stats',
+      icon: <TrendingUpIcon />,
+    },
+    {
+      title: 'Báo cáo doanh thu',
+      url: '/dashboard/reports',
+      icon: <FileChartColumnIcon />,
+    },
+    {
+      title: 'Quản lý doanh số (Sale)',
+      url: '/dashboard/report-sale',
+      icon: <ChartBarIcon />,
+    },
+    {
+      title: 'Quản lý tồn kho (Inventory)',
+      url: '/dashboard/report-inventory',
+      icon: <DatabaseIcon />,
+    },
+    {
+      title: 'Quản lý sản phẩm',
+      url: '/dashboard/products',
+      icon: <FolderIcon />,
+    },
+    {
+      title: 'Quản lý kho hàng',
+      url: '/dashboard/plants',
+      icon: <PackageIcon />,
+    },
+    {
+      title: 'Quản lý chi nhánh',
+      url: '/dashboard/branches',
+      icon: <Building2Icon />,
+    },
+    {
+      title: 'Quản lý tài khoản',
+      url: '/dashboard/accounts',
+      icon: <UsersIcon />,
     },
   ],
   navSecondary: [
@@ -81,43 +122,6 @@ const data = {
       icon: <CircleHelpIcon />,
     },
   ],
-  documents: [
-    {
-      name: 'Báo cáo doanh thu',
-      url: '/dashboard/reports',
-      icon: <FileChartColumnIcon />,
-    },
-    {
-      name: 'Quản lý doanh số (Sale)',
-      url: '/dashboard/report-sale',
-      icon: <ChartBarIcon />,
-    },
-    {
-      name: 'Quản lý tồn kho (Inventory)',
-      url: '/dashboard/report-inventory',
-      icon: <DatabaseIcon />,
-    },
-    {
-      name: 'Quản lý sản phẩm',
-      url: '/dashboard/products',
-      icon: <FolderIcon />,
-    },
-    {
-      name: 'Quản lý kho hàng',
-      url: '/dashboard/plants',
-      icon: <PackageIcon />,
-    },
-    {
-      name: 'Quản lý chi nhánh',
-      url: '/dashboard/branches',
-      icon: <Building2Icon />,
-    },
-    {
-      name: 'Quản lý tài khoản',
-      url: '/dashboard/accounts',
-      icon: <UsersIcon />,
-    },
-  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -135,8 +139,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const [unreadCount, setUnreadCount] = React.useState(0);
 
-  const filteredNavMain = React.useMemo(() => {
-    return data.navMain.filter((item) => {
+  const filteredDataManagement = React.useMemo(() => {
+    return data.dataManagement.filter((item) => {
       if (item.url === '/dashboard/accounts') {
         return userProfile.role === 'ADMIN';
       }
@@ -192,35 +196,85 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* ── Content ── */}
       <SidebarContent>
-        {/* Navigation chính */}
-        <NavMain items={filteredNavMain} />
+        {/* ── Section 1: TÍNH NĂNG ── */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Tính năng</SidebarGroupLabel>
+          <SidebarGroupContent className="flex flex-col gap-2">
+            <SidebarMenu>
+              {/* Nút Tạo Nhanh & Hộp Thư */}
+              <SidebarMenuItem className="flex items-center gap-2 mb-2 px-1">
+                <SidebarMenuButton
+                  tooltip="Tạo nhanh"
+                  className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+                >
+                  <CirclePlusIcon className="size-4" />
+                  <span>Tạo nhanh</span>
+                </SidebarMenuButton>
+                <Button
+                  size="icon"
+                  className="size-8 shrink-0 group-data-[collapsible=icon]:opacity-0"
+                  variant="outline"
+                >
+                  <MailIcon className="size-4" />
+                  <span className="sr-only">Hộp thư đến</span>
+                </Button>
+              </SidebarMenuItem>
 
-        {/* Tài liệu & công cụ */}
-        <NavDocuments items={data.documents} />
+              {/* Các tính năng chính */}
+              {data.features.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                    <Link href={item.url}>
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
 
-        {/* Thông báo — link đến trang riêng */}
-        <SidebarMenu className="px-2">
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/dashboard/notifications" className="flex items-center gap-2 w-full">
-                <span className="relative flex items-center">
-                  <Bell className="h-4 w-4" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[8px] font-bold text-primary-foreground leading-none">
-                      {unreadCount > 99 ? '99+' : unreadCount}
+              {/* Thông báo */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Thông báo">
+                  <Link href="/dashboard/notifications" className="flex items-center gap-2 w-full">
+                    <span className="relative flex items-center">
+                      <Bell className="h-4 w-4" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[8px] font-bold text-primary-foreground leading-none">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
                     </span>
-                  )}
-                </span>
-                <span>Thông báo</span>
-                {unreadCount > 0 && (
-                  <span className="ml-auto text-[10px] font-semibold text-primary">
-                    {unreadCount} mới
-                  </span>
-                )}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+                    <span>Thông báo</span>
+                    {unreadCount > 0 && (
+                      <span className="ml-auto text-[10px] font-semibold text-primary group-data-[collapsible=icon]:hidden">
+                        {unreadCount} mới
+                      </span>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* ── Section 2: DỮ LIỆU ── */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Dữ liệu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {filteredDataManagement.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild tooltip={item.title}>
+                    <Link href={item.url}>
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         {/* Điều hướng phụ */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />

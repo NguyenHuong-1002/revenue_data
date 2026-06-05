@@ -157,15 +157,13 @@ export function InventoryReportsCharts({ reports }: InventoryReportsChartsProps)
                   </div>
                 ) : (
                   <ChartContainer config={chartConfig} className="h-full w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={plantData} margin={{ left: -10, right: 10, top: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                        <XAxis dataKey="name" tickLine={false} axisLine={false} style={{ fontSize: '10px' }} />
-                        <YAxis tickLine={false} axisLine={false} style={{ fontSize: '10px' }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="count" fill="hsl(262.1, 83.3%, 57.8%)" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <BarChart data={plantData} margin={{ left: -10, right: 10, top: 10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                      <XAxis dataKey="name" tickLine={false} axisLine={false} style={{ fontSize: '10px' }} />
+                      <YAxis tickLine={false} axisLine={false} style={{ fontSize: '10px' }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="count" fill="hsl(262.1, 83.3%, 57.8%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
                   </ChartContainer>
                 )}
               </div>

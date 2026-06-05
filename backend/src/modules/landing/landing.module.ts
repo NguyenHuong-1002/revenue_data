@@ -1,23 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { LandingController } from './landing.controller';
-import { LandingService } from './landing.service';
-import { LandingFeatureEntity } from '../../entities/landing-feature.entity';
-import { LandingAiInsightEntity } from '../../entities/landing-ai-insight.entity';
-import { LandingTestimonialEntity } from '../../entities/landing-testimonial.entity';
-import { LandingPricingEntity } from '../../entities/landing-pricing.entity';
+import { FeatureModule } from './features/feature.module';
+import { AiInsightModule } from './ai-insights/ai-insight.module';
+import { TestimonialModule } from './testimonials/testimonial.module';
+import { PricingModule } from './pricing/pricing.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      LandingFeatureEntity,
-      LandingAiInsightEntity,
-      LandingTestimonialEntity,
-      LandingPricingEntity,
-    ]),
-  ],
-  controllers: [LandingController],
-  providers: [LandingService],
-  exports: [LandingService],
+  imports: [FeatureModule, AiInsightModule, TestimonialModule, PricingModule],
 })
 export class LandingModule {}

@@ -154,7 +154,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
 
           <div className="relative hidden bg-muted md:block">
             <img
-              src="/login_banner.png"
+              src="/image_auth.webp"
               alt="Image"
               className="absolute inset-0 h-full w-full object-cover"
             />

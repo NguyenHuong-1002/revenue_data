@@ -2,6 +2,7 @@ import { ArrowLeftIcon, BarChart3Icon } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { DynamicBreadcrumb } from '@/components/dynamic-breadcrumb';
 
 export const metadata: Metadata = {
   title: 'Điều khoản dịch vụ | Hệ thống Doanh thu',
@@ -27,6 +28,7 @@ export default function TermsPage() {
         </div>
 
         <div className="space-y-8">
+          <DynamicBreadcrumb />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Điều khoản dịch vụ</h1>
             <p className="mt-2 text-sm text-muted-foreground">Cập nhật lần cuối: 01/06/2026</p>

@@ -10,6 +10,15 @@ export class BranchItemDto {
   @ApiProperty({ example: 'Hà Nội', description: 'Thành phố' })
   city!: string;
 
+  @ApiProperty({ example: '72 Nguyễn Trãi, Đống Đa, Hà Nội', description: 'Địa chỉ chi tiết', nullable: true })
+  address!: string | null;
+
+  @ApiProperty({ example: 21.0029, description: 'Vĩ độ (latitude)', nullable: true })
+  latitude!: number | null;
+
+  @ApiProperty({ example: 105.8152, description: 'Kinh độ (longitude)', nullable: true })
+  longitude!: number | null;
+
   @ApiProperty({ example: '2026-05-27T07:20:41.142Z', description: 'Thời gian tạo' })
   created_at!: Date;
 

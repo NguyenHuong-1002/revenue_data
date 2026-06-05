@@ -270,22 +270,20 @@ export function ProductsCharts({ products }: ProductsChartsProps) {
                   <div className="h-[160px] flex items-center justify-center text-xs text-muted-foreground">Không có dữ liệu</div>
                 ) : (
                   <ChartContainer config={chartConfig} className="h-[160px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={ageData} layout="vertical" margin={{ left: -10, right: 10, top: 5, bottom: 5 }}>
-                        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
-                        <XAxis type="number" hide />
-                        <YAxis
-                          dataKey="name"
-                          type="category"
-                          axisLine={false}
-                          tickLine={false}
-                          width={80}
-                          tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                        <Bar dataKey="count" fill="hsl(217.2, 91.2%, 59.8%)" radius={[0, 4, 4, 0]} barSize={8} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <BarChart data={ageData} layout="vertical" margin={{ left: -10, right: 10, top: 5, bottom: 5 }}>
+                      <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+                      <XAxis type="number" hide />
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        axisLine={false}
+                        tickLine={false}
+                        width={80}
+                        tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                      <Bar dataKey="count" fill="hsl(217.2, 91.2%, 59.8%)" radius={[0, 4, 4, 0]} barSize={8} />
+                    </BarChart>
                   </ChartContainer>
                 )}
               </div>
@@ -297,22 +295,20 @@ export function ProductsCharts({ products }: ProductsChartsProps) {
                   <div className="h-[160px] flex items-center justify-center text-xs text-muted-foreground">Không có dữ liệu</div>
                 ) : (
                   <ChartContainer config={chartConfig} className="h-[160px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={activityData} layout="vertical" margin={{ left: -10, right: 10, top: 5, bottom: 5 }}>
-                        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
-                        <XAxis type="number" hide />
-                        <YAxis
-                          dataKey="name"
-                          type="category"
-                          axisLine={false}
-                          tickLine={false}
-                          width={80}
-                          tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                        <Bar dataKey="count" fill="hsl(173.4, 80.4%, 40%)" radius={[0, 4, 4, 0]} barSize={8} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <BarChart data={activityData} layout="vertical" margin={{ left: -10, right: 10, top: 5, bottom: 5 }}>
+                      <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+                      <XAxis type="number" hide />
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        axisLine={false}
+                        tickLine={false}
+                        width={80}
+                        tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                      <Bar dataKey="count" fill="hsl(173.4, 80.4%, 40%)" radius={[0, 4, 4, 0]} barSize={8} />
+                    </BarChart>
                   </ChartContainer>
                 )}
               </div>
@@ -324,22 +320,20 @@ export function ProductsCharts({ products }: ProductsChartsProps) {
                   <div className="h-[160px] flex items-center justify-center text-xs text-muted-foreground">Không có dữ liệu</div>
                 ) : (
                   <ChartContainer config={chartConfig} className="h-[160px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={lifestyleData} layout="vertical" margin={{ left: -10, right: 10, top: 5, bottom: 5 }}>
-                        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
-                        <XAxis type="number" hide />
-                        <YAxis
-                          dataKey="name"
-                          type="category"
-                          axisLine={false}
-                          tickLine={false}
-                          width={70}
-                          tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                        <Bar dataKey="count" fill="hsl(262.1, 83.3%, 57.8%)" radius={[0, 4, 4, 0]} barSize={8} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <BarChart data={lifestyleData} layout="vertical" margin={{ left: -10, right: 10, top: 5, bottom: 5 }}>
+                      <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
+                      <XAxis type="number" hide />
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        axisLine={false}
+                        tickLine={false}
+                        width={70}
+                        tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                      <Bar dataKey="count" fill="hsl(262.1, 83.3%, 57.8%)" radius={[0, 4, 4, 0]} barSize={8} />
+                    </BarChart>
                   </ChartContainer>
                 )}
               </div>

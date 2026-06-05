@@ -11,13 +11,12 @@ async function check() {
   });
 
   try {
-    const [rows] = await connection.query('SELECT COUNT(*) as total, MIN(calendar_year_week) as min_date, MAX(calendar_year_week) as max_date FROM InventoryReport');
-    console.log('--- INVENTORY REPORT TABLE STATS ---');
-    console.log(JSON.stringify(rows[0], null, 2));
-
-    const [sample] = await connection.query('SELECT * FROM InventoryReport LIMIT 3');
-    console.log('--- SAMPLE ROWS ---');
-    console.log(JSON.stringify(sample, null, 2));
+    const tables = ['storeBranch', 'Plant', 'product', 'account', 'InventoryReport', 'saleReport'];
+    console.log('--- DATABASE TABLE RECORD COUNTS ---');
+    for (const t of tables) {
+      const [rows] = await connection.query(`SELECT COUNT(*) as total FROM ${t}`);
+      console.log(`${t}: ${rows[0].total} rows`);
+    }
   } catch (err) {
     console.error('Error querying DB:', err);
   } finally {
@@ -26,3 +25,4 @@ async function check() {
 }
 
 check();
+

@@ -18,7 +18,6 @@ export interface CleanedProduct {
 export interface CleanedSaleReport {
   sale_id: string;
   product_id: string;
-  customer_id: string;
   sold_quantity: number;
   distribution_channel: string;
   branch_id: string;

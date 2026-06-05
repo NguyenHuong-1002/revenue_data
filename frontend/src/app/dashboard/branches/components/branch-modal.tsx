@@ -1,27 +1,32 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { PlusCircle, SaveIcon } from 'lucide-react';
 import * as React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { PlusCircle } from 'lucide-react';
-import { Modal } from './modal';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Modal } from '@/components/ui/modal';
+import type { IBranch } from '@/lib/types/branch';
 import { createBranchSchema, type CreateBranchFormValues } from '../branches.schema';
 
-interface CreateBranchModalProps {
+interface BranchModalProps {
   isOpen: boolean;
   onClose: () => void;
+  branch: IBranch | null; // Nếu null là tạo mới, khác null là cập nhật
   onSubmit: (data: CreateBranchFormValues) => Promise<void>;
 }
 
-export function CreateBranchModal({ isOpen, onClose, onSubmit }: CreateBranchModalProps) {
+export function BranchModal({ isOpen, onClose, branch, onSubmit }: BranchModalProps) {
+  const isEdit = !!branch;
+
   const form = useForm<CreateBranchFormValues>({
     resolver: zodResolver(createBranchSchema),
     defaultValues: {
       name: '',
       city: '',
+      address: '',
     },
   });
 
@@ -34,12 +39,21 @@ export function CreateBranchModal({ isOpen, onClose, onSubmit }: CreateBranchMod
 
   React.useEffect(() => {
     if (isOpen) {
-      reset({
-        name: '',
-        city: '',
-      });
+      if (branch) {
+        reset({
+          name: branch.name,
+          city: branch.city,
+          address: branch.address ?? '',
+        });
+      } else {
+        reset({
+          name: '',
+          city: '',
+          address: '',
+        });
+      }
     }
-  }, [isOpen, reset]);
+  }, [isOpen, branch, reset]);
 
   const handleFormSubmit = async (data: CreateBranchFormValues) => {
     try {
@@ -51,15 +65,21 @@ export function CreateBranchModal({ isOpen, onClose, onSubmit }: CreateBranchMod
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Thêm chi nhánh mới">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? 'Sửa thông tin chi nhánh' : 'Thêm chi nhánh mới'}
+    >
       <FormProvider {...form}>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <FieldGroup className="gap-3">
             <Field>
-              <FieldLabel htmlFor="create-branch-name">Tên chi nhánh</FieldLabel>
+              <FieldLabel htmlFor="branch-name">Tên chi nhánh</FieldLabel>
               <Input
-                id="create-branch-name"
-                placeholder="Nhập tên chi nhánh (ví dụ: Chi nhánh Quận 1)"
+                id="branch-name"
+                placeholder={
+                  isEdit ? 'Nhập tên chi nhánh' : 'Nhập tên chi nhánh (ví dụ: Chi nhánh Quận 1)'
+                }
                 {...register('name')}
                 data-invalid={!!errors.name}
               />
@@ -67,14 +87,25 @@ export function CreateBranchModal({ isOpen, onClose, onSubmit }: CreateBranchMod
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="create-branch-city">Thành phố</FieldLabel>
+              <FieldLabel htmlFor="branch-city">Thành phố</FieldLabel>
               <Input
-                id="create-branch-city"
-                placeholder="Nhập thành phố (ví dụ: Hồ Chí Minh)"
+                id="branch-city"
+                placeholder="Nhập thành phố"
                 {...register('city')}
                 data-invalid={!!errors.city}
               />
               <FieldError errors={[errors.city]} />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="branch-address">Địa chỉ chi tiết</FieldLabel>
+              <Input
+                id="branch-address"
+                placeholder="Nhập địa chỉ chi tiết (ví dụ: 123 Đường Lê Lợi)"
+                {...register('address')}
+                data-invalid={!!errors.address}
+              />
+              <FieldError errors={[errors.address]} />
             </Field>
           </FieldGroup>
 
@@ -93,8 +124,18 @@ export function CreateBranchModal({ isOpen, onClose, onSubmit }: CreateBranchMod
               disabled={isSubmitting}
               className="bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-lg hover:shadow-blue-500/10 cursor-pointer"
             >
-              <PlusCircle className="size-4 mr-2" />
-              {isSubmitting ? 'Đang tạo...' : 'Thêm chi nhánh'}
+              {isEdit ? (
+                <SaveIcon className="size-4 mr-2" />
+              ) : (
+                <PlusCircle className="size-4 mr-2" />
+              )}
+              {isSubmitting
+                ? isEdit
+                  ? 'Đang lưu...'
+                  : 'Đang tạo...'
+                : isEdit
+                  ? 'Lưu thay đổi'
+                  : 'Thêm chi nhánh'}
             </Button>
           </div>
         </form>

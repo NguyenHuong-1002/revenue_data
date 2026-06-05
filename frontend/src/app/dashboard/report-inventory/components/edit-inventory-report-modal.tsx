@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal } from './modal';
+import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -127,7 +127,7 @@ export function EditInventoryReportModal({ isOpen, onClose, onSubmit, report }: 
                       <SelectContent position="popper">
                         {plants.map((pl) => (
                           <SelectItem key={pl.plant_id} value={pl.plant_id}>
-                            {pl.name} ({pl.plant_id})
+                            {pl.name_plant} ({pl.plant_id})
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -22,7 +22,7 @@ tests {
   expect(response.meta).to.have.property('page', 1);
   expect(response.meta).to.have.property('limit', 10);
   expect(Array.isArray(response.data)).to.be.true;
-
+  
   if (response.data.length > 0) {
     bru.setEnvVar('currentBranchId', response.data[0].store_id);
   }

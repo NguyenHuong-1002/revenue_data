@@ -34,7 +34,7 @@ import { accountService } from '@/lib/services/account.service';
 import { toast } from 'sonner';
 import { CreateProductModal } from './components/create-product-modal';
 import { EditProductModal } from './components/edit-product-modal';
-import { Modal } from './components/modal';
+import { Modal } from '@/components/ui/modal';
 import { ProductsCharts } from './components/products-charts';
 import type { IProduct } from '@/lib/types/product';
 import type { IAccount } from '@/lib/types/account';
