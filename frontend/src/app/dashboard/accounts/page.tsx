@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Users,
   UserCheck,
@@ -18,6 +18,10 @@ import {
   ChevronRight,
   Shield,
   User,
+  SlidersHorizontal,
+  X,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,6 +69,7 @@ export default function AccountsPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<IAccount | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Fetch current user
   useEffect(() => {
@@ -227,6 +232,60 @@ export default function AccountsPage() {
   const adminCount = chartAccounts.filter((acc) => acc.role === 'ADMIN').length;
   const staffCount = chartAccounts.filter((acc) => acc.role === 'STAFF').length;
 
+  const stats = useMemo(() => {
+    const total = chartAccounts.length;
+    
+    // Tỉ lệ hoạt động (Active ratio)
+    const activeCount = chartAccounts.filter((acc) => acc.status_account === 'ACTIVE').length;
+    const activeRatio = total > 0 ? (activeCount / total) * 100 : 0;
+
+    // Tốc độ tăng trưởng & % so với tháng trước
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const startOfThisMonth = new Date(currentYear, currentMonth, 1);
+    
+    const startOfLastMonth = new Date(
+      currentMonth === 0 ? currentYear - 1 : currentYear,
+      currentMonth === 0 ? 11 : currentMonth - 1,
+      1
+    );
+
+    const totalBeforeThisMonth = chartAccounts.filter(
+      (acc) => new Date(acc.created_at) < startOfThisMonth
+    ).length;
+
+    const newThisMonth = chartAccounts.filter(
+      (acc) => new Date(acc.created_at) >= startOfThisMonth
+    ).length;
+
+    const newLastMonth = chartAccounts.filter((acc) => {
+      const date = new Date(acc.created_at);
+      return date >= startOfLastMonth && date < startOfThisMonth;
+    }).length;
+
+    // % so với tháng trước
+    const pctChange = totalBeforeThisMonth > 0 ? (newThisMonth / totalBeforeThisMonth) * 100 : 0;
+
+    // Tốc độ tăng trưởng MoM
+    let growthRate = 0;
+    if (newLastMonth > 0) {
+      growthRate = ((newThisMonth - newLastMonth) / newLastMonth) * 100;
+    } else if (newThisMonth > 0) {
+      growthRate = 100;
+    }
+
+    return {
+      total,
+      pctChange,
+      growthRate,
+      activeCount,
+      activeRatio,
+      newThisMonth,
+    };
+  }, [chartAccounts]);
+
   return (
     <div className="flex flex-1 flex-col p-6 gap-6 max-w-7xl mx-auto w-full">
       {/* Header section */}
@@ -251,41 +310,81 @@ export default function AccountsPage() {
       <div
         className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${currentUser?.role !== 'ADMIN' ? 'opacity-50 pointer-events-none select-none' : ''}`}
       >
-        <Card className="bg-card border-border shadow-md">
+        {/* Card 1: Tổng tài khoản */}
+        <Card className="bg-card border-border shadow-md relative overflow-hidden group hover:border-border/80 transition-all">
           <CardContent className="p-6 flex items-center justify-between">
-            <div className="space-y-2">
+            <div className="space-y-1">
               <span className="text-muted-foreground text-sm font-medium">Tổng tài khoản</span>
-              <p className="text-3xl font-bold text-foreground">{totalAccounts}</p>
+              <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+              
+              <div className="flex items-center gap-1 mt-2">
+                {stats.pctChange > 0 ? (
+                  <>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 border border-emerald-500/20">
+                      <TrendingUp className="h-3 w-3" />
+                      +{stats.pctChange.toFixed(1)}%
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">so với tháng trước</span>
+                  </>
+                ) : stats.pctChange < 0 ? (
+                  <>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 text-rose-600 bg-rose-500/10 dark:text-rose-400 border border-rose-500/25">
+                      <TrendingDown className="h-3 w-3" />
+                      {stats.pctChange.toFixed(1)}%
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">so với tháng trước</span>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground italic">Không đổi so với tháng trước</span>
+                )}
+              </div>
             </div>
-            <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+            <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
               <Users className="size-6" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border shadow-md">
+        {/* Card 2: Tốc độ tăng trưởng */}
+        <Card className="bg-card border-border shadow-md relative overflow-hidden group hover:border-border/80 transition-all">
           <CardContent className="p-6 flex items-center justify-between">
-            <div className="space-y-2">
-              <span className="text-muted-foreground text-sm font-medium">Quản trị viên</span>
+            <div className="space-y-1">
+              <span className="text-muted-foreground text-sm font-medium">Tốc độ tăng trưởng</span>
               <p className="text-3xl font-bold text-foreground">
-                {roleFilter === 'ALL' && keyword === '' ? adminCount : '-'}
+                {stats.growthRate > 0 ? '+' : ''}{stats.growthRate.toFixed(1)}%
               </p>
+              
+              <div className="flex items-center gap-1 mt-2">
+                {stats.growthRate > 0 ? (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 border border-emerald-500/20">
+                    <TrendingUp className="h-3 w-3" />
+                    MoM Growth
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground italic">Gia tăng thành viên ổn định</span>
+                )}
+              </div>
             </div>
-            <div className="size-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
-              <Shield className="size-6" />
+            <div className="size-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 shrink-0">
+              <TrendingUp className="size-6" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border shadow-md">
+        {/* Card 3: Tỉ lệ người dùng đồng hành */}
+        <Card className="bg-card border-border shadow-md relative overflow-hidden group hover:border-border/80 transition-all">
           <CardContent className="p-6 flex items-center justify-between">
-            <div className="space-y-2">
-              <span className="text-muted-foreground text-sm font-medium">Nhân viên</span>
+            <div className="space-y-1">
+              <span className="text-muted-foreground text-sm font-medium">Người dùng đồng hành</span>
               <p className="text-3xl font-bold text-foreground">
-                {roleFilter === 'ALL' && keyword === '' ? staffCount : '-'}
+                {stats.activeRatio.toFixed(1)}%
+              </p>
+              
+              <p className="text-[10px] text-muted-foreground mt-2">
+                {stats.activeCount} / {stats.total} tài khoản đang hoạt động
               </p>
             </div>
-            <div className="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+            <div className="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
               <UserCheck className="size-6" />
             </div>
           </CardContent>
@@ -303,107 +402,159 @@ export default function AccountsPage() {
 
       {/* Search and Filters */}
       <Card
-        className={`bg-card border-border shadow-sm ${currentUser?.role !== 'ADMIN' ? 'opacity-50 pointer-events-none select-none' : ''}`}
+        className={`bg-card border-border shadow-sm overflow-hidden ${currentUser?.role !== 'ADMIN' ? 'opacity-50 pointer-events-none select-none' : ''}`}
       >
-        <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-          {/* Keyword Search */}
-          <div className="relative w-full md:max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Tìm theo họ tên, email hoặc username..."
-              value={keyword}
-              onChange={handleSearchChange}
-              className="pl-9 bg-muted/20 border-border"
-            />
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 w-full md:w-auto items-center justify-end">
-            {/* Role Filter */}
-            <div className="flex gap-3 items-center w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground hidden sm:inline whitespace-nowrap">
-                Vai trò:
-              </span>
-              <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
-                <SelectTrigger className="w-full sm:w-40 border-border">
-                  <SelectValue placeholder="Tất cả vai trò" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Tất cả vai trò</SelectItem>
-                  <SelectItem value="ADMIN">Quản trị viên</SelectItem>
-                  <SelectItem value="STAFF">Nhân viên</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Status Filter */}
-            <div className="flex gap-3 items-center w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground hidden sm:inline whitespace-nowrap">
-                Trạng thái:
-              </span>
-              <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                <SelectTrigger className="w-full sm:w-40 border-border">
-                  <SelectValue placeholder="Tất cả trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
-                  <SelectItem value="ACTIVE">Hoạt động</SelectItem>
-                  <SelectItem value="INACTIVE">Tạm ngưng</SelectItem>
-                  <SelectItem value="LOCKED">Bị khóa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Start Date */}
-            <div className="flex gap-3 items-center w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground hidden sm:inline whitespace-nowrap">
-                Từ ngày:
-              </span>
-              <input
-                type="date"
-                value={startDate}
-                onChange={handleStartDateChange}
-                className="w-full sm:w-40 bg-background border border-border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary text-foreground dark:[color-scheme:dark] h-9 cursor-pointer"
-                max={endDate || undefined}
+        <CardContent className="p-4 space-y-4">
+          {/* Main search bar */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+            <div className="relative w-full sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm theo họ tên, email hoặc username..."
+                value={keyword}
+                onChange={handleSearchChange}
+                className="pl-9 bg-muted/20 border-border h-10 text-sm"
               />
             </div>
 
-            {/* End Date */}
-            <div className="flex gap-3 items-center w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground hidden sm:inline whitespace-nowrap">
-                Đến ngày:
-              </span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={handleEndDateChange}
-                className="w-full sm:w-40 bg-background border border-border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary text-foreground dark:[color-scheme:dark] h-9 cursor-pointer"
-                min={startDate || undefined}
-              />
-            </div>
-
-            {/* Clear Filters Button */}
-            {(keyword ||
-              roleFilter !== 'ALL' ||
-              statusFilter !== 'ALL' ||
-              startDate ||
-              endDate) && (
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <Button
-                variant="ghost"
-                onClick={() => {
-                  setKeyword('');
-                  setRoleFilter('ALL');
-                  setStatusFilter('ALL');
-                  setStartDate('');
-                  setEndDate('');
-                  setCurrentPage(1);
-                }}
-                className="h-9 px-3 text-muted-foreground hover:text-foreground cursor-pointer text-xs"
+                variant={showAdvancedFilters || roleFilter !== 'ALL' || statusFilter !== 'ALL' || startDate || endDate ? "secondary" : "outline"}
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="h-10 text-xs gap-2 cursor-pointer w-full sm:w-auto font-medium"
               >
-                Xóa bộ lọc
+                <SlidersHorizontal className="size-3.5" />
+                Bộ lọc nâng cao
+                {(roleFilter !== 'ALL' || statusFilter !== 'ALL' || startDate || endDate) && (
+                  <Badge variant="default" className="ml-1 size-5 rounded-full flex items-center justify-center p-0 text-[10px] bg-blue-600 text-white border-none font-bold">
+                    {Number(roleFilter !== 'ALL') + Number(statusFilter !== 'ALL') + Number(!!startDate) + Number(!!endDate)}
+                  </Badge>
+                )}
               </Button>
-            )}
+
+              {(keyword || roleFilter !== 'ALL' || statusFilter !== 'ALL' || startDate || endDate) && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setKeyword('');
+                    setRoleFilter('ALL');
+                    setStatusFilter('ALL');
+                    setStartDate('');
+                    setEndDate('');
+                    setCurrentPage(1);
+                  }}
+                  className="h-10 px-3 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  Đặt lại
+                </Button>
+              )}
+            </div>
           </div>
+
+          {/* Advanced filters collapsible block */}
+          {showAdvancedFilters && (
+            <div className="p-4 bg-muted/20 border border-border/60 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Role Filter */}
+                <div className="space-y-1.5">
+                  <span className="text-xs font-semibold text-muted-foreground block">Vai trò</span>
+                  <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
+                    <SelectTrigger className="w-full border-border h-9 text-xs">
+                      <SelectValue placeholder="Tất cả vai trò" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Tất cả vai trò</SelectItem>
+                      <SelectItem value="ADMIN">Quản trị viên</SelectItem>
+                      <SelectItem value="STAFF">Nhân viên</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Status Filter */}
+                <div className="space-y-1.5">
+                  <span className="text-xs font-semibold text-muted-foreground block">Trạng thái</span>
+                  <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+                    <SelectTrigger className="w-full border-border h-9 text-xs">
+                      <SelectValue placeholder="Tất cả trạng thái" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
+                      <SelectItem value="ACTIVE">Hoạt động</SelectItem>
+                      <SelectItem value="INACTIVE">Tạm ngưng</SelectItem>
+                      <SelectItem value="LOCKED">Bị khóa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Start Date */}
+                <div className="space-y-1.5">
+                  <span className="text-xs font-semibold text-muted-foreground block">Từ ngày</span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary text-foreground dark:[color-scheme:dark] h-9 cursor-pointer"
+                    max={endDate || undefined}
+                  />
+                </div>
+
+                {/* End Date */}
+                <div className="space-y-1.5">
+                  <span className="text-xs font-semibold text-muted-foreground block">Đến ngày</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={handleEndDateChange}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary text-foreground dark:[color-scheme:dark] h-9 cursor-pointer"
+                    min={startDate || undefined}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Active Filter Tags */}
+          {(roleFilter !== 'ALL' || statusFilter !== 'ALL' || startDate || endDate || keyword) && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-border/45 items-center">
+              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mr-1">Đang lọc theo:</span>
+              
+              {keyword && (
+                <Badge variant="secondary" className="text-xs gap-1 py-0.5 px-2 bg-primary/5 hover:bg-primary/10 border border-primary/20 text-foreground">
+                  Từ khóa: "{keyword}"
+                  <button onClick={() => setKeyword('')} className="hover:text-destructive cursor-pointer">
+                    <X className="size-3" />
+                  </button>
+                </Badge>
+              )}
+
+              {roleFilter !== 'ALL' && (
+                <Badge variant="secondary" className="text-xs gap-1 py-0.5 px-2 bg-primary/5 hover:bg-primary/10 border border-primary/20 text-foreground">
+                  Vai trò: {roleFilter === 'ADMIN' ? 'Quản trị viên' : 'Nhân viên'}
+                  <button onClick={() => setRoleFilter('ALL')} className="hover:text-destructive cursor-pointer">
+                    <X className="size-3" />
+                  </button>
+                </Badge>
+              )}
+
+              {statusFilter !== 'ALL' && (
+                <Badge variant="secondary" className="text-xs gap-1 py-0.5 px-2 bg-primary/5 hover:bg-primary/10 border border-primary/20 text-foreground">
+                  Trạng thái: {statusFilter === 'ACTIVE' ? 'Hoạt động' : statusFilter === 'INACTIVE' ? 'Tạm ngưng' : 'Bị khóa'}
+                  <button onClick={() => setStatusFilter('ALL')} className="hover:text-destructive cursor-pointer">
+                    <X className="size-3" />
+                  </button>
+                </Badge>
+              )}
+
+              {(startDate || endDate) && (
+                <Badge variant="secondary" className="text-xs gap-1 py-0.5 px-2 bg-primary/5 hover:bg-primary/10 border border-primary/20 text-foreground">
+                  Thời gian: {startDate || '*'} - {endDate || '*'}
+                  <button onClick={() => { setStartDate(''); setEndDate(''); }} className="hover:text-destructive cursor-pointer">
+                    <X className="size-3" />
+                  </button>
+                </Badge>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
