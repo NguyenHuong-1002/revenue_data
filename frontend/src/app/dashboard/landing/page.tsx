@@ -42,13 +42,15 @@ export default function LandingManagerPage() {
 
       {/* Tab Navigation */}
       <div className="flex border-b border-border/60 pb-px gap-2 overflow-x-auto scrollbar-none">
-        {([
-          { key: 'general', label: 'Thông tin chung & FAQ' },
-          { key: 'features', label: 'Tính năng nổi bật' },
-          { key: 'ai', label: 'Chức năng AI' },
-          { key: 'testimonials', label: 'Ý kiến khách hàng' },
-          { key: 'pricing', label: 'Gói Bảng giá' },
-        ] as const).map((tab) => (
+        {(
+          [
+            { key: 'general', label: 'Thông tin chung & FAQ' },
+            { key: 'features', label: 'Tính năng nổi bật' },
+            { key: 'ai', label: 'Chức năng AI' },
+            { key: 'testimonials', label: 'Ý kiến khách hàng' },
+            { key: 'pricing', label: 'Gói Bảng giá' },
+          ] as const
+        ).map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}

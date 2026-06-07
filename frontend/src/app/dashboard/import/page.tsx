@@ -18,11 +18,13 @@ export default function ImportPage() {
 
       {/* ── Tabs Navigation ── */}
       <div className="flex border-b border-border/60 gap-2 overflow-x-auto scrollbar-none">
-        {([
-          { key: 'products', label: 'Sản phẩm (Products)', icon: FolderOpen },
-          { key: 'sales', label: 'Doanh số (Sales)', icon: ShoppingBag },
-          { key: 'inventory', label: 'Tồn kho (Inventory)', icon: Boxes },
-        ] as const).map((tab) => {
+        {(
+          [
+            { key: 'products', label: 'Sản phẩm (Products)', icon: FolderOpen },
+            { key: 'sales', label: 'Doanh số (Sales)', icon: ShoppingBag },
+            { key: 'inventory', label: 'Tồn kho (Inventory)', icon: Boxes },
+          ] as const
+        ).map((tab) => {
           const Icon = tab.icon;
           return (
             <button

@@ -59,7 +59,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="dark min-h-screen bg-background text-foreground overflow-hidden relative selection:bg-primary/30">
+    <main className="min-h-screen bg-background text-foreground overflow-x-hidden relative selection:bg-primary/30">
       {/* Background Glowing Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
       <div className="absolute top-[30%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-chart-4/5 blur-[130px] pointer-events-none" />

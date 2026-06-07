@@ -468,7 +468,9 @@ export class SaleReportsService {
 
       topGrowth = [...activeGrowth].sort((a, b) => b.growthPercent - a.growthPercent).slice(0, 10);
 
-      bottomGrowth = [...activeGrowth].sort((a, b) => a.growthPercent - b.growthPercent).slice(0, 10);
+      bottomGrowth = [...activeGrowth]
+        .sort((a, b) => a.growthPercent - b.growthPercent)
+        .slice(0, 10);
     }
 
     return {

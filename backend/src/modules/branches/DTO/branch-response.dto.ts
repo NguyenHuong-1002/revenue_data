@@ -10,7 +10,11 @@ export class BranchItemDto {
   @ApiProperty({ example: 'Hà Nội', description: 'Thành phố' })
   city!: string;
 
-  @ApiProperty({ example: '72 Nguyễn Trãi, Đống Đa, Hà Nội', description: 'Địa chỉ chi tiết', nullable: true })
+  @ApiProperty({
+    example: '72 Nguyễn Trãi, Đống Đa, Hà Nội',
+    description: 'Địa chỉ chi tiết',
+    nullable: true,
+  })
   address!: string | null;
 
   @ApiProperty({ example: 21.0029, description: 'Vĩ độ (latitude)', nullable: true })

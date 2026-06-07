@@ -11,7 +11,6 @@ export class ProductService {
   constructor(
     private readonly db: DatabaseService,
     private readonly notificationService: NotificationService,
-    // eslint-disable-next-line prettier/prettier
   ) {}
 
   async getProductsAll(filters: GetProductAllDto): Promise<IPaginatedProducts> {

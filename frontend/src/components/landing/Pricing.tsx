@@ -40,7 +40,10 @@ export function Pricing({ items, isLoading = false }: PricingProps) {
       : defaultPricing;
 
   return (
-    <section id="pricing" className="relative border-t border-white/5 grid-pattern">
+    <section
+      id="pricing"
+      className="relative border-t border-zinc-200 dark:border-white/5 grid-pattern"
+    >
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center animate-fade-in">
           <Badge variant="outline" className="mb-4 border-primary/30 text-primary bg-primary/5">
@@ -82,10 +85,10 @@ export function Pricing({ items, isLoading = false }: PricingProps) {
             : displayPricing.map((plan, i) => (
                 <Card
                   key={plan.name}
-                  className={`relative border border-white/5 bg-white/[0.02] transition-all duration-500 animate-fade-in ${
+                  className={`relative border border-zinc-200 bg-zinc-50/30 dark:border-white/5 dark:bg-white/[0.02] transition-all duration-500 animate-fade-in ${
                     plan.popular
                       ? 'ring-1 ring-primary/50 shadow-[0_0_40px_rgba(var(--primary-rgb),0.1)] scale-105 hover:shadow-[0_0_60px_rgba(var(--primary-rgb),0.2)]'
-                      : 'hover:bg-white/[0.04] hover:-translate-y-1'
+                      : 'hover:bg-zinc-100/50 dark:hover:bg-white/[0.04] hover:-translate-y-1'
                   }`}
                   style={{ animationDelay: `${0.1 + i * 0.1}s` }}
                 >
@@ -117,7 +120,7 @@ export function Pricing({ items, isLoading = false }: PricingProps) {
                       className={`mt-6 w-full transition-all duration-300 ${
                         plan.popular
                           ? 'shadow-lg shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)] hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]'
-                          : 'border-white/10 hover:bg-white/5'
+                          : 'border-zinc-200 hover:bg-zinc-100 text-foreground dark:border-white/10 dark:hover:bg-white/5 dark:hover:text-white'
                       }`}
                       variant={plan.popular ? 'default' : 'outline'}
                     >

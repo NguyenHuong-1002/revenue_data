@@ -87,14 +87,17 @@ function TrendForecastInner() {
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const salesChartData = useMemo(() => {
     if (!forecastData?.sales?.chartData) return [];
-    
-    const tempMap: Record<string, {
-      period: string;
-      actual: number | null;
-      ema: number | null;
-      linear: number | null;
-      type: 'actual' | 'forecast';
-    }> = {};
+
+    const tempMap: Record<
+      string,
+      {
+        period: string;
+        actual: number | null;
+        ema: number | null;
+        linear: number | null;
+        type: 'actual' | 'forecast';
+      }
+    > = {};
 
     forecastData.sales.chartData.forEach((pt) => {
       if (!tempMap[pt.period]) {
@@ -106,7 +109,7 @@ function TrendForecastInner() {
           type: pt.type,
         };
       }
-      
+
       if (pt.type === 'actual') {
         tempMap[pt.period].actual = pt.value;
         tempMap[pt.period].ema = pt.value;
@@ -134,14 +137,17 @@ function TrendForecastInner() {
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const inventoryChartData = useMemo(() => {
     if (!forecastData?.inventory?.chartData) return [];
-    
-    const tempMap: Record<string, {
-      period: string;
-      actual: number | null;
-      ema: number | null;
-      linear: number | null;
-      type: 'actual' | 'forecast';
-    }> = {};
+
+    const tempMap: Record<
+      string,
+      {
+        period: string;
+        actual: number | null;
+        ema: number | null;
+        linear: number | null;
+        type: 'actual' | 'forecast';
+      }
+    > = {};
 
     forecastData.inventory.chartData.forEach((pt) => {
       if (!tempMap[pt.period]) {
@@ -153,7 +159,7 @@ function TrendForecastInner() {
           type: pt.type,
         };
       }
-      
+
       if (pt.type === 'actual') {
         tempMap[pt.period].actual = pt.value;
         tempMap[pt.period].ema = pt.value;

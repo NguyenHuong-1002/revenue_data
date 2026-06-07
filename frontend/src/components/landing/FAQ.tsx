@@ -14,7 +14,7 @@ export function FAQ({ items }: FAQProps) {
       : defaultFaqs.map((f) => ({ question: f.q, answer: f.a }));
 
   return (
-    <section id="faq" className="border-t border-white/5">
+    <section id="faq" className="border-t border-zinc-200 dark:border-white/5">
       <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center animate-fade-in">
           <Badge variant="outline" className="mb-4 border-sky-500/30 text-sky-400 bg-sky-500/5">
@@ -30,7 +30,7 @@ export function FAQ({ items }: FAQProps) {
           {displayFaqs.map((faq, i) => (
             <details
               key={faq.question}
-              className="group rounded-xl border border-white/5 bg-white/[0.02] p-4 open:bg-white/[0.04] transition-all duration-300 hover:border-white/10 animate-fade-in"
+              className="group rounded-xl border border-zinc-200 bg-zinc-50/30 dark:border-white/5 dark:bg-white/[0.02] p-4 open:bg-zinc-100/50 dark:open:bg-white/[0.04] transition-all duration-300 hover:border-zinc-300 dark:hover:border-white/10 animate-fade-in"
               style={{ animationDelay: `${0.1 + i * 0.1}s` }}
             >
               <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-medium">

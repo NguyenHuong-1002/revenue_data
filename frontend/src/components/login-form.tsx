@@ -34,9 +34,18 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = React.useState(false);
 
+  // Trigger error toast popup when backend returns a server-side login failure
+  React.useEffect(() => {
+    if (serverError) {
+      toast.error('Đăng nhập thất bại', {
+        description: serverError,
+        duration: 5000,
+      });
+    }
+  }, [serverError]);
+
   React.useEffect(() => {
     if (searchParams && searchParams.get('unauthorized') === 'true') {
-      // Clear URL parameter without reloading to prevent showing the toast again on refresh
       const url = new URL(window.location.href);
       url.searchParams.delete('unauthorized');
       window.history.replaceState({}, document.title, url.pathname + url.search);
@@ -60,12 +69,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
                   Đăng nhập vào tài khoản của bạn
                 </p>
               </div>
-
-              {serverError && (
-                <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
-                  {serverError}
-                </div>
-              )}
 
               <Field>
                 <FieldLabel htmlFor="username">Tên đăng nhập</FieldLabel>

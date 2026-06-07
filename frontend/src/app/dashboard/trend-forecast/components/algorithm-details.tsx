@@ -33,7 +33,10 @@ function AlgorithmCard({
       <div className="flex items-start gap-3">
         <div
           className="size-9 rounded-lg flex items-center justify-center shrink-0"
-          style={{ backgroundColor: `rgba(var(--${accentColor}-rgb), 0.08)`, color: `var(--${accentColor})` }}
+          style={{
+            backgroundColor: `rgba(var(--${accentColor}-rgb), 0.08)`,
+            color: `var(--${accentColor})`,
+          }}
         >
           {icon}
         </div>
@@ -85,10 +88,15 @@ function AlgorithmCard({
       {/* Ưu / Nhược điểm */}
       <div className="grid grid-cols-2 gap-3 mt-auto">
         <div className="rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/30 p-2.5">
-          <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">Ưu điểm</p>
+          <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+            Ưu điểm
+          </p>
           <ul className="list-disc list-inside space-y-0.5">
             {pros.map((p, i) => (
-              <li key={i} className="text-[10px] text-emerald-600 dark:text-emerald-300 leading-relaxed">
+              <li
+                key={i}
+                className="text-[10px] text-emerald-600 dark:text-emerald-300 leading-relaxed"
+              >
                 {p}
               </li>
             ))}

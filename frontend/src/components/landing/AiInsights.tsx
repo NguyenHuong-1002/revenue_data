@@ -14,7 +14,7 @@ export function AiInsights({ items, isLoading = false }: AiInsightsProps) {
   const displayInsights = items && items.length > 0 ? items : null;
 
   return (
-    <section id="ai-insights" className="relative border-t border-white/5">
+    <section id="ai-insights" className="relative border-t border-zinc-200 dark:border-white/5">
       <div className="absolute inset-0 bg-primary/[0.02] pointer-events-none" />
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 relative">
         <div className="mx-auto max-w-2xl text-center animate-fade-in">
@@ -54,7 +54,7 @@ export function AiInsights({ items, isLoading = false }: AiInsightsProps) {
               return (
                 <Card
                   key={insight.id || insight.title}
-                  className="group border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.1)] animate-fade-in"
+                  className="group border border-zinc-200 bg-zinc-50/30 hover:bg-zinc-50/80 dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.06] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.1)] animate-fade-in"
                   style={{ animationDelay: `${0.1 + i * 0.1}s` }}
                 >
                   <CardHeader>

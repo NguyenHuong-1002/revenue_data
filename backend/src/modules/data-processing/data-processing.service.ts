@@ -34,7 +34,7 @@ export class DataProcessingService {
   private readonly dataDir = path.resolve(__dirname, '../../../../data');
   private readonly batchSize = 500;
 
-  constructor(private readonly db: DatabaseService) { }
+  constructor(private readonly db: DatabaseService) {}
 
   private async isTableEmpty(table: string): Promise<boolean> {
     const [rows] = await this.db.client.query<RowDataPacket[]>(
@@ -368,8 +368,8 @@ export class DataProcessingService {
 
     this.logger.log(
       `Kết quả import: Tổng số ${rows.length} dòng. ` +
-      `Dữ liệu sạch (100% hợp lệ): ${validProducts.length} dòng (Đã đẩy thành công: ${inserted}). ` +
-      `Bị loại bỏ do vi phạm định dạng hoặc bị null: ${skipped} dòng.`,
+        `Dữ liệu sạch (100% hợp lệ): ${validProducts.length} dòng (Đã đẩy thành công: ${inserted}). ` +
+        `Bị loại bỏ do vi phạm định dạng hoặc bị null: ${skipped} dòng.`,
     );
 
     return {

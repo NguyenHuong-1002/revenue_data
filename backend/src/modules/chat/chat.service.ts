@@ -185,7 +185,7 @@ export class ChatService {
         throw new InternalServerErrorException('AI API request failed');
       }
 
-      const data = (await response.json()) as any;
+      const data = await response.json();
       const content = data.choices?.[0]?.message?.content ?? '';
 
       // Save assistant reply to DB if sessionId provided
@@ -210,8 +210,8 @@ export class ChatService {
               changed = true;
             }
             if (!session.description) {
-              this.generateBackgroundDescription(sessionId, firstUserMsg.content, content).catch((err) =>
-                this.logger.error('Error in background description generation', err),
+              this.generateBackgroundDescription(sessionId, firstUserMsg.content, content).catch(
+                (err) => this.logger.error('Error in background description generation', err),
               );
             }
             if (changed) {
@@ -279,7 +279,7 @@ export class ChatService {
       });
 
       if (response.ok) {
-        const data = (await response.json()) as any;
+        const data = await response.json();
         const description = data.choices?.[0]?.message?.content ?? '';
         if (description) {
           const cleaned = description.trim().replace(/^["']|["']$/g, '');
@@ -312,7 +312,7 @@ export class ChatService {
            LEFT JOIN saleReport sr ON sb.store_id = sr.branch_id
            LEFT JOIN product p ON sr.product_id = p.product_id
            GROUP BY sb.store_id, sb.name, sb.city
-           ORDER BY total_revenue DESC`
+           ORDER BY total_revenue DESC`,
         );
 
         const [monthlyBranchRevenue] = await this.db.client.query<RowDataPacket[]>(
@@ -326,7 +326,7 @@ export class ChatService {
            INNER JOIN product p ON sr.product_id = p.product_id
            GROUP BY sb.store_id, sb.name, month
            ORDER BY month DESC, monthly_revenue DESC
-           LIMIT 15`
+           LIMIT 15`,
         );
 
         let context = `[DỮ LIỆU DOANH THU CHI NHÁNH TỪ HỆ THỐNG]\n`;
@@ -338,7 +338,7 @@ export class ChatService {
             context += `- Chi nhánh: ${b.branch_name} (${b.city}), ID: ${b.store_id}, Doanh thu: ${Number(b.total_revenue).toLocaleString('vi-VN')} VNĐ, Số lượng bán: ${b.total_sold_quantity} sản phẩm\n`;
           });
         }
-        
+
         context += `\n2. Chi tiết doanh thu theo tháng gần đây của các chi nhánh:\n`;
         if (monthlyBranchRevenue.length === 0) {
           context += `- Chưa có dữ liệu theo tháng gần đây.\n`;
@@ -371,7 +371,7 @@ export class ChatService {
            FROM saleReport sr
            INNER JOIN product p ON sr.product_id = p.product_id
            GROUP BY month
-           ORDER BY month ASC`
+           ORDER BY month ASC`,
         );
 
         let context = `[DỮ LIỆU DOANH THU LỊCH SỬ TỪ HỆ THỐNG ĐỂ DỰ BÁO]\n`;
@@ -393,11 +393,11 @@ export class ChatService {
           const pct = prev > 0 ? (diff / prev) * 100 : 0;
           context += `\n[TÍNH TOÁN BỔ SUNG ĐỂ DỰ BÁO]\n`;
           context += `- Tăng trưởng tháng gần nhất (${historicalRevenue[lastIndex].month} so với ${historicalRevenue[lastIndex - 1].month}): ${pct > 0 ? '+' : ''}${pct.toFixed(2)}% (${diff.toLocaleString('vi-VN')} VNĐ)\n`;
-          
+
           // Simple Linear Regression slope prediction
           const n = historicalRevenue.length;
-          const xs = Array.from({length: n}, (_, i) => i + 1);
-          const ys = historicalRevenue.map(r => Number(r.total_revenue));
+          const xs = Array.from({ length: n }, (_, i) => i + 1);
+          const ys = historicalRevenue.map((r) => Number(r.total_revenue));
           const sumX = xs.reduce((a, b) => a + b, 0);
           const sumY = ys.reduce((a, b) => a + b, 0);
           const sumXY = xs.reduce((sum, x, idx) => sum + x * ys[idx], 0);
@@ -437,7 +437,7 @@ export class ChatService {
            INNER JOIN saleReport sr ON p.product_id = sr.product_id
            GROUP BY p.product_id, p.color, p.detail_product_group, p.gender, p.size, p.listing_price
            ORDER BY total_revenue DESC
-           LIMIT 10`
+           LIMIT 10`,
         );
 
         let context = `[DỮ LIỆU TOP 10 SẢN PHẨM BÁN CHẠY NHẤT TỪ HỆ THỐNG]\n`;
@@ -479,7 +479,7 @@ export class ChatService {
            FROM Plant pl
            LEFT JOIN InventoryReport ir ON pl.plant_id = ir.plant_id
            GROUP BY pl.plant_id, pl.name_plant, pl.address, pl.manager_name, pl.phone
-           ORDER BY total_stock DESC`
+           ORDER BY total_stock DESC`,
         );
 
         const [monthlyPlantInventory] = await this.db.client.query<RowDataPacket[]>(
@@ -491,7 +491,7 @@ export class ChatService {
            INNER JOIN InventoryReport ir ON pl.plant_id = ir.plant_id
            GROUP BY pl.plant_id, pl.name_plant, month
            ORDER BY month DESC, stock_quantity DESC
-           LIMIT 15`
+           LIMIT 15`,
         );
 
         let context = `[DỮ LIỆU TỒN KHO VÀ HIỆU SUẤT NHÀ KHO TỪ HỆ THỐNG]\n`;
@@ -527,7 +527,7 @@ export class ChatService {
            (SELECT SUM(sr.sold_quantity * p.listing_price) FROM saleReport sr INNER JOIN product p ON sr.product_id = p.product_id) as total_revenue,
            (SELECT COUNT(*) FROM storeBranch) as branch_count,
            (SELECT COUNT(*) FROM product) as product_count,
-           (SELECT SUM(quantity) FROM InventoryReport) as total_stock`
+           (SELECT SUM(quantity) FROM InventoryReport) as total_stock`,
       );
 
       const stats = generalStats[0];

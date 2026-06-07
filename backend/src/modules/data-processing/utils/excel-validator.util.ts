@@ -11,13 +11,7 @@ export const REQUIRED_FIELDS = {
     'activity_group',
     'lifestyle_group',
   ],
-  'sale-report': [
-    'product_id',
-    'sold_quantity',
-    'distribution_channel',
-    'branch_id',
-    'month',
-  ],
+  'sale-report': ['product_id', 'sold_quantity', 'distribution_channel', 'branch_id', 'month'],
   'inventory-report': ['product_id', 'plant', 'calendar_year_week', 'quantity'],
 };
 

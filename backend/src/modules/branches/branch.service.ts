@@ -15,7 +15,6 @@ export class BranchService {
     @InjectRepository(StoreBranchEntity)
     private readonly branchRepository: Repository<StoreBranchEntity>,
     private readonly notificationService: NotificationService,
-    // eslint-disable-next-line prettier/prettier
   ) {}
 
   async getAll(filters: GetBranchAllDto): Promise<IPaginatedBranches> {
@@ -32,7 +31,7 @@ export class BranchService {
     });
 
     return {
-      data: data as IBranch[],
+      data: data,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }
@@ -42,7 +41,7 @@ export class BranchService {
     if (!branch) {
       throw new NotFoundException(`Chi nhánh với mã '${id}' không tồn tại`);
     }
-    return branch as IBranch;
+    return branch;
   }
 
   async create(dto: CreateBranchDto, adminUsername?: string): Promise<IBranch> {
@@ -61,7 +60,7 @@ export class BranchService {
       type: 'SYSTEM',
     });
 
-    return branch as IBranch;
+    return branch;
   }
 
   async update(id: string, dto: UpdateBranchDto, adminUsername?: string): Promise<IBranch> {
@@ -82,7 +81,7 @@ export class BranchService {
       type: 'SYSTEM',
     });
 
-    return branch as IBranch;
+    return branch;
   }
 
   async delete(id: string, adminUsername?: string): Promise<void> {

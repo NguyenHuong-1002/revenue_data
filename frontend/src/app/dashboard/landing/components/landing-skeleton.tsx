@@ -12,7 +12,10 @@ export function LandingSkeleton() {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-border/50 bg-card p-5 shadow-sm space-y-3">
+          <div
+            key={i}
+            className="rounded-xl border border-border/50 bg-card p-5 shadow-sm space-y-3"
+          >
             <div className="flex items-center gap-3">
               <Skeleton className="size-10 rounded-lg shrink-0" />
               <div className="space-y-1.5 flex-1">

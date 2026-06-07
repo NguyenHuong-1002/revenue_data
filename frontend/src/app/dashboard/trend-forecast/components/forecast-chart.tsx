@@ -79,9 +79,9 @@ export function ForecastChart({
               <stop offset="95%" stopColor={actualColor} stopOpacity={0} />
             </linearGradient>
           </defs>
-          
+
           <CartesianGrid vertical={false} strokeDasharray={GRID_DASH} className={GRID_CLASS} />
-          
+
           <XAxis
             dataKey="period"
             tickLine={false}
@@ -89,14 +89,14 @@ export function ForecastChart({
             tickMargin={TICK_MARGIN}
             className={AXIS_TICK_CLASS}
           />
-          
+
           <YAxis
             tickLine={false}
             axisLine={false}
             tickMargin={TICK_MARGIN}
             className={AXIS_TICK_CLASS}
           />
-          
+
           <Tooltip
             cursor={CURSOR_STYLE}
             content={({ active, payload, label }) => {
@@ -122,12 +122,10 @@ export function ForecastChart({
                     <div className="space-y-1">
                       {payload.map((item, idx) => {
                         if (item.value == null) return null;
-                        
+
                         const name =
-                          item.name === 'actual'
-                            ? `${actualLabel}: `
-                            : 'Dự báo xu hướng: ';
-                              
+                          item.name === 'actual' ? `${actualLabel}: ` : 'Dự báo xu hướng: ';
+
                         return (
                           <p
                             key={idx}
@@ -148,7 +146,7 @@ export function ForecastChart({
               return null;
             }}
           />
-          
+
           <Legend
             verticalAlign="top"
             height={32}
@@ -203,7 +201,7 @@ export function ForecastChart({
             strokeWidth={3}
             dot={false}
           />
-          
+
           {/* Linear regression line */}
           <Area
             name="linear"

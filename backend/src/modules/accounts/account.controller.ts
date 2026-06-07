@@ -49,7 +49,6 @@ import {
 @UseGuards(authGuard.AuthGuard)
 @Controller('accounts')
 export class AccountController {
-  // eslint-disable-next-line prettier/prettier
   constructor(private readonly accountService: AccountService) {}
 
   @authGuard.Roles('ADMIN')

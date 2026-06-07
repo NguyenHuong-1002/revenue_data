@@ -134,3 +134,21 @@ export function ApiDeleteProductSwagger() {
     }),
   );
 }
+
+export function ApiGetProductStatsSwagger() {
+  return applyDecorators(
+    ApiOperation({
+      summary: 'Lấy thống kê sản phẩm',
+      description:
+        'API này trả về số liệu thống kê sản phẩm (nhóm theo danh mục, tổng số lượng, vv.) trong hệ thống.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Lấy thống kê thành công.',
+    }),
+    ApiResponse({
+      status: 401,
+      description: 'Lỗi chưa đăng nhập hoặc token không hợp lệ.',
+    }),
+  );
+}

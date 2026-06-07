@@ -66,21 +66,21 @@ export function parseDate(dateStr: string): string | null {
 // Chuyển đổi định dạng tháng Excel YYYY0MM hoặc YYYYMM (ví dụ 2022001 -> 2022-01-01 00:00:00, 202201 -> 2022-01-01 00:00:00) làm time_report
 export function parseMonthToDateStr(val: unknown): string {
   const sVal = String(val == null ? '' : val).trim();
-  
+
   // Định dạng YYYYMM (6 ký tự)
   if (sVal.length === 6 && /^\d{6}$/.test(sVal)) {
     const year = sVal.substring(0, 4);
     const month = sVal.substring(4, 6);
     return `${year}-${month}-01 00:00:00`;
   }
-  
+
   // Định dạng YYYY0MM (7 ký tự)
   if (sVal.length === 7 && /^\d{7}$/.test(sVal)) {
     const year = sVal.substring(0, 4);
     const month = sVal.substring(5, 7);
     return `${year}-${month}-01 00:00:00`;
   }
-  
+
   const d = new Date(sVal);
   if (!Number.isNaN(d.getTime())) {
     return d.toISOString().slice(0, 19).replace('T', ' ');
@@ -111,7 +111,7 @@ export function normalizeAgeGroup(val: string): string {
     '6 đến <10 tuổi',
     '3 đến <6 tuổi',
     '10 đến <16 tuổi',
-    'Khác'
+    'Khác',
   ];
   if (validAgeGroups.includes(a)) return a;
   if (a.includes('100') || a.includes('80') || a.includes('60') || a.includes('Trên 60')) {
@@ -128,7 +128,7 @@ export function normalizeActivityGroup(val: string): string {
     'Thể thao',
     'Văn phòng',
     'Chuyên biệt',
-    'Khác'
+    'Khác',
   ];
   if (validActivityGroups.includes(act)) return act;
   if (act === 'Thời trang' || act === 'Fashion') return 'Khác';

@@ -120,7 +120,7 @@ const validateExcelRows = (
       const cellVal = row[colIdx];
       const valStr = cellVal !== undefined && cellVal !== null ? String(cellVal).trim() : '';
       rowData[h] = valStr;
-      
+
       // Map aliases for validation
       const hLower = h.toLowerCase().trim();
       if (hLower === 'cost_price') rowData['price_cost'] = valStr;

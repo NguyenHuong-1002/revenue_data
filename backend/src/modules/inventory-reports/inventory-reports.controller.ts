@@ -17,7 +17,10 @@ import * as authGuard from 'src/middlewares/auth.guard';
 import { InventoryReportsService } from './inventory-reports.service';
 import { CreateInventoryReportDto } from './DTO/create-inventory-report.dto';
 import { GetInventoryReportAllDto } from './DTO/get-inventory-report-all.dto';
-import { IInventoryReport, IPaginatedInventoryReports } from './interfaces/inventory-report.interface';
+import {
+  IInventoryReport,
+  IPaginatedInventoryReports,
+} from './interfaces/inventory-report.interface';
 
 @ApiTags('Quản lý báo cáo tồn kho (Inventory Reports)')
 @ApiBearerAuth()

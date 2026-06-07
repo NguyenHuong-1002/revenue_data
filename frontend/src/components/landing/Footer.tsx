@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/5 bg-white/[0.01]">
+    <footer className="border-t border-zinc-200 dark:border-white/5 bg-zinc-50/10 dark:bg-white/[0.01]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="animate-fade-in">
@@ -93,7 +93,7 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="mt-10 border-t border-white/5 pt-6 text-center text-xs text-muted-foreground">
+        <div className="mt-10 border-t border-zinc-200 dark:border-white/5 pt-6 text-center text-xs text-muted-foreground">
           &copy; 2026 Hệ thống Doanh thu. Tất cả quyền được bảo lưu.
         </div>
       </div>

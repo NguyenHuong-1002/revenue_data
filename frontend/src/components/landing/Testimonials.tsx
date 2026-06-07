@@ -14,7 +14,7 @@ export function Testimonials({ items, isLoading = false }: TestimonialsProps) {
   const displayTestimonials = items && items.length > 0 ? items : defaultTestimonials;
 
   return (
-    <section className="border-t border-white/5">
+    <section className="border-t border-zinc-200 dark:border-white/5">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center animate-fade-in">
           <Badge variant="outline" className="mb-4 border-rose-500/30 text-rose-400 bg-rose-500/5">
@@ -50,7 +50,7 @@ export function Testimonials({ items, isLoading = false }: TestimonialsProps) {
             : displayTestimonials.map((t, i) => (
                 <Card
                   key={t.name}
-                  className="group border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] transition-all duration-500 hover:-translate-y-1 animate-fade-in"
+                  className="group border border-zinc-200 bg-zinc-50/30 hover:bg-zinc-50/80 dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.06] transition-all duration-500 hover:-translate-y-1 animate-fade-in"
                   style={{ animationDelay: `${0.1 + i * 0.1}s` }}
                 >
                   <CardContent className="pt-6">
@@ -62,7 +62,7 @@ export function Testimonials({ items, isLoading = false }: TestimonialsProps) {
                     <p className="mt-4 text-sm leading-relaxed text-muted-foreground group-hover:text-foreground/80 transition-colors">
                       &ldquo;{t.content}&rdquo;
                     </p>
-                    <div className="mt-6 flex items-center gap-3 border-t border-white/5 pt-4">
+                    <div className="mt-6 flex items-center gap-3 border-t border-zinc-200 dark:border-white/5 pt-4">
                       <span className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
                         {t.name.charAt(0)}
                       </span>

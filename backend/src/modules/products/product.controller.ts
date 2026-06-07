@@ -25,6 +25,7 @@ import {
   ApiGetDetailProductSwagger,
   ApiUpdateProductSwagger,
   ApiDeleteProductSwagger,
+  ApiGetProductStatsSwagger,
 } from './product.swagger';
 
 @ApiTags('Sản phẩm (Products)')
@@ -32,7 +33,6 @@ import {
 @UseGuards(authGuard.AuthGuard)
 @Controller('products')
 export class ProductController {
-  // eslint-disable-next-line prettier/prettier
   constructor(private readonly productService: ProductService) {}
 
   @ApiGetProductsSwagger()
@@ -55,6 +55,7 @@ export class ProductController {
     return this.productService.createProduct(productDTO, admin.username);
   }
 
+  @ApiGetProductStatsSwagger()
   @Get('/stats')
   @HttpCode(HttpStatus.OK)
   getProductStats(): Promise<any> {

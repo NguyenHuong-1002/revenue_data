@@ -68,7 +68,6 @@ export class AccountService {
     private readonly accountRepository: Repository<AccountEntity>,
     private readonly jwtService: JwtService,
     private readonly notificationService: NotificationService,
-    // eslint-disable-next-line prettier/prettier
   ) {}
 
   /**

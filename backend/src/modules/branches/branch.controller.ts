@@ -32,7 +32,6 @@ import {
 @UseGuards(authGuard.AuthGuard)
 @Controller('branches')
 export class BranchController {
-  // eslint-disable-next-line prettier/prettier
   constructor(private readonly branchService: BranchService) {}
 
   @authGuard.Public()

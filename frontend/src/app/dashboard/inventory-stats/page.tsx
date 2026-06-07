@@ -58,7 +58,9 @@ export default function InventoryStatsPage() {
       if (productsRes.status === 'fulfilled') {
         const map: Record<string, string> = {};
         (productsRes.value.data?.data ?? []).forEach((p: any) => {
-          map[p.product_id] = [p.color, p.gender, p.size ? `Size ${p.size}` : ''].filter(Boolean).join(' · ');
+          map[p.product_id] = [p.color, p.gender, p.size ? `Size ${p.size}` : '']
+            .filter(Boolean)
+            .join(' · ');
         });
         setProductMap(map);
       }
@@ -100,10 +102,7 @@ export default function InventoryStatsPage() {
   return (
     <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
       {/* ── Header ── */}
-      <InventoryHeader
-        refreshing={refreshing}
-        onRefresh={() => loadData(timeRange, true)}
-      />
+      <InventoryHeader refreshing={refreshing} onRefresh={() => loadData(timeRange, true)} />
 
       {/* ── Time Range Filter ── */}
       <TimeRangeFilter value={timeRange} onChange={setTimeRange} />
@@ -129,8 +128,13 @@ export default function InventoryStatsPage() {
 
       {/* ── Tab Content ── */}
       {activeTab === 'overview' && (
-        <OverviewTab kpis={kpis} rankings={rankings} timeRange={timeRange}
-          productMap={productMap} plantMap={plantMap} />
+        <OverviewTab
+          kpis={kpis}
+          rankings={rankings}
+          timeRange={timeRange}
+          productMap={productMap}
+          plantMap={plantMap}
+        />
       )}
       {activeTab === 'alerts' && (
         <AlertsTab alerts={alerts} productMap={productMap} plantMap={plantMap} />

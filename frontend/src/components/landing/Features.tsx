@@ -15,7 +15,10 @@ export function Features({ items, isLoading = false }: FeaturesProps) {
   const displayFeatures = items && items.length > 0 ? items : null;
 
   return (
-    <section id="features" className="relative border-t border-white/5 grid-pattern">
+    <section
+      id="features"
+      className="relative border-t border-zinc-200 dark:border-white/5 grid-pattern"
+    >
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center animate-fade-in">
           <Badge variant="outline" className="mb-4 border-primary/30 text-primary bg-primary/5">
@@ -59,7 +62,7 @@ export function Features({ items, isLoading = false }: FeaturesProps) {
                     <Card
                       key={feature.id || feature.title}
                       size="sm"
-                      className="group border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.08)] animate-fade-in"
+                      className="group border border-zinc-200 bg-zinc-50/30 hover:bg-zinc-50/80 dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.06] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.08)] animate-fade-in"
                       style={{ animationDelay: `${0.1 + i * 0.05}s` }}
                     >
                       <CardHeader>
@@ -80,7 +83,7 @@ export function Features({ items, isLoading = false }: FeaturesProps) {
                     <Card
                       key={feature.title}
                       size="sm"
-                      className="group border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.08)] animate-fade-in"
+                      className="group border border-zinc-200 bg-zinc-50/30 hover:bg-zinc-50/80 dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.06] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.08)] animate-fade-in"
                       style={{ animationDelay: `${0.1 + i * 0.05}s` }}
                     >
                       <CardHeader>

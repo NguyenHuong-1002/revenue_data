@@ -81,7 +81,11 @@ export const inventoryReportService = {
     }>('/inventory-reports/rankings', { params: { topN, ...params } });
   },
 
-  getAlerts(lowThreshold = 50, highThreshold = 10000, params?: { fromDate?: string; toDate?: string }) {
+  getAlerts(
+    lowThreshold = 50,
+    highThreshold = 10000,
+    params?: { fromDate?: string; toDate?: string }
+  ) {
     return api.get<{
       lowStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
       highStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];

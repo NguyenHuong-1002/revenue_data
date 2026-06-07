@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { ConsoleLogger } from '@nestjs/common';
 import * as fs from 'node:fs';
 import * as path from 'node:path';

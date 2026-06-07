@@ -24,7 +24,14 @@ export class CreateSaleReportDto {
 
   @IsNotEmpty({ message: 'Kênh phân phối không được để trống.' })
   @IsEnum(DistributionChannel, { message: 'Kênh phân phối không hợp lệ.' })
-  distribution_channel!: 'Online' | 'Bán lẻ' | 'Phát sinh' | 'Bán sỉ' | 'Siêu thị' | 'Hợp đồng' | 'Chi nhánh';
+  distribution_channel!:
+    | 'Online'
+    | 'Bán lẻ'
+    | 'Phát sinh'
+    | 'Bán sỉ'
+    | 'Siêu thị'
+    | 'Hợp đồng'
+    | 'Chi nhánh';
 
   @IsNotEmpty({ message: 'Mã chi nhánh không được để trống.' })
   @IsString({ message: 'Mã chi nhánh phải là chuỗi ký tự.' })

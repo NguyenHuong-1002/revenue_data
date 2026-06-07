@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 export function CTA() {
   return (
-    <section className="relative border-t border-white/5 overflow-hidden">
+    <section className="relative border-t border-zinc-200 dark:border-white/5 overflow-hidden">
       <div className="absolute inset-0 bg-primary/[0.05] pointer-events-none" />
       <div className="orb orb-1" style={{ opacity: 0.15 }} />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-20 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8 relative">

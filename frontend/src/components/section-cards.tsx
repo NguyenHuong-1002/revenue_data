@@ -71,12 +71,8 @@ export function SectionCards({ timeRange }: { timeRange?: string }) {
             .getRevenueStats(timeRange)
             .catch(() => ({ data: { totalRevenue: 0, growthRate: 0 } })),
           notificationService.getAll(1, 100).catch(() => ({ data: { data: [] } })),
-          inventoryReportService
-            .getKpis(dateParams)
-            .catch(() => ({ data: null })),
-          inventoryReportService
-            .getRankings(12, dateParams)
-            .catch(() => ({ data: null })),
+          inventoryReportService.getKpis(dateParams).catch(() => ({ data: null })),
+          inventoryReportService.getRankings(12, dateParams).catch(() => ({ data: null })),
         ]);
 
         const unreadCount = (notificationsRes.data?.data || []).filter(
@@ -98,9 +94,7 @@ export function SectionCards({ timeRange }: { timeRange?: string }) {
         if (trend.length >= 2) {
           const first = trend[0].total as number;
           const last = trend[trend.length - 1].total as number;
-          setInventoryGrowth(
-            first === 0 ? null : Math.round(((last - first) / first) * 1000) / 10
-          );
+          setInventoryGrowth(first === 0 ? null : Math.round(((last - first) / first) * 1000) / 10);
         } else {
           setInventoryGrowth((kpisRes.data as any)?.growthPercent ?? null);
         }
@@ -220,9 +214,7 @@ export function SectionCards({ timeRange }: { timeRange?: string }) {
                   : 'text-rose-600 dark:text-rose-400'
             )}
           >
-            {invGrowthNeutral
-              ? '—'
-              : `${invGrowthPositive ? '+' : ''}${inventoryGrowth}%`}
+            {invGrowthNeutral ? '—' : `${invGrowthPositive ? '+' : ''}${inventoryGrowth}%`}
           </CardTitle>
           <CardAction>
             <Badge

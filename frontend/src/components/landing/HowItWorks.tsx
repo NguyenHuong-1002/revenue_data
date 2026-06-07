@@ -24,7 +24,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="border-t border-white/5 bg-white/[0.01]">
+    <section className="border-t border-zinc-200 dark:border-white/5 bg-zinc-50/10 dark:bg-white/[0.01]">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center animate-fade-in">
           <Badge

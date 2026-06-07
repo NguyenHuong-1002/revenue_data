@@ -424,86 +424,86 @@ export default function ChatAssistantPage() {
       <div className="flex flex-1 flex-col p-6 gap-6 max-w-7xl mx-auto w-full">
         <div className="flex flex-1 min-h-0 overflow-hidden rounded-xl border border-border/50 bg-card">
           {/* ── Session Sidebar ──────────────────────────────────────────────── */}
-        <SessionSidebar
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          sessionsLoading={sessionsLoading}
-          onNewSession={handleNewSession}
-          onSelectSession={handleSelectSession}
-          onDeleteSession={handleDeleteSession}
-          onTogglePin={handleTogglePin}
-          onStartRename={handleStartRename}
-          onDescEdit={setDescEditing}
-          onShowDeleteAll={() => setShowDeleteAll(true)}
-        />
-
-        {/* ── Main Chat Area ───────────────────────────────────────────────── */}
-        <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-card/10">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0 bg-background/60 backdrop-blur-md">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="size-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
-                <Sparkles className="size-5" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-base font-bold text-foreground leading-tight truncate flex items-center gap-1.5">
-                  {!!activeSession?.isPinned && (
-                    <Pin className="size-3.5 text-amber-500 shrink-0" />
-                  )}
-                  {activeSession ? activeSession.title : 'Trợ lý AI thông minh'}
-                </h1>
-                {activeSession ? (
-                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                    {activeSession.description && (
-                      <span className="text-[11px] text-muted-foreground truncate max-w-[200px]">
-                        {activeSession.description}
-                      </span>
-                    )}
-                    <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1 shrink-0">
-                      <Calendar className="size-3" />
-                      {activeSession.lastAccessedAt
-                        ? formatRelativeTime(activeSession.lastAccessedAt)
-                        : formatRelativeTime(activeSession.createdAt)}
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-muted-foreground/85 mt-0.5">
-                    Tích hợp OpenRouter · DeepSeek AI
-                  </p>
-                )}
-              </div>
-            </div>
-            {activeSessionId && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClearMessages}
-                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-lg shrink-0 cursor-pointer transition-colors"
-                title="Xóa tin nhắn"
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            )}
-          </div>
-
-          {/* Messages */}
-          <ChatMessages
+          <SessionSidebar
+            sessions={sessions}
             activeSessionId={activeSessionId}
-            messages={messages}
-            isLoading={isLoading}
+            sessionsLoading={sessionsLoading}
             onNewSession={handleNewSession}
-            onSendSuggestion={handleSendSuggestion}
-            chatEndRef={chatEndRef}
+            onSelectSession={handleSelectSession}
+            onDeleteSession={handleDeleteSession}
+            onTogglePin={handleTogglePin}
+            onStartRename={handleStartRename}
+            onDescEdit={setDescEditing}
+            onShowDeleteAll={() => setShowDeleteAll(true)}
           />
 
-          {/* Input bar */}
-          <ChatInput
-            input={input}
-            setInput={setInput}
-            onSubmit={handleSend}
-            isLoading={isLoading}
-            inputRef={inputRef}
-          />
+          {/* ── Main Chat Area ───────────────────────────────────────────────── */}
+          <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-card/10">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0 bg-background/60 backdrop-blur-md">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+                  <Sparkles className="size-5" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-base font-bold text-foreground leading-tight truncate flex items-center gap-1.5">
+                    {!!activeSession?.isPinned && (
+                      <Pin className="size-3.5 text-amber-500 shrink-0" />
+                    )}
+                    {activeSession ? activeSession.title : 'Trợ lý AI thông minh'}
+                  </h1>
+                  {activeSession ? (
+                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                      {activeSession.description && (
+                        <span className="text-[11px] text-muted-foreground truncate max-w-[200px]">
+                          {activeSession.description}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-muted-foreground/60 flex items-center gap-1 shrink-0">
+                        <Calendar className="size-3" />
+                        {activeSession.lastAccessedAt
+                          ? formatRelativeTime(activeSession.lastAccessedAt)
+                          : formatRelativeTime(activeSession.createdAt)}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground/85 mt-0.5">
+                      Tích hợp OpenRouter · DeepSeek AI
+                    </p>
+                  )}
+                </div>
+              </div>
+              {activeSessionId && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClearMessages}
+                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-lg shrink-0 cursor-pointer transition-colors"
+                  title="Xóa tin nhắn"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Messages */}
+            <ChatMessages
+              activeSessionId={activeSessionId}
+              messages={messages}
+              isLoading={isLoading}
+              onNewSession={handleNewSession}
+              onSendSuggestion={handleSendSuggestion}
+              chatEndRef={chatEndRef}
+            />
+
+            {/* Input bar */}
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              onSubmit={handleSend}
+              isLoading={isLoading}
+              inputRef={inputRef}
+            />
           </div>
         </div>
       </div>

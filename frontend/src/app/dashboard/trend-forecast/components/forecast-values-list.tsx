@@ -31,7 +31,8 @@ interface ForecastValuesListProps {
 
 export function ForecastValuesList({ sales, inventory }: ForecastValuesListProps) {
   const hasSales = sales?.linearRegression?.forecast && sales.linearRegression.forecast.length > 0;
-  const hasInventory = inventory?.linearRegression?.forecast && inventory.linearRegression.forecast.length > 0;
+  const hasInventory =
+    inventory?.linearRegression?.forecast && inventory.linearRegression.forecast.length > 0;
 
   return (
     <Card className="border border-border/80 bg-card/35 backdrop-blur-xs">

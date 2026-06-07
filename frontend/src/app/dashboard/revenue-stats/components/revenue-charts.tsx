@@ -108,14 +108,13 @@ export function RevenueCharts({ charts }: RevenueChartsProps) {
         emptyMessage="Không có dữ liệu kênh phân phối"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={charts.distribution_channel} layout="vertical" margin={CHART_DEFAULTS.barChartMargin}>
+          <BarChart
+            data={charts.distribution_channel}
+            layout="vertical"
+            margin={CHART_DEFAULTS.barChartMargin}
+          >
             <CartesianGrid horizontal={false} strokeDasharray={GRID_DASH} className={GRID_CLASS} />
-            <XAxis
-              type="number"
-              tickLine={false}
-              axisLine={false}
-              className={AXIS_TICK_CLASS}
-            />
+            <XAxis type="number" tickLine={false} axisLine={false} className={AXIS_TICK_CLASS} />
             <YAxis
               dataKey="name"
               type="category"

@@ -105,10 +105,7 @@ export function AlertTable({
                 >
                   {plantMap[row.plant_id] || row.plant_id}
                 </span>
-                <span
-                  className="truncate text-muted-foreground"
-                  title={row.product_id}
-                >
+                <span className="truncate text-muted-foreground" title={row.product_id}>
                   {productMap[row.product_id] || row.product_id}
                 </span>
               </div>

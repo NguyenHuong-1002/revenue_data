@@ -18,6 +18,7 @@ import {
   LogOutIcon,
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -32,9 +33,9 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from '@/components/ui/sidebar';
+import { useLogout } from '@/lib/hooks/use-logout';
 import { accountService } from '@/lib/services/account.service';
 import { notificationService } from '@/lib/services/notification.service';
-import { useLogout } from '@/lib/hooks/use-logout';
 
 const data = {
   system: [
@@ -48,6 +49,11 @@ const data = {
       url: '/dashboard/chat',
       icon: <Sparkles />,
     },
+    {
+      title: 'Thông báo',
+      url: '/dashboard/notifications',
+      icon: <Bell />,
+    },
   ],
   analytics: [
     {
@@ -56,12 +62,12 @@ const data = {
       icon: <TrendingUpIcon />,
     },
     {
-      title: 'Thống kê & Dự báo kho hàng',
+      title: 'Thống kê kho hàng',
       url: '/dashboard/inventory-stats',
       icon: <BoxesIcon />,
     },
     {
-      title: 'Dự báo xu hướng',
+      title: 'Dự báo xu hướng doanh thu và tồn kho',
       url: '/dashboard/trend-forecast',
       icon: <TrendingUpIcon />,
     },
@@ -111,6 +117,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
   const { handleLogout } = useLogout();
   const [userProfile, setUserProfile] = React.useState<{
     fullname: string;
@@ -165,6 +172,71 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return () => clearInterval(interval);
   }, []);
 
+  const isItemActive = React.useCallback(
+    (url: string) => {
+      if (url === '/dashboard') {
+        return pathname === '/dashboard';
+      }
+      return pathname === url || pathname.startsWith(url + '/');
+    },
+    [pathname]
+  );
+
+  const renderMenuItem = React.useCallback(
+    (item: { title: string; url: string; icon: React.ReactNode }) => {
+      const active = isItemActive(item.url);
+      const isNotification = item.url === '/dashboard/notifications';
+
+      return (
+        <SidebarMenuItem key={item.title}>
+          <SidebarMenuButton asChild tooltip={item.title} isActive={active}>
+            <Link
+              href={item.url}
+              className={isNotification ? 'flex items-center gap-2 w-full' : undefined}
+            >
+              {isNotification ? (
+                <span className="relative flex items-center">
+                  {item.icon}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[8px] font-bold text-primary-foreground leading-none">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </span>
+              ) : (
+                item.icon
+              )}
+              <span>{item.title}</span>
+              {isNotification && unreadCount > 0 && (
+                <span className="ml-auto text-[10px] font-semibold text-primary group-data-[collapsible=icon]:hidden">
+                  {unreadCount} mới
+                </span>
+              )}
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      );
+    },
+    [isItemActive, unreadCount]
+  );
+
+  const groups = React.useMemo(() => {
+    return [
+      {
+        label: 'Hệ thống',
+        items: data.system,
+      },
+      {
+        label: 'Phân tích & Báo cáo',
+        items: data.analytics,
+      },
+      {
+        label: 'Quản lý dữ liệu',
+        items: filteredManagement,
+      },
+    ];
+  }, [filteredManagement]);
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       {/* ── Header ── */}
@@ -183,84 +255,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* ── Content ── */}
       <SidebarContent>
-        {/* ── Section 1: HỆ THỐNG ── */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Hệ thống</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {data.system.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <Link href={item.url}>
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-
-              {/* Thông báo */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Thông báo">
-                  <Link href="/dashboard/notifications" className="flex items-center gap-2 w-full">
-                    <span className="relative flex items-center">
-                      <Bell className="h-4 w-4" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[8px] font-bold text-primary-foreground leading-none">
-                          {unreadCount > 99 ? '99+' : unreadCount}
-                        </span>
-                      )}
-                    </span>
-                    <span>Thông báo</span>
-                    {unreadCount > 0 && (
-                      <span className="ml-auto text-[10px] font-semibold text-primary group-data-[collapsible=icon]:hidden">
-                        {unreadCount} mới
-                      </span>
-                    )}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* ── Section 2: PHÂN TÍCH & BÁO CÁO ── */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Phân tích & Báo cáo</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {data.analytics.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <Link href={item.url}>
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* ── Section 3: QUẢN LÝ DỮ LIỆU ── */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Quản lý dữ liệu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {filteredManagement.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <Link href={item.url}>
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {groups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>{group.items.map(renderMenuItem)}</SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
 
         {/* Đăng xuất */}
         <SidebarMenu className="mt-auto">

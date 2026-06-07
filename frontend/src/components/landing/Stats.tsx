@@ -10,7 +10,10 @@ export function Stats({ items }: StatsProps) {
   const displayStats = items && items.length > 0 ? items : defaultStats;
 
   return (
-    <section id="stats" className="relative border-t border-white/5 grid-pattern">
+    <section
+      id="stats"
+      className="relative border-t border-zinc-200 dark:border-white/5 grid-pattern"
+    >
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center animate-fade-in">
           <Badge

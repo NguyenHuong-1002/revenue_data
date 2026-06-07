@@ -32,7 +32,6 @@ import {
 @UseGuards(authGuard.AuthGuard)
 @Controller('plants')
 export class PlantController {
-  // eslint-disable-next-line prettier/prettier
   constructor(private readonly plantService: PlantService) {}
 
   @authGuard.Public()

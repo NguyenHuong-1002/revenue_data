@@ -18,8 +18,32 @@ export function Hero({ title, subtitle }: HeroProps) {
       <div className="absolute bottom-10 left-10 w-[400px] h-[400px] bg-muted-foreground/[0.02] rounded-full blur-[100px] pointer-events-none" />
 
       <div className="flex flex-col justify-center items-center text-center lg:items-start lg:text-left relative z-10">
-        <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl leading-[1.1] text-white animate-fade-in stagger-1 max-w-3xl">
-          {title || (
+        <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl leading-[1.1] text-zinc-900 dark:text-zinc-200 animate-fade-in stagger-1 max-w-3xl">
+          {title ? (
+            (() => {
+              const highlight = 'tự động hóa dự báo';
+              if (title.includes(highlight)) {
+                const parts = title.split(highlight);
+                return (
+                  <>
+                    {parts[0]}
+                    <span className="gradient-text">{highlight}</span>
+                    {parts.slice(1).join(highlight)}
+                  </>
+                );
+              }
+              const parts = title.split('&');
+              if (parts.length > 1) {
+                return (
+                  <>
+                    {parts[0]}&{' '}
+                    <span className="gradient-text">{parts.slice(1).join('&').trim()}</span>
+                  </>
+                );
+              }
+              return title;
+            })()
+          ) : (
             <>
               Quản lý dữ liệu doanh thu & <span className="gradient-text">tự động hóa dự báo</span>
             </>
@@ -46,7 +70,7 @@ export function Hero({ title, subtitle }: HeroProps) {
             asChild
             variant="outline"
             size="lg"
-            className="border-white/10 hover:bg-white/5 px-8 text-muted-foreground hover:text-white transition-all"
+            className="border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900 px-8 text-muted-foreground dark:border-white/10 dark:hover:bg-white/5 dark:hover:text-white transition-all"
           >
             <a href="#features">Tìm hiểu tính năng</a>
           </Button>
@@ -54,17 +78,17 @@ export function Hero({ title, subtitle }: HeroProps) {
 
         {/* Professional Metrics Signals */}
         <div className="mt-16 grid grid-cols-3 gap-4 w-full max-w-lg text-left">
-          <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] backdrop-blur-xs">
+          <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/50 dark:border-white/5 dark:bg-white/[0.02] backdrop-blur-xs">
             <div className="text-2xl font-extrabold text-primary tracking-tight">100%</div>
             <div className="text-xs text-muted-foreground mt-1 font-medium">Bảo mật dữ liệu</div>
           </div>
-          <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] backdrop-blur-xs">
+          <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/50 dark:border-white/5 dark:bg-white/[0.02] backdrop-blur-xs">
             <div className="text-2xl font-extrabold text-chart-4 tracking-tight">Excel</div>
             <div className="text-xs text-muted-foreground mt-1 font-medium">
               Đồng bộ hóa 1-click
             </div>
           </div>
-          <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02] backdrop-blur-xs">
+          <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/50 dark:border-white/5 dark:bg-white/[0.02] backdrop-blur-xs">
             <div className="text-2xl font-extrabold text-chart-2 tracking-tight">AI / ML</div>
             <div className="text-xs text-muted-foreground mt-1 font-medium">Mô hình dự báo</div>
           </div>
@@ -197,8 +221,22 @@ export function Hero({ title, subtitle }: HeroProps) {
 
                     {/* Points */}
                     <circle cx="120" cy="60" r="3" fill="var(--primary)" />
-                    <circle cx="240" cy="50" r="3.5" fill="var(--primary)" stroke="currentColor" strokeWidth="1" />
-                    <circle cx="400" cy="5" r="4" fill="var(--primary)" stroke="currentColor" strokeWidth="1.5" />
+                    <circle
+                      cx="240"
+                      cy="50"
+                      r="3.5"
+                      fill="var(--primary)"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                    />
+                    <circle
+                      cx="400"
+                      cy="5"
+                      r="4"
+                      fill="var(--primary)"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
                   </svg>
 
                   {/* Clean Static Tooltip */}

@@ -41,7 +41,6 @@ export class NotificationController {
   constructor(
     private readonly notificationService: NotificationService,
     private readonly accountNotificationService: AccountNotificationService,
-    // eslint-disable-next-line prettier/prettier
   ) {}
 
   /**

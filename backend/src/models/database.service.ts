@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import { createPool, Pool, PoolConnection } from 'mysql2/promise';
@@ -62,7 +61,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     await seedMockAccounts(this.pool);
 
     // 4. Tự động kiểm tra và import dữ liệu seed nếu bảng notification trống
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
     await seedMockNotifications(this.pool);
 
     // 5. Tự động kiểm tra và import dữ liệu seed nếu bảng account_notification trống

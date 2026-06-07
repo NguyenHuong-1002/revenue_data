@@ -18,7 +18,7 @@ export class SettingsService {
     for (const s of settings) {
       const group = s.group || 'general';
       if (!groupedMap.has(group)) groupedMap.set(group, []);
-      groupedMap.get(group)!.push(s as ISystemSetting);
+      groupedMap.get(group)!.push(s);
     }
     return Array.from(groupedMap.entries()).map(([group, settings]) => ({ group, settings }));
   }
@@ -28,7 +28,7 @@ export class SettingsService {
     if (!setting) {
       throw new NotFoundException(`Cài đặt với key '${key}' không tồn tại`);
     }
-    return setting as ISystemSetting;
+    return setting;
   }
 
   async update(key: string, dto: UpdateSettingDto): Promise<ISystemSetting> {
@@ -48,7 +48,7 @@ export class SettingsService {
       });
     }
     await this.settingsRepository.save(setting);
-    return setting as ISystemSetting;
+    return setting;
   }
 
   async create(dto: {
@@ -70,7 +70,7 @@ export class SettingsService {
       description: dto.description || '',
     });
     await this.settingsRepository.save(setting);
-    return setting as ISystemSetting;
+    return setting;
   }
 
   async delete(key: string): Promise<void> {

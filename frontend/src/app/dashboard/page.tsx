@@ -134,7 +134,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadData(timeRange);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadData, timeRange]);
 
   // Format date helper

@@ -289,16 +289,25 @@ export async function seedMockStores(pool: Pool): Promise<void> {
           const [cols] = await pool.query<any[]>(
             `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'storeBranch' AND COLUMN_NAME = ?`,
-            [col]
+            [col],
           );
-          if ((cols as any[]).length === 0) {
+          if (cols.length === 0) {
             await pool.query(ddl);
             logger.log(`Đã thêm cột ${col} vào bảng storeBranch.`);
           }
         };
-        await checkAndAdd('address', `ALTER TABLE storeBranch ADD COLUMN address VARCHAR(255) DEFAULT NULL`);
-        await checkAndAdd('latitude', `ALTER TABLE storeBranch ADD COLUMN latitude DOUBLE DEFAULT NULL`);
-        await checkAndAdd('longitude', `ALTER TABLE storeBranch ADD COLUMN longitude DOUBLE DEFAULT NULL`);
+        await checkAndAdd(
+          'address',
+          `ALTER TABLE storeBranch ADD COLUMN address VARCHAR(255) DEFAULT NULL`,
+        );
+        await checkAndAdd(
+          'latitude',
+          `ALTER TABLE storeBranch ADD COLUMN latitude DOUBLE DEFAULT NULL`,
+        );
+        await checkAndAdd(
+          'longitude',
+          `ALTER TABLE storeBranch ADD COLUMN longitude DOUBLE DEFAULT NULL`,
+        );
       } catch (innerErr: any) {
         logger.warn(`Không thể thêm các cột tọa độ: ${innerErr.message}`);
       }
@@ -317,7 +326,14 @@ export async function seedMockStores(pool: Pool): Promise<void> {
         `INSERT INTO storeBranch (store_id, name, city, address, latitude, longitude)
          VALUES (?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE name = VALUES(name), city = VALUES(city), address = VALUES(address), latitude = VALUES(latitude), longitude = VALUES(longitude)`,
-        [st.store_id, st.name, st.city || 'Chưa xác định', st.address ?? null, st.latitude ?? null, st.longitude ?? null],
+        [
+          st.store_id,
+          st.name,
+          st.city || 'Chưa xác định',
+          st.address ?? null,
+          st.latitude ?? null,
+          st.longitude ?? null,
+        ],
       );
       syncCount++;
     }
@@ -326,7 +342,6 @@ export async function seedMockStores(pool: Pool): Promise<void> {
     logger.error(`Lỗi khi nạp dữ liệu chi nhánh mẫu: ${err.message}`);
   }
 }
-
 
 /**
  * 6. Nạp (Seed) dữ liệu notification mẫu từ file JSON

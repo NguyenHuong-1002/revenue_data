@@ -270,7 +270,9 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
                     d={province.d}
                     aria-label={province.label}
                     className="province-path transition-all duration-150"
-                    fill={isCitySelected ? 'rgba(var(--primary-rgb), 0.45)' : 'rgba(30, 41, 59, 0.65)'}
+                    fill={
+                      isCitySelected ? 'rgba(var(--primary-rgb), 0.45)' : 'rgba(30, 41, 59, 0.65)'
+                    }
                     stroke={isCitySelected ? 'var(--primary)' : 'rgba(255, 255, 255, 0.08)'}
                     strokeWidth={isCitySelected ? 1.5 : 0.6}
                     onClick={(e) => {

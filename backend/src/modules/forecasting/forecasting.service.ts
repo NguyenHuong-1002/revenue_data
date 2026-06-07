@@ -19,9 +19,7 @@ export class ForecastingService {
   async getCombinedForecast(query: ForecastQueryDto): Promise<IForecastCombinedResponse> {
     const warnings: string[] = [];
     const sales =
-      query.scope === 'all' || query.scope === 'sales'
-        ? await this.getSalesForecast(query)
-        : null;
+      query.scope === 'all' || query.scope === 'sales' ? await this.getSalesForecast(query) : null;
     const inventory =
       query.scope === 'all' || query.scope === 'inventory'
         ? await this.getInventoryForecast(query)

@@ -54,9 +54,9 @@ const FONT_ITALIC = path.join(FONT_DIR, 'Arial-Italic.ttf');
 
 /* ─── Brand colors ─── */
 const COLOR = {
-  primary: '#2563EB',      // Indigo blue
+  primary: '#2563EB', // Indigo blue
   primaryDark: '#1E40AF',
-  accent: '#0EA5E9',       // Sky
+  accent: '#0EA5E9', // Sky
   success: '#16A34A',
   danger: '#DC2626',
   warning: '#D97706',
@@ -145,8 +145,14 @@ export class ReportsService {
     const where: string[] = [];
 
     const range = this.resolveMonthRange(query.fromMonth, query.toMonth);
-    if (range.from) { where.push('sr.time_report >= ?'); params.push(range.from); }
-    if (range.to)   { where.push('sr.time_report <= ?'); params.push(range.to); }
+    if (range.from) {
+      where.push('sr.time_report >= ?');
+      params.push(range.from);
+    }
+    if (range.to) {
+      where.push('sr.time_report <= ?');
+      params.push(range.to);
+    }
 
     const sql = `
       SELECT DATE_FORMAT(sr.time_report, '%Y-%m') AS month,
@@ -167,13 +173,22 @@ export class ReportsService {
     }));
   }
 
-  private async loadTopProducts(query: ReportQueryDto, limit: number): Promise<ITopProductRevenue[]> {
+  private async loadTopProducts(
+    query: ReportQueryDto,
+    limit: number,
+  ): Promise<ITopProductRevenue[]> {
     const params: Array<string | number> = [];
     const where: string[] = [];
     const range = this.resolveMonthRange(query.fromMonth, query.toMonth);
 
-    if (range.from) { where.push('sr.time_report >= ?'); params.push(range.from); }
-    if (range.to)   { where.push('sr.time_report <= ?'); params.push(range.to); }
+    if (range.from) {
+      where.push('sr.time_report >= ?');
+      params.push(range.from);
+    }
+    if (range.to) {
+      where.push('sr.time_report <= ?');
+      params.push(range.to);
+    }
     params.push(limit);
 
     const sql = `
@@ -198,13 +213,22 @@ export class ReportsService {
     }));
   }
 
-  private async loadTopBranches(query: ReportQueryDto, limit: number): Promise<ITopBranchRevenue[]> {
+  private async loadTopBranches(
+    query: ReportQueryDto,
+    limit: number,
+  ): Promise<ITopBranchRevenue[]> {
     const params: Array<string | number> = [];
     const where: string[] = [];
     const range = this.resolveMonthRange(query.fromMonth, query.toMonth);
 
-    if (range.from) { where.push('sr.time_report >= ?'); params.push(range.from); }
-    if (range.to)   { where.push('sr.time_report <= ?'); params.push(range.to); }
+    if (range.from) {
+      where.push('sr.time_report >= ?');
+      params.push(range.from);
+    }
+    if (range.to) {
+      where.push('sr.time_report <= ?');
+      params.push(range.to);
+    }
     params.push(limit);
 
     const sql = `
@@ -241,7 +265,11 @@ export class ReportsService {
     const previousMonthRevenue = monthly.length > 1 ? (monthly.at(-2)?.revenue ?? 0) : 0;
     const growthPercent =
       previousMonthRevenue > 0
-        ? Number((((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(2))
+        ? Number(
+            (((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100).toFixed(
+              2,
+            ),
+          )
         : null;
 
     return {
@@ -250,12 +278,17 @@ export class ReportsService {
       currentMonthRevenue,
       previousMonthRevenue,
       growthPercent,
-      averageMonthlyRevenue: monthly.length > 0 ? Number((totalRevenue / monthly.length).toFixed(2)) : 0,
-      averageMonthlyQuantity: monthly.length > 0 ? Number((totalQuantity / monthly.length).toFixed(2)) : 0,
+      averageMonthlyRevenue:
+        monthly.length > 0 ? Number((totalRevenue / monthly.length).toFixed(2)) : 0,
+      averageMonthlyQuantity:
+        monthly.length > 0 ? Number((totalQuantity / monthly.length).toFixed(2)) : 0,
     };
   }
 
-  private resolveMonthRange(fromMonth?: string, toMonth?: string): { from: string | null; to: string | null } {
+  private resolveMonthRange(
+    fromMonth?: string,
+    toMonth?: string,
+  ): { from: string | null; to: string | null } {
     return {
       from: this.normalizeMonthBoundary(fromMonth, false),
       to: this.normalizeMonthBoundary(toMonth, true),
@@ -265,12 +298,17 @@ export class ReportsService {
   private normalizeMonthBoundary(value: string | undefined, endOfMonth: boolean): string | null {
     if (!value) return null;
     const match = /^(\d{4})-(\d{2})$/.exec(value);
-    if (!match) throw new NotFoundException(`Định dạng tháng không hợp lệ: '${value}'. Dùng YYYY-MM.`);
+    if (!match)
+      throw new NotFoundException(`Định dạng tháng không hợp lệ: '${value}'. Dùng YYYY-MM.`);
     const year = Number(match[1]);
     const month = Number(match[2]);
     if (month < 1 || month > 12) throw new NotFoundException(`Tháng không hợp lệ: '${value}'.`);
     const date = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-    if (endOfMonth) { date.setUTCMonth(date.getUTCMonth() + 1); date.setUTCDate(0); date.setUTCHours(23, 59, 59, 999); }
+    if (endOfMonth) {
+      date.setUTCMonth(date.getUTCMonth() + 1);
+      date.setUTCDate(0);
+      date.setUTCHours(23, 59, 59, 999);
+    }
     return date.toISOString().slice(0, 19).replace('T', ' ');
   }
 
@@ -295,7 +333,11 @@ export class ReportsService {
   }
 
   private today(): string {
-    return new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return new Date().toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
   }
 
   /* ════════════════════════════════════════════
@@ -330,22 +372,42 @@ export class ReportsService {
     doc.rect(0, 0, pageWidth, 120).fill(COLOR.primary);
 
     // Decorative circles
-    doc.circle(pageWidth - 60, 20, 55).fillOpacity(0.08).fill(COLOR.white).fillOpacity(1);
-    doc.circle(pageWidth - 20, 100, 40).fillOpacity(0.06).fill(COLOR.white).fillOpacity(1);
+    doc
+      .circle(pageWidth - 60, 20, 55)
+      .fillOpacity(0.08)
+      .fill(COLOR.white)
+      .fillOpacity(1);
+    doc
+      .circle(pageWidth - 20, 100, 40)
+      .fillOpacity(0.06)
+      .fill(COLOR.white)
+      .fillOpacity(1);
     doc.circle(30, 110, 30).fillOpacity(0.06).fill(COLOR.white).fillOpacity(1);
 
     // Accent line bottom of banner
     doc.rect(0, 116, pageWidth, 4).fill(COLOR.accent);
 
     // Title
-    doc.font('Bold').fontSize(20).fillColor(COLOR.white).text(title, g, 32, { width: pageWidth - g * 2 });
+    doc
+      .font('Bold')
+      .fontSize(20)
+      .fillColor(COLOR.white)
+      .text(title, g, 32, { width: pageWidth - g * 2 });
 
     // Subtitle
-    doc.font('Regular').fontSize(10).fillColor('rgba(255,255,255,0.80)').text(subtitle, g, 60, { width: pageWidth - g * 2 });
+    doc
+      .font('Regular')
+      .fontSize(10)
+      .fillColor('rgba(255,255,255,0.80)')
+      .text(subtitle, g, 60, { width: pageWidth - g * 2 });
 
     // Date top-right (inside banner)
     const dateStr = `Ngày xuất: ${this.today()}`;
-    doc.font('Regular').fontSize(8).fillColor('rgba(255,255,255,0.65)').text(dateStr, g, 98, { width: pageWidth - g * 2, align: 'right' });
+    doc
+      .font('Regular')
+      .fontSize(8)
+      .fillColor('rgba(255,255,255,0.65)')
+      .text(dateStr, g, 98, { width: pageWidth - g * 2, align: 'right' });
 
     doc.y = 140;
     doc.fillColor(COLOR.neutral900);
@@ -361,10 +423,19 @@ export class ReportsService {
     doc.rect(g, y, 4, 16).fill(COLOR.primary);
 
     // Title text
-    doc.font('Bold').fontSize(12).fillColor(COLOR.primary).text(text, g + 10, y + 1, { width: pageWidth - g * 2 - 10 });
+    doc
+      .font('Bold')
+      .fontSize(12)
+      .fillColor(COLOR.primary)
+      .text(text, g + 10, y + 1, { width: pageWidth - g * 2 - 10 });
 
     // Divider line
-    doc.moveTo(g, y + 20).lineTo(pageWidth - g, y + 20).lineWidth(0.5).strokeColor(COLOR.neutral300).stroke();
+    doc
+      .moveTo(g, y + 20)
+      .lineTo(pageWidth - g, y + 20)
+      .lineWidth(0.5)
+      .strokeColor(COLOR.neutral300)
+      .stroke();
 
     doc.y = y + 28;
     doc.fillColor(COLOR.neutral900);
@@ -394,11 +465,17 @@ export class ReportsService {
       doc.rect(bx, y, bw, 3).fill(item.color ?? COLOR.primary);
 
       // Label
-      doc.font('Regular').fontSize(7).fillColor(COLOR.neutral500)
+      doc
+        .font('Regular')
+        .fontSize(7)
+        .fillColor(COLOR.neutral500)
         .text(item.label.toUpperCase(), bx + 8, y + 10, { width: bw - 16 });
 
       // Value
-      doc.font('Bold').fontSize(11).fillColor(item.color ?? COLOR.neutral900)
+      doc
+        .font('Bold')
+        .fontSize(11)
+        .fillColor(item.color ?? COLOR.neutral900)
         .text(item.value, bx + 8, y + 22, { width: bw - 16, lineBreak: false });
     });
 
@@ -418,10 +495,20 @@ export class ReportsService {
     let y = doc.y;
 
     // Header row
-    doc.rect(g, y, colWidths.reduce((a, b) => a + b, 0), rowH).fill(COLOR.primary);
+    doc
+      .rect(
+        g,
+        y,
+        colWidths.reduce((a, b) => a + b, 0),
+        rowH,
+      )
+      .fill(COLOR.primary);
     let x = g;
     headers.forEach((h, i) => {
-      doc.font('Bold').fontSize(8.5).fillColor(COLOR.white)
+      doc
+        .font('Bold')
+        .fontSize(8.5)
+        .fillColor(COLOR.white)
         .text(h, x + 6, y + 6, { width: colWidths[i] - 12, lineBreak: false });
       x += colWidths[i];
     });
@@ -440,7 +527,10 @@ export class ReportsService {
         doc.rect(g, y, totalW, rowH).fill(COLOR.primary);
         let hx = g;
         headers.forEach((h, i) => {
-          doc.font('Bold').fontSize(8.5).fillColor(COLOR.white)
+          doc
+            .font('Bold')
+            .fontSize(8.5)
+            .fillColor(COLOR.white)
             .text(h, hx + 6, y + 6, { width: colWidths[i] - 12, lineBreak: false });
           hx += colWidths[i];
         });
@@ -450,7 +540,10 @@ export class ReportsService {
       doc.rect(g, y, totalW, rowH).fill(isEven ? COLOR.white : COLOR.neutral100);
       let cx = g;
       row.forEach((cell, i) => {
-        doc.font('Regular').fontSize(8.5).fillColor(COLOR.neutral700)
+        doc
+          .font('Regular')
+          .fontSize(8.5)
+          .fillColor(COLOR.neutral700)
           .text(cell, cx + 6, y + 6, { width: colWidths[i] - 12, lineBreak: false });
         cx += colWidths[i];
       });
@@ -484,10 +577,17 @@ export class ReportsService {
 
     // Chart background
     doc.rect(g, y, chartW, chartH + 30).fill(COLOR.neutral100);
-    doc.rect(g, y, chartW, chartH + 30).lineWidth(0.5).strokeColor(COLOR.neutral300).stroke();
+    doc
+      .rect(g, y, chartW, chartH + 30)
+      .lineWidth(0.5)
+      .strokeColor(COLOR.neutral300)
+      .stroke();
 
     // Label
-    doc.font('Bold').fontSize(8).fillColor(COLOR.neutral500)
+    doc
+      .font('Bold')
+      .fontSize(8)
+      .fillColor(COLOR.neutral500)
       .text(label, g + 8, y + 6, { width: chartW - 16 });
 
     // Bars
@@ -503,7 +603,10 @@ export class ReportsService {
 
       // Month label below
       const shortMonth = d.month.slice(5, 7) + '/' + d.month.slice(2, 4);
-      doc.font('Regular').fontSize(6).fillColor(COLOR.neutral500)
+      doc
+        .font('Regular')
+        .fontSize(6)
+        .fillColor(COLOR.neutral500)
         .text(shortMonth, bx, y + chartH + 8, { width: barW, align: 'center', lineBreak: false });
     });
 
@@ -522,13 +625,27 @@ export class ReportsService {
       const footerY = doc.page.height - 28;
 
       doc.rect(0, footerY - 2, pageW, 30).fill(COLOR.neutral100);
-      doc.moveTo(g, footerY - 2).lineTo(pageW - g, footerY - 2).lineWidth(0.5).strokeColor(COLOR.neutral300).stroke();
+      doc
+        .moveTo(g, footerY - 2)
+        .lineTo(pageW - g, footerY - 2)
+        .lineWidth(0.5)
+        .strokeColor(COLOR.neutral300)
+        .stroke();
 
-      doc.font('Regular').fontSize(7).fillColor(COLOR.neutral500)
+      doc
+        .font('Regular')
+        .fontSize(7)
+        .fillColor(COLOR.neutral500)
         .text(title, g, footerY + 6, { width: pageW * 0.6 });
 
-      doc.font('Regular').fontSize(7).fillColor(COLOR.neutral500)
-        .text(`Trang ${i + 1} / ${pageCount}`, g, footerY + 6, { width: pageW - g * 2, align: 'right' });
+      doc
+        .font('Regular')
+        .fontSize(7)
+        .fillColor(COLOR.neutral500)
+        .text(`Trang ${i + 1} / ${pageCount}`, g, footerY + 6, {
+          width: pageW - g * 2,
+          align: 'right',
+        });
     }
   }
 
@@ -541,7 +658,10 @@ export class ReportsService {
 
     doc.roundedRect(g, y, boxW, 34, 5).fill(`${color}15`);
     doc.rect(g, y, 4, 34).fill(color);
-    doc.font('Regular').fontSize(9).fillColor(COLOR.neutral700)
+    doc
+      .font('Regular')
+      .fontSize(9)
+      .fillColor(COLOR.neutral700)
       .text(text, g + 14, y + 10, { width: boxW - 20 });
 
     doc.y = y + 44;
@@ -556,15 +676,13 @@ export class ReportsService {
     const endPromise = this.collect(doc);
     const period = this.fmtPeriod(report.period.from, report.period.to);
     const growth = report.summary.growthPercent;
-    const growthColor = growth === null ? COLOR.neutral500 : growth >= 0 ? COLOR.success : COLOR.danger;
-    const growthStr = growth === null ? 'Không có dữ liệu tháng trước' : `${growth >= 0 ? '+' : ''}${growth}%`;
+    const growthColor =
+      growth === null ? COLOR.neutral500 : growth >= 0 ? COLOR.success : COLOR.danger;
+    const growthStr =
+      growth === null ? 'Không có dữ liệu tháng trước' : `${growth >= 0 ? '+' : ''}${growth}%`;
 
     /* ─── PAGE 1: HEADER + KPIs ─── */
-    this.drawHeader(
-      doc,
-      'BÁO CÁO DOANH THU HỆ THỐNG',
-      `Kỳ báo cáo: ${period}`,
-    );
+    this.drawHeader(doc, 'BÁO CÁO DOANH THU HỆ THỐNG', `Kỳ báo cáo: ${period}`);
 
     // Intro callout
     this.drawCallout(
@@ -575,17 +693,31 @@ export class ReportsService {
     // KPI row 1
     this.drawSectionTitle(doc, 'Tóm tắt tổng quan');
     this.drawKpiRow(doc, [
-      { label: 'Tổng Doanh Thu', value: this.fmtVND(report.summary.totalRevenue), color: COLOR.success },
-      { label: 'Tổng Số Lượng Bán', value: `${this.fmtNum(report.summary.totalQuantity)} sản phẩm` },
+      {
+        label: 'Tổng Doanh Thu',
+        value: this.fmtVND(report.summary.totalRevenue),
+        color: COLOR.success,
+      },
+      {
+        label: 'Tổng Số Lượng Bán',
+        value: `${this.fmtNum(report.summary.totalQuantity)} sản phẩm`,
+      },
       { label: 'Tăng Trưởng MoM', value: growthStr, color: growthColor },
       { label: 'Doanh Thu TB/Tháng', value: this.fmtVND(report.summary.averageMonthlyRevenue) },
     ]);
 
     // KPI row 2
     this.drawKpiRow(doc, [
-      { label: 'Doanh Thu Tháng Hiện Tại', value: this.fmtVND(report.summary.currentMonthRevenue), color: COLOR.primary },
+      {
+        label: 'Doanh Thu Tháng Hiện Tại',
+        value: this.fmtVND(report.summary.currentMonthRevenue),
+        color: COLOR.primary,
+      },
       { label: 'Doanh Thu Tháng Trước', value: this.fmtVND(report.summary.previousMonthRevenue) },
-      { label: 'SL TB/Tháng', value: `${this.fmtNum(Math.round(report.summary.averageMonthlyQuantity))} sp` },
+      {
+        label: 'SL TB/Tháng',
+        value: `${this.fmtNum(Math.round(report.summary.averageMonthlyQuantity))} sp`,
+      },
       { label: 'Số Tháng Thống Kê', value: `${report.monthly.length} tháng` },
     ]);
 
@@ -611,7 +743,10 @@ export class ReportsService {
     );
 
     /* ─── TOP CHI NHÁNH ─── */
-    this.drawSectionTitle(doc, `Xếp hạng Top ${report.topBranches.length} chi nhánh theo doanh thu`);
+    this.drawSectionTitle(
+      doc,
+      `Xếp hạng Top ${report.topBranches.length} chi nhánh theo doanh thu`,
+    );
 
     this.drawTable(
       doc,
@@ -661,8 +796,10 @@ export class ReportsService {
     const endPromise = this.collect(doc);
     const period = this.fmtPeriod(report.period.from, report.period.to);
     const growth = report.summary.growthPercent;
-    const growthColor = growth === null ? COLOR.neutral500 : growth >= 0 ? COLOR.success : COLOR.danger;
-    const growthStr = growth === null ? 'Tháng đầu tiên trong kỳ' : `${growth >= 0 ? '+' : ''}${growth}%`;
+    const growthColor =
+      growth === null ? COLOR.neutral500 : growth >= 0 ? COLOR.success : COLOR.danger;
+    const growthStr =
+      growth === null ? 'Tháng đầu tiên trong kỳ' : `${growth >= 0 ? '+' : ''}${growth}%`;
 
     /* ─── PAGE 1 ─── */
     this.drawHeader(
@@ -680,16 +817,30 @@ export class ReportsService {
     /* KPI chính */
     this.drawSectionTitle(doc, 'Các chỉ số tăng trưởng chính');
     this.drawKpiRow(doc, [
-      { label: 'Tổng Doanh Thu Kỳ', value: this.fmtVND(report.summary.totalRevenue), color: COLOR.success },
+      {
+        label: 'Tổng Doanh Thu Kỳ',
+        value: this.fmtVND(report.summary.totalRevenue),
+        color: COLOR.success,
+      },
       { label: 'Tăng Trưởng MoM', value: growthStr, color: growthColor },
-      { label: 'Doanh Thu Tháng Hiện Tại', value: this.fmtVND(report.summary.currentMonthRevenue), color: COLOR.primary },
+      {
+        label: 'Doanh Thu Tháng Hiện Tại',
+        value: this.fmtVND(report.summary.currentMonthRevenue),
+        color: COLOR.primary,
+      },
       { label: 'Doanh Thu Tháng Trước', value: this.fmtVND(report.summary.previousMonthRevenue) },
     ]);
 
     this.drawKpiRow(doc, [
-      { label: 'Tổng Số Lượng Bán', value: `${this.fmtNum(report.summary.totalQuantity)} sản phẩm` },
+      {
+        label: 'Tổng Số Lượng Bán',
+        value: `${this.fmtNum(report.summary.totalQuantity)} sản phẩm`,
+      },
       { label: 'Doanh Thu TB/Tháng', value: this.fmtVND(report.summary.averageMonthlyRevenue) },
-      { label: 'Số Lượng TB/Tháng', value: `${this.fmtNum(Math.round(report.summary.averageMonthlyQuantity))} sp` },
+      {
+        label: 'Số Lượng TB/Tháng',
+        value: `${this.fmtNum(Math.round(report.summary.averageMonthlyQuantity))} sp`,
+      },
       { label: 'Tổng Số Tháng', value: `${report.monthly.length} tháng` },
     ]);
 
@@ -727,14 +878,18 @@ export class ReportsService {
       report.monthly.map((row, i) => {
         const prev = i > 0 ? report.monthly[i - 1].revenue : null;
         const delta =
-          prev !== null && prev > 0
-            ? `${(((row.revenue - prev) / prev) * 100).toFixed(1)}%`
-            : '—';
+          prev !== null && prev > 0 ? `${(((row.revenue - prev) / prev) * 100).toFixed(1)}%` : '—';
         const share =
           report.summary.totalRevenue > 0
             ? `${((row.revenue / report.summary.totalRevenue) * 100).toFixed(1)}%`
             : '0%';
-        return [this.fmtMonth(row.month), this.fmtVND(row.revenue), this.fmtNum(row.quantity), delta, share];
+        return [
+          this.fmtMonth(row.month),
+          this.fmtVND(row.revenue),
+          this.fmtNum(row.quantity),
+          delta,
+          share,
+        ];
       }),
       [85, 140, 100, 95, 90],
     );
@@ -746,8 +901,8 @@ export class ReportsService {
         trend > 0
           ? `Doanh thu có xu hướng TĂNG trong kỳ này, tổng biến động: +${this.fmtVND(trend)} so với tháng đầu kỳ.`
           : trend < 0
-          ? `Doanh thu có xu hướng GIẢM trong kỳ này, tổng biến động: ${this.fmtVND(trend)} so với tháng đầu kỳ.`
-          : 'Doanh thu ổn định trong toàn kỳ báo cáo.';
+            ? `Doanh thu có xu hướng GIẢM trong kỳ này, tổng biến động: ${this.fmtVND(trend)} so với tháng đầu kỳ.`
+            : 'Doanh thu ổn định trong toàn kỳ báo cáo.';
 
       this.drawCallout(
         doc,
@@ -809,19 +964,33 @@ export class ReportsService {
       { key: 'growth', width: 18, header: 'Tăng Trưởng MoM (%)' },
       { key: 'share', width: 18, header: 'Tỷ Trọng DT (%)' },
     ];
-    this.styleExcelHeader(wsMonthly, ['Tháng', 'Doanh Thu (VNĐ)', 'Số Lượng Bán', 'Tăng Trưởng MoM (%)', 'Tỷ Trọng DT (%)'], 5);
+    this.styleExcelHeader(
+      wsMonthly,
+      ['Tháng', 'Doanh Thu (VNĐ)', 'Số Lượng Bán', 'Tăng Trưởng MoM (%)', 'Tỷ Trọng DT (%)'],
+      5,
+    );
     report.monthly.forEach((r, i) => {
       const prev = i > 0 ? report.monthly[i - 1].revenue : null;
-      const delta = prev !== null && prev > 0 ? +((r.revenue - prev) / prev * 100).toFixed(2) : null;
-      const share = report.summary.totalRevenue > 0 ? +((r.revenue / report.summary.totalRevenue) * 100).toFixed(2) : 0;
-      const row = wsMonthly.addRow([this.fmtMonth(r.month), r.revenue, r.quantity, delta ?? '—', share]);
+      const delta =
+        prev !== null && prev > 0 ? +(((r.revenue - prev) / prev) * 100).toFixed(2) : null;
+      const share =
+        report.summary.totalRevenue > 0
+          ? +((r.revenue / report.summary.totalRevenue) * 100).toFixed(2)
+          : 0;
+      const row = wsMonthly.addRow([
+        this.fmtMonth(r.month),
+        r.revenue,
+        r.quantity,
+        delta ?? '—',
+        share,
+      ]);
       this.styleExcelDataRow(row, i % 2 === 0);
       row.getCell(2).numFmt = '#,##0';
       row.getCell(3).numFmt = '#,##0';
     });
 
     const output = await wb.xlsx.writeBuffer();
-    return Buffer.from(output as ArrayBuffer);
+    return Buffer.from(output);
   }
 
   private async renderRevenueExcel(report: IRevenueReportData): Promise<Buffer> {
@@ -831,7 +1000,10 @@ export class ReportsService {
 
     /* ─ Tóm tắt ─ */
     const wsSummary = wb.addWorksheet('Tóm tắt');
-    wsSummary.columns = [{ key: 'label', width: 36 }, { key: 'value', width: 28 }];
+    wsSummary.columns = [
+      { key: 'label', width: 36 },
+      { key: 'value', width: 28 },
+    ];
     this.styleExcelHeader(wsSummary, ['Chỉ số', 'Giá trị'], 2);
     const growth = report.summary.growthPercent;
     [
@@ -850,12 +1022,21 @@ export class ReportsService {
     /* ─ Chi tiết tháng ─ */
     const wsMonthly = wb.addWorksheet('Doanh thu theo tháng');
     wsMonthly.columns = [
-      { key: 'month', width: 16 }, { key: 'revenue', width: 24 },
-      { key: 'quantity', width: 18 }, { key: 'share', width: 20 },
+      { key: 'month', width: 16 },
+      { key: 'revenue', width: 24 },
+      { key: 'quantity', width: 18 },
+      { key: 'share', width: 20 },
     ];
-    this.styleExcelHeader(wsMonthly, ['Tháng', 'Doanh Thu (VNĐ)', 'Số Lượng Bán', 'Tỷ Trọng DT (%)'], 4);
+    this.styleExcelHeader(
+      wsMonthly,
+      ['Tháng', 'Doanh Thu (VNĐ)', 'Số Lượng Bán', 'Tỷ Trọng DT (%)'],
+      4,
+    );
     report.monthly.forEach((r, i) => {
-      const share = report.summary.totalRevenue > 0 ? +((r.revenue / report.summary.totalRevenue) * 100).toFixed(2) : 0;
+      const share =
+        report.summary.totalRevenue > 0
+          ? +((r.revenue / report.summary.totalRevenue) * 100).toFixed(2)
+          : 0;
       const row = wsMonthly.addRow([this.fmtMonth(r.month), r.revenue, r.quantity, share]);
       this.styleExcelDataRow(row, i % 2 === 0);
       row.getCell(2).numFmt = '#,##0';
@@ -865,11 +1046,17 @@ export class ReportsService {
     /* ─ Top sản phẩm ─ */
     const wsProducts = wb.addWorksheet('Top Sản Phẩm');
     wsProducts.columns = [
-      { key: 'rank', width: 8 }, { key: 'product_id', width: 20 },
-      { key: 'product_name', width: 28 }, { key: 'quantity', width: 18 },
+      { key: 'rank', width: 8 },
+      { key: 'product_id', width: 20 },
+      { key: 'product_name', width: 28 },
+      { key: 'quantity', width: 18 },
       { key: 'revenue', width: 24 },
     ];
-    this.styleExcelHeader(wsProducts, ['#', 'Mã Sản Phẩm', 'Tên / Màu Sắc', 'Số Lượng Bán', 'Doanh Thu (VNĐ)'], 5);
+    this.styleExcelHeader(
+      wsProducts,
+      ['#', 'Mã Sản Phẩm', 'Tên / Màu Sắc', 'Số Lượng Bán', 'Doanh Thu (VNĐ)'],
+      5,
+    );
     report.topProducts.forEach((p, i) => {
       const row = wsProducts.addRow([i + 1, p.product_id, p.product_name, p.quantity, p.revenue]);
       this.styleExcelDataRow(row, i % 2 === 0);
@@ -880,11 +1067,17 @@ export class ReportsService {
     /* ─ Top chi nhánh ─ */
     const wsBranches = wb.addWorksheet('Top Chi Nhánh');
     wsBranches.columns = [
-      { key: 'rank', width: 8 }, { key: 'branch_id', width: 20 },
-      { key: 'branch_name', width: 28 }, { key: 'quantity', width: 18 },
+      { key: 'rank', width: 8 },
+      { key: 'branch_id', width: 20 },
+      { key: 'branch_name', width: 28 },
+      { key: 'quantity', width: 18 },
       { key: 'revenue', width: 24 },
     ];
-    this.styleExcelHeader(wsBranches, ['#', 'Mã Chi Nhánh', 'Tên Chi Nhánh', 'Số Lượng Bán', 'Doanh Thu (VNĐ)'], 5);
+    this.styleExcelHeader(
+      wsBranches,
+      ['#', 'Mã Chi Nhánh', 'Tên Chi Nhánh', 'Số Lượng Bán', 'Doanh Thu (VNĐ)'],
+      5,
+    );
     report.topBranches.forEach((b, i) => {
       const row = wsBranches.addRow([i + 1, b.branch_id, b.branch_name, b.quantity, b.revenue]);
       this.styleExcelDataRow(row, i % 2 === 0);
@@ -893,7 +1086,7 @@ export class ReportsService {
     });
 
     const output = await wb.xlsx.writeBuffer();
-    return Buffer.from(output as ArrayBuffer);
+    return Buffer.from(output);
   }
 
   /* ─── Excel styling helpers ─── */

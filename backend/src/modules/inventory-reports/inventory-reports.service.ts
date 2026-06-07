@@ -2,7 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/models/database.service';
 import { CreateInventoryReportDto } from './DTO/create-inventory-report.dto';
 import { GetInventoryReportAllDto } from './DTO/get-inventory-report-all.dto';
-import { IInventoryReport, IPaginatedInventoryReports } from './interfaces/inventory-report.interface';
+import {
+  IInventoryReport,
+  IPaginatedInventoryReports,
+} from './interfaces/inventory-report.interface';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
 
@@ -13,7 +16,9 @@ export class InventoryReportsService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async getInventoryReportsAll(filters: GetInventoryReportAllDto): Promise<IPaginatedInventoryReports> {
+  async getInventoryReportsAll(
+    filters: GetInventoryReportAllDto,
+  ): Promise<IPaginatedInventoryReports> {
     const whereClauses: string[] = [];
     const values: unknown[] = [];
 
@@ -72,17 +77,14 @@ export class InventoryReportsService {
     return rows[0] as IInventoryReport;
   }
 
-  async createInventoryReport(dto: CreateInventoryReportDto, adminUsername?: string): Promise<IInventoryReport> {
+  async createInventoryReport(
+    dto: CreateInventoryReportDto,
+    adminUsername?: string,
+  ): Promise<IInventoryReport> {
     const id = `INV${Date.now()}`;
     await this.db.client.query<ResultSetHeader>(
       `INSERT INTO InventoryReport (inventory_id, product_id, plant_id, calendar_year_week, quantity) VALUES (?, ?, ?, ?, ?)`,
-      [
-        id,
-        dto.product_id,
-        dto.plant_id,
-        dto.calendar_year_week,
-        dto.quantity,
-      ],
+      [id, dto.product_id, dto.plant_id, dto.calendar_year_week, dto.quantity],
     );
 
     await this.notificationService.createNotification({
@@ -102,13 +104,7 @@ export class InventoryReportsService {
     await this.getDetailInventoryReport(id);
     await this.db.client.query<ResultSetHeader>(
       `UPDATE InventoryReport SET product_id = ?, plant_id = ?, calendar_year_week = ?, quantity = ? WHERE inventory_id = ?`,
-      [
-        dto.product_id,
-        dto.plant_id,
-        dto.calendar_year_week,
-        dto.quantity,
-        id,
-      ],
+      [dto.product_id, dto.plant_id, dto.calendar_year_week, dto.quantity, id],
     );
 
     await this.notificationService.createNotification({
@@ -151,8 +147,13 @@ export class InventoryReportsService {
     );
 
     return {
-      plant_inventory: plantRows.map(r => ({ name: String(r.name), count: Number(r.count ?? 0) })),
-      monthly_inventory: monthlyRows.reverse().map(r => ({ name: String(r.name), count: Number(r.count ?? 0) })),
+      plant_inventory: plantRows.map((r) => ({
+        name: String(r.name),
+        count: Number(r.count ?? 0),
+      })),
+      monthly_inventory: monthlyRows
+        .reverse()
+        .map((r) => ({ name: String(r.name), count: Number(r.count ?? 0) })),
     };
   }
 
@@ -215,8 +216,12 @@ export class InventoryReportsService {
       currentMonthStock: curStock,
       previousMonthStock: prevStock,
       growthPercent,
-      topPlant: topPlantRow ? { plant_id: String(topPlantRow.plant_id), total: Number(topPlantRow.total) } : null,
-      topProduct: topProductRow ? { product_id: String(topProductRow.product_id), total: Number(topProductRow.total) } : null,
+      topPlant: topPlantRow
+        ? { plant_id: String(topPlantRow.plant_id), total: Number(topPlantRow.total) }
+        : null,
+      topProduct: topProductRow
+        ? { product_id: String(topProductRow.product_id), total: Number(topProductRow.total) }
+        : null,
       avgStockPerPlant: totalPlants > 0 ? Math.round(totalStock / totalPlants) : 0,
     };
   }
@@ -252,17 +257,27 @@ export class InventoryReportsService {
        ORDER BY month ASC`,
     );
 
-    const monthlyWithGrowth = (monthlyRows as RowDataPacket[]).map((row, i) => {
-      const prev = i > 0 ? Number((monthlyRows as RowDataPacket[])[i - 1].total ?? 0) : 0;
+    const monthlyWithGrowth = monthlyRows.map((row, i) => {
+      const prev = i > 0 ? Number(monthlyRows[i - 1].total ?? 0) : 0;
       const cur = Number(row.total ?? 0);
       const growthPct = prev > 0 ? Number((((cur - prev) / prev) * 100).toFixed(2)) : null;
       return { month: String(row.month), total: cur, growthPct };
     });
 
     return {
-      topStocked: topRows.map(r => ({ product_id: String(r.product_id), total: Number(r.total) })),
-      bottomStocked: bottomRows.map(r => ({ product_id: String(r.product_id), total: Number(r.total) })),
-      topPlants: plantRows.map(r => ({ plant_id: String(r.plant_id), total: Number(r.total), record_count: Number(r.record_count) })),
+      topStocked: topRows.map((r) => ({
+        product_id: String(r.product_id),
+        total: Number(r.total),
+      })),
+      bottomStocked: bottomRows.map((r) => ({
+        product_id: String(r.product_id),
+        total: Number(r.total),
+      })),
+      topPlants: plantRows.map((r) => ({
+        plant_id: String(r.plant_id),
+        total: Number(r.total),
+        record_count: Number(r.record_count),
+      })),
       monthlyTrend: monthlyWithGrowth,
     };
   }
@@ -270,7 +285,10 @@ export class InventoryReportsService {
   /* ═══════════════════════════════════════
      INVENTORY STATS — Cảnh báo tồn kho
   ═══════════════════════════════════════ */
-  async getInventoryAlerts(lowThreshold = 50, highThreshold = 10000): Promise<{
+  async getInventoryAlerts(
+    lowThreshold = 50,
+    highThreshold = 10000,
+  ): Promise<{
     lowStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
     highStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
     totalAlerts: number;
@@ -291,8 +309,18 @@ export class InventoryReportsService {
     );
 
     return {
-      lowStock: lowRows.map(r => ({ product_id: String(r.product_id), plant_id: String(r.plant_id), quantity: Number(r.quantity), last_date: String(r.last_date) })),
-      highStock: highRows.map(r => ({ product_id: String(r.product_id), plant_id: String(r.plant_id), quantity: Number(r.quantity), last_date: String(r.last_date) })),
+      lowStock: lowRows.map((r) => ({
+        product_id: String(r.product_id),
+        plant_id: String(r.plant_id),
+        quantity: Number(r.quantity),
+        last_date: String(r.last_date),
+      })),
+      highStock: highRows.map((r) => ({
+        product_id: String(r.product_id),
+        plant_id: String(r.plant_id),
+        quantity: Number(r.quantity),
+        last_date: String(r.last_date),
+      })),
       totalAlerts: lowRows.length + highRows.length,
     };
   }
