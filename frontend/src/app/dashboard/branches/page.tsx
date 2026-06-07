@@ -160,6 +160,7 @@ export default function BranchesPage() {
         onButtonClick={() => setIsCreateOpen(true)}
         isButtonDisabled={!isAdmin}
         buttonTooltip={!isAdmin ? 'Chỉ Quản trị viên mới có quyền thêm chi nhánh' : undefined}
+        icon={Building2}
       />
 
       {/* Top Overview: Vietnam Map (2/3) + Region Donut Chart (1/3) */}
@@ -198,6 +199,7 @@ export default function BranchesPage() {
           setCityFilter('');
           setCurrentPage(1);
         }}
+        isLoading={isLoading}
       />
 
       {/* Main Table / Cards */}

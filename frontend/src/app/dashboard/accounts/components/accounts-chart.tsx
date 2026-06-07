@@ -49,7 +49,7 @@ interface AccountsChartProps {
 export function AccountsChart({ accounts, timeRange, setTimeRange }: AccountsChartProps) {
   // Tạo dữ liệu biểu đồ động từ danh sách tài khoản
   const chartData = React.useMemo(() => {
-    const referenceDate = new Date('2026-06-03');
+    const referenceDate = new Date();
     const days = 365; // Tạo 365 ngày lịch sử để hỗ trợ lọc 1 năm (1year)
     const dataList = [];
 

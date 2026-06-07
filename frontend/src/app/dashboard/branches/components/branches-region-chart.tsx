@@ -2,8 +2,15 @@
 
 import * as React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { PieChart as PieIcon } from 'lucide-react';
+import { PieChart as PieIcon, ZoomIn } from 'lucide-react';
 import type { IBranch } from '@/lib/types/branch';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface BranchesRegionChartProps {
   branches: IBranch[];
@@ -25,6 +32,8 @@ const classifyRegion = (city: string): 'North' | 'Central' | 'South' => {
 };
 
 export function BranchesRegionChart({ branches }: BranchesRegionChartProps) {
+  const [isZoomed, setIsZoomed] = React.useState(false);
+
   // 1. Phân nhóm chi nhánh theo vùng miền
   const regionalData = React.useMemo(() => {
     const groups = {
@@ -92,20 +101,27 @@ export function BranchesRegionChart({ branches }: BranchesRegionChartProps) {
   };
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-md flex flex-col h-full overflow-hidden hover:shadow-lg transition-all duration-300">
+    <>
+      <div
+        onClick={() => setIsZoomed(true)}
+        className="bg-card border border-border rounded-xl p-5 shadow-md flex flex-col h-full overflow-hidden hover:shadow-lg hover:border-indigo-500/50 transition-all duration-300 cursor-pointer group"
+      >
       {/* Header Biểu đồ */}
-      <div className="flex items-center gap-2 mb-4 border-b border-border/50 pb-3">
-        <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
-          <PieIcon className="size-4 animate-spin-slow" />
+      <div className="flex items-center justify-between mb-4 border-b border-border/50 pb-3">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
+            <PieIcon className="size-4 animate-spin-slow" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-foreground">
+              Phân bố chi nhánh vùng miền
+            </h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Tỷ lệ phân bố cơ sở kinh doanh theo vùng miền
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-bold text-foreground">
-            Phân bố chi nhánh vùng miền
-          </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Tỷ lệ phân bố cơ sở kinh doanh theo vùng miền
-          </p>
-        </div>
+        <ZoomIn className="size-4 text-muted-foreground group-hover:text-indigo-500 transition-colors" />
       </div>
 
       {/* Layout dọc: chart trên, danh sách bên dưới – phù hợp cột 1/3 */}
@@ -173,6 +189,90 @@ export function BranchesRegionChart({ branches }: BranchesRegionChartProps) {
           )}
         </div>
       </div>
-    </div>
+
+      </div>
+
+      <Dialog open={isZoomed} onOpenChange={(open) => !open && setIsZoomed(false)}>
+        <DialogContent className="sm:max-w-3xl bg-card border-border p-6 rounded-2xl">
+          <DialogHeader className="border-b border-border/50 pb-4">
+            <DialogTitle className="text-lg font-bold text-foreground">
+              Phân tích cơ cấu vùng miền
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Biểu đồ trực quan và số liệu chi tiết về tỷ lệ chi nhánh theo miền Bắc, miền Trung, và miền Nam.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-center pt-4">
+            {/* Biểu đồ quạt phóng to */}
+            <div className="col-span-1 md:col-span-3 h-[320px] w-full flex items-center justify-center relative">
+              {regionalData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Pie
+                        data={regionalData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={80}
+                        outerRadius={120}
+                        paddingAngle={4}
+                        dataKey="value"
+                        isAnimationActive={true}
+                      >
+                        {regionalData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} className="focus:outline-none" />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-3xl font-black text-foreground tracking-tight leading-none">{total}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Cơ sở</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-muted-foreground italic">Không có dữ liệu</div>
+              )}
+            </div>
+
+            {/* Chi tiết số liệu bên cạnh */}
+            <div className="col-span-1 md:col-span-2 space-y-4">
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-3">
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                  Chi tiết phân bổ
+                </span>
+                <div className="space-y-2.5">
+                  {regionalData.map((region) => {
+                    const percent = ((region.value / total) * 100).toFixed(1);
+                    return (
+                      <div key={region.key} className="flex items-center justify-between">
+                        <span className="text-sm text-foreground/80 flex items-center gap-2">
+                          <span className="size-3 rounded-full" style={{ backgroundColor: region.fill }} />
+                          {region.name}
+                        </span>
+                        <div className="text-right">
+                          <span className="text-sm font-semibold text-foreground">{region.value}</span>
+                          <span className="text-xs text-muted-foreground ml-1.5">
+                            ({percent}%)
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-xs text-indigo-600 dark:text-indigo-400">
+                <p className="font-semibold mb-1">💡 Định hướng khu vực</p>
+                <p className="leading-relaxed opacity-90">
+                  Phân bổ vùng miền giúp tối ưu hóa việc phân phối sản phẩm, điều chuyển nhân sự và lập báo cáo doanh thu theo khu vực địa lý một cách chính xác.
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

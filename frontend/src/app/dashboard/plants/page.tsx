@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Package } from 'lucide-react';
+import { Package, Warehouse } from 'lucide-react';
 import { plantService } from '@/lib/services/plant.service';
 import { accountService } from '@/lib/services/account.service';
 import { toast } from 'sonner';
 import { PlantModal } from './components/plant-modal';
-import { PlantsHeader } from './components/plants-header';
+import { DashboardHeader } from '@/components/dashboard-header';
 import { PlantsStats } from './components/plants-stats';
 import { PlantsFilter } from './components/plants-filter';
 import { PlantsTable } from './components/plants-table';
@@ -173,7 +173,15 @@ export default function PlantsPage() {
   return (
     <div className="flex flex-1 flex-col p-6 gap-6 max-w-7xl mx-auto w-full">
       {/* Header section */}
-      <PlantsHeader isAdmin={isAdmin} onAddClick={() => setIsCreateOpen(true)} />
+      <DashboardHeader
+        title="Quản lý nhà kho"
+        description="Quản lý thông tin nhà kho, xưởng sản xuất, địa chỉ và thông tin liên hệ của quản lý kho."
+        buttonText="Thêm nhà kho"
+        onButtonClick={() => setIsCreateOpen(true)}
+        isButtonDisabled={!isAdmin}
+        buttonTooltip={!isAdmin ? 'Chỉ Quản trị viên mới có quyền thêm nhà kho' : undefined}
+        icon={Warehouse}
+      />
 
       {/* Overview Stats + Region Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
@@ -196,6 +204,7 @@ export default function PlantsPage() {
               setCurrentPage(1);
             }}
             onResetFilters={handleClearFilters}
+            isLoading={isLoading}
           />
         </div>
         <div className="lg:col-span-1">

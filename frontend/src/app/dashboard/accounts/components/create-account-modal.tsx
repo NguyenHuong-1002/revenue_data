@@ -7,7 +7,7 @@
 import * as React from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserPlusIcon } from 'lucide-react';
+import { UserPlusIcon, Camera, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { createAccountSchema, type CreateAccountFormValues } from '../accounts.schema';
+import { toast } from 'sonner';
+import { accountService } from '@/lib/services/account.service';
+import { getAvatarUrl } from '@/lib/avatar';
 
 interface CreateAccountModalProps {
   isOpen: boolean;
@@ -24,6 +27,9 @@ interface CreateAccountModalProps {
 }
 
 export function CreateAccountModal({ isOpen, onClose, onSubmit }: CreateAccountModalProps) {
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   // Khởi tạo form với react-hook-form + Zod resolver
   const form = useForm<CreateAccountFormValues>({
     resolver: zodResolver(createAccountSchema),
@@ -34,6 +40,7 @@ export function CreateAccountModal({ isOpen, onClose, onSubmit }: CreateAccountM
       password: '',
       role: 'STAFF',
       status_account: 'ACTIVE',
+      avatarURL: '',
     },
   });
 
@@ -47,10 +54,45 @@ export function CreateAccountModal({ isOpen, onClose, onSubmit }: CreateAccountM
     if (isOpen) {
       reset({
         fullname: '', username: '', mail: '', password: '',
-        role: 'STAFF', status_account: 'ACTIVE',
+        role: 'STAFF', status_account: 'ACTIVE', avatarURL: '',
       });
     }
   }, [isOpen, reset]);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file hình ảnh (png, jpg, jpeg...)');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Kích thước ảnh tối đa là 2MB');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const res = await accountService.uploadAvatar(file);
+      if (res.data.success || res.data.avatarURL) {
+        form.setValue('avatarURL', res.data.avatarURL);
+        toast.success('Tải ảnh đại diện lên thành công!');
+      } else {
+        toast.error('Không thể tải ảnh đại diện lên.');
+      }
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi tải ảnh đại diện.');
+      console.error(error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Xử lý submit: gọi lên parent, nếu thành công thì đóng modal
   const handleFormSubmit = async (data: CreateAccountFormValues) => {
@@ -67,6 +109,39 @@ export function CreateAccountModal({ isOpen, onClose, onSubmit }: CreateAccountM
       <FormProvider {...form}>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <FieldGroup className="gap-3">
+            {/* Ảnh đại diện */}
+            <div className="flex flex-col items-center justify-center py-2 pb-4">
+              <div
+                onClick={handleAvatarClick}
+                className="relative group cursor-pointer size-20 rounded-full border border-dashed border-border hover:border-blue-500 transition-all flex items-center justify-center overflow-hidden bg-muted/40"
+              >
+                {isUploading ? (
+                  <Loader2 className="size-6 text-blue-500 animate-spin" />
+                ) : form.watch('avatarURL') ? (
+                  <img
+                    src={getAvatarUrl(form.watch('avatarURL'))}
+                    alt="Avatar Preview"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-muted-foreground group-hover:text-blue-500 transition-colors">
+                    <Camera className="size-5 mb-0.5" />
+                    <span className="text-[10px] font-medium">Chọn ảnh</span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold">
+                  Tải ảnh lên
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
+              <span className="text-[10px] text-muted-foreground mt-1.5">Ảnh vuông, tối đa 2MB</span>
+            </div>
             {/* Họ và tên */}
             <Field>
               <FieldLabel htmlFor="create-fullname">Họ và tên</FieldLabel>

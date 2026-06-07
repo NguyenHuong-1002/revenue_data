@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ interface PlantsFilterProps {
   onToggleAdvancedFilters: () => void;
   onSearchSubmit: (address: string, manager: string, region: 'ALL' | 'North' | 'Central' | 'South') => void;
   onResetFilters: () => void;
+  isLoading?: boolean;
 }
 
 export function PlantsFilter({
@@ -36,6 +38,7 @@ export function PlantsFilter({
   onToggleAdvancedFilters,
   onSearchSubmit,
   onResetFilters,
+  isLoading = false,
 }: PlantsFilterProps) {
   // Các state tạm thời để hiển thị trên input trước khi người dùng nhấn Tìm kiếm
   const [tempAddress, setTempAddress] = useState(addressFilter);
@@ -58,6 +61,22 @@ export function PlantsFilter({
   // Kiểm tra xem có filter nào đã được áp dụng và đang active không (để hiển thị badge/nút đặt lại)
   const hasActiveAdvancedFilters = !!managerFilter || regionFilter !== 'ALL';
   const hasAnyFilter = !!addressFilter || !!managerFilter || regionFilter !== 'ALL';
+
+  if (isLoading) {
+    return (
+      <Card className="bg-card border-border shadow-sm overflow-hidden">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+            <Skeleton className="h-10 w-full sm:max-w-md" />
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-36" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-card border-border shadow-sm overflow-hidden">

@@ -39,28 +39,43 @@ const SVG_CITIES: MapCity[] = [
   { id: 'dongnai', name: 'Đồng Nai', displayName: 'Đồng Nai', x: 248.5, y: 692.7 },
 ];
 
+function removeDiacritics(str: string): string {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .replace(/tp\.\s*/g, '')
+    .replace(/tinh\s*/g, '')
+    .replace(/thanh\s*pho\s*/g, '')
+    .replace(/[\s–-]/g, '')
+    .trim();
+}
+
 function resolveProvinceId(city: string): string | null {
-  const c = city.trim().toLowerCase();
-  if (c.includes('hà nội') || c.includes('hanoi')) return 'hanoi';
-  if (c.includes('hải phòng') || c.includes('haiphong')) return 'haiphong';
-  if (c.includes('đà nẵng') || c.includes('danang')) return 'danang';
-  if (c.includes('hồ chí minh') || c.includes('hcm') || c.includes('saigon')) return 'hcm';
-  if (c.includes('cần thơ') || c.includes('cantho')) return 'cantho';
-  if (c.includes('lạng sơn') || c.includes('langson')) return 'langson';
-  if (c.includes('vinh') || c.includes('nghệ an')) return 'nghean';
-  if (c.includes('huế') || c.includes('tthue')) return 'tthue';
-  if (c.includes('nha trang') || c.includes('khánh hòa')) return 'khanhhoa';
-  if (c.includes('đà lạt') || c.includes('lâm đồng')) return 'lamdong';
-  if (c.includes('vũng tàu') || c.includes('bà rịa')) return 'baria';
-  if (c.includes('cà mau') || c.includes('camau')) return 'camau';
-  if (c.includes('bình dương') || c.includes('binhduong')) return 'binhduong';
-  if (c.includes('đồng nai') || c.includes('dongnai')) return 'dongnai';
+  const c = removeDiacritics(city);
+  if (c.includes('hanoi')) return 'hanoi';
+  if (c.includes('haiphong')) return 'haiphong';
+  if (c.includes('danang')) return 'danang';
+  if (c.includes('hcm') || c.includes('hochiminh') || c.includes('saigon')) return 'hcm';
+  if (c.includes('cantho')) return 'cantho';
+  if (c.includes('langson')) return 'langson';
+  if (c.includes('vinh') || c.includes('nghean')) return 'nghean';
+  if (c.includes('hue') || c.includes('tthue')) return 'tthue';
+  if (c.includes('nhatrang') || c.includes('khanhhoa')) return 'khanhhoa';
+  if (c.includes('dalat') || c.includes('lamdong')) return 'lamdong';
+  if (c.includes('vungtau') || c.includes('baria')) return 'baria';
+  if (c.includes('camau')) return 'camau';
+  if (c.includes('binhduong')) return 'binhduong';
+  if (c.includes('dongnai')) return 'dongnai';
   return null;
 }
 
 function projectCoords(lng: number, lat: number): { x: number; y: number } {
-  const x = 56.50596 * lng - 5800.87414;
-  const y = 1299.52937 - 56.61576 * lat;
+  // Công thức phép chiếu 2D đã được tối ưu hóa dựa trên tọa độ thực tế & tọa độ SVG của Hà Nội, Đà Nẵng, TP.HCM
+  const x = 40.13 * lng - 2.376 * lat - 4008.9;
+  const y = -3.173 * lng - 55.277 * lat + 1633.92;
   return { x: parseFloat(x.toFixed(1)), y: parseFloat(y.toFixed(1)) };
 }
 
@@ -235,13 +250,14 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
                 const isCitySelected =
                   selectedCity && resolveProvinceId(selectedCity) === province.id;
 
-                // Đếm số chi nhánh của tỉnh này
+                // Đếm số chi nhánh của tỉnh này (sử dụng đối sánh không dấu)
                 let branchCount = 0;
-                // Fuzzy match province label with branch cities
+                const normalizedProvLabel = removeDiacritics(province.label);
                 for (const key of Object.keys(byCity)) {
+                  const normalizedCityKey = removeDiacritics(key);
                   if (
-                    key.toLowerCase().includes(province.label.toLowerCase()) ||
-                    province.label.toLowerCase().includes(key.toLowerCase())
+                    normalizedCityKey.includes(normalizedProvLabel) ||
+                    normalizedProvLabel.includes(normalizedCityKey)
                   ) {
                     branchCount += byCity[key].length;
                   }
@@ -400,39 +416,45 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
           {/* Absolute HTML Tooltip */}
           {hoveredItem && (
             <div
-              className="absolute z-30 pointer-events-none bg-slate-955/95 text-white p-3 rounded-xl border border-white/10 shadow-2xl text-xs flex flex-col gap-1"
+              className="absolute z-30 pointer-events-none bg-slate-950/90 text-white p-3.5 rounded-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] text-xs flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-150"
               style={{
                 left: tipPos.x,
                 top: tipPos.y,
                 transform: 'translate(-50%,-100%)',
                 whiteSpace: 'nowrap',
-                backdropFilter: 'blur(4px)',
+                backdropFilter: 'blur(8px)',
               }}
             >
               {hoveredItem.type === 'branch' ? (
                 <>
-                  <div className="font-extrabold text-[12.5px] text-slate-100 flex items-center gap-1">
-                    🏬 {hoveredItem.data.name}
+                  <div className="font-extrabold text-[13.5px] text-white flex items-center gap-1.5">
+                    <span className="text-blue-400 text-sm">🏬</span>
+                    <span>{hoveredItem.data.name}</span>
                   </div>
-                  <div className="text-indigo-400 font-semibold">
-                    📍 Thành phố: {hoveredItem.data.city}
+                  <div className="text-indigo-300 font-semibold text-[11px] flex items-center gap-1">
+                    <span className="text-indigo-400">📍</span>
+                    <span>Thành phố: {hoveredItem.data.city}</span>
                   </div>
                   {hoveredItem.data.address && (
-                    <div className="text-slate-300 text-[11px] whitespace-normal max-w-[200px] leading-relaxed">
-                      🏠 {hoveredItem.data.address}
+                    <div className="text-slate-300 text-[11px] whitespace-normal max-w-[220px] leading-relaxed bg-white/5 p-2 rounded-lg border border-white/5 mt-0.5">
+                      <span className="text-slate-400 font-medium">Địa chỉ:</span>{' '}
+                      {hoveredItem.data.address}
                     </div>
                   )}
-                  <div className="text-slate-500 font-mono text-[9px] mt-1">
-                    ID: {hoveredItem.data.store_id}
+                  <div className="text-slate-500 font-mono text-[9px] mt-1 pt-1.5 border-t border-white/5 flex justify-between items-center gap-4">
+                    <span>ID cửa hàng:</span>
+                    <span className="text-slate-400">{hoveredItem.data.store_id}</span>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="font-extrabold text-slate-100 text-[12px]">
-                    {hoveredItem.label}
+                  <div className="font-extrabold text-white text-[13px] flex items-center gap-1.5">
+                    <span className="text-blue-400 text-sm">🗺️</span>
+                    <span>{hoveredItem.label}</span>
                   </div>
-                  <div className="text-blue-400 font-medium">
-                    {hoveredItem.count} chi nhánh hoạt động
+                  <div className="text-blue-300 font-semibold text-[11px] flex items-center gap-1">
+                    <span className="text-blue-400">📍</span>
+                    <span>{hoveredItem.count} chi nhánh hoạt động</span>
                   </div>
                 </>
               )}

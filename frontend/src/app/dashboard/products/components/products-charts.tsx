@@ -23,129 +23,80 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 interface ProductsChartsProps {
-  products: IProduct[];
+  // products prop is no longer needed since page-level modeling has been removed
 }
 
-export function ProductsCharts({ products }: ProductsChartsProps) {
+export function ProductsCharts({}: ProductsChartsProps) {
   const [isExpanded, setIsExpanded] = React.useState(true);
-  const [viewMode, setViewMode] = React.useState<'page' | 'system'>('page');
   const [systemStats, setSystemStats] = React.useState<IProductStats | null>(null);
   const [isStatsLoading, setIsStatsLoading] = React.useState(false);
 
-  // Fetch system-wide stats when toggled
+  // Fetch system-wide stats on mount
   React.useEffect(() => {
-    if (viewMode === 'system' && !systemStats) {
-      setIsStatsLoading(true);
-      productService
-        .stats()
-        .then((res) => {
-          setSystemStats(res.data);
-        })
-        .catch(() => {
-          toast.error('Không thể tải phân tích trực quan toàn hệ thống.');
-          setViewMode('page'); // Fallback
-        })
-        .finally(() => {
-          setIsStatsLoading(false);
-        });
-    }
-  }, [viewMode, systemStats]);
+    setIsStatsLoading(true);
+    productService
+      .stats()
+      .then((res) => {
+        setSystemStats(res.data);
+      })
+      .catch(() => {
+        toast.error('Không thể tải phân tích trực quan toàn hệ thống.');
+      })
+      .finally(() => {
+        setIsStatsLoading(false);
+      });
+  }, []);
 
   // 1. Gender Distribution (Pie Chart)
   const genderData = React.useMemo(() => {
-    if (viewMode === 'page') {
-      const counts: Record<string, number> = { MEN: 0, WOM: 0, BOY: 0, GIR: 0 };
-      products.forEach((p) => {
-        if (counts[p.gender] !== undefined) {
-          counts[p.gender]++;
-        }
-      });
-      return [
-        { name: 'Nam (MEN)', value: counts.MEN, fill: 'hsl(217.2, 91.2%, 59.8%)' },
-        { name: 'Nữ (WOM)', value: counts.WOM, fill: 'hsl(346.8, 77.2%, 49.8%)' },
-        { name: 'Bé trai (BOY)', value: counts.BOY, fill: 'hsl(173.4, 80.4%, 40%)' },
-        { name: 'Bé gái (GIR)', value: counts.GIR, fill: 'hsl(262.1, 83.3%, 57.8%)' },
-      ].filter((d) => d.value > 0);
-    } else {
-      if (!systemStats) return [];
-      return systemStats.gender.map((item) => {
-        let name = item.name;
-        let fill = 'hsl(217.2, 91.2%, 59.8%)';
-        if (item.name === 'MEN') {
-          name = 'Nam (MEN)';
-          fill = 'hsl(217.2, 91.2%, 59.8%)';
-        } else if (item.name === 'WOM') {
-          name = 'Nữ (WOM)';
-          fill = 'hsl(346.8, 77.2%, 49.8%)';
-        } else if (item.name === 'BOY') {
-          name = 'Bé trai (BOY)';
-          fill = 'hsl(173.4, 80.4%, 40%)';
-        } else if (item.name === 'GIR') {
-          name = 'Bé gái (GIR)';
-          fill = 'hsl(262.1, 83.3%, 57.8%)';
-        }
-        return {
-          name,
-          value: Number(item.count),
-          fill,
-        };
-      });
-    }
-  }, [products, viewMode, systemStats]);
+    if (!systemStats) return [];
+    return systemStats.gender.map((item) => {
+      let name = item.name;
+      let fill = 'hsl(217.2, 91.2%, 59.8%)';
+      if (item.name === 'MEN') {
+        name = 'Nam (MEN)';
+        fill = 'hsl(217.2, 91.2%, 59.8%)';
+      } else if (item.name === 'WOM') {
+        name = 'Nữ (WOM)';
+        fill = 'hsl(346.8, 77.2%, 49.8%)';
+      } else if (item.name === 'BOY') {
+        name = 'Bé trai (BOY)';
+        fill = 'hsl(173.4, 80.4%, 40%)';
+      } else if (item.name === 'GIR') {
+        name = 'Bé gái (GIR)';
+        fill = 'hsl(262.1, 83.3%, 57.8%)';
+      }
+      return {
+        name,
+        value: Number(item.count),
+        fill,
+      };
+    });
+  }, [systemStats]);
 
   // 2. Age Group Distribution
   const ageData = React.useMemo(() => {
-    if (viewMode === 'page') {
-      const counts: Record<string, number> = {};
-      products.forEach((p) => {
-        counts[p.age_group] = (counts[p.age_group] || 0) + 1;
-      });
-      return Object.entries(counts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count);
-    } else {
-      if (!systemStats) return [];
-      return systemStats.age_group
-        .map((item) => ({ name: item.name, count: Number(item.count) }))
-        .sort((a, b) => b.count - a.count);
-    }
-  }, [products, viewMode, systemStats]);
+    if (!systemStats) return [];
+    return systemStats.age_group
+      .map((item) => ({ name: item.name, count: Number(item.count) }))
+      .sort((a, b) => b.count - a.count);
+  }, [systemStats]);
 
   // 3. Activity Distribution
   const activityData = React.useMemo(() => {
-    if (viewMode === 'page') {
-      const counts: Record<string, number> = {};
-      products.forEach((p) => {
-        counts[p.activity_group] = (counts[p.activity_group] || 0) + 1;
-      });
-      return Object.entries(counts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count);
-    } else {
-      if (!systemStats) return [];
-      return systemStats.activity_group
-        .map((item) => ({ name: item.name, count: Number(item.count) }))
-        .sort((a, b) => b.count - a.count);
-    }
-  }, [products, viewMode, systemStats]);
+    if (!systemStats) return [];
+    return systemStats.activity_group
+      .map((item) => ({ name: item.name, count: Number(item.count) }))
+      .sort((a, b) => b.count - a.count);
+  }, [systemStats]);
 
   // 4. Lifestyle Distribution
   const lifestyleData = React.useMemo(() => {
-    if (viewMode === 'page') {
-      const counts: Record<string, number> = {};
-      products.forEach((p) => {
-        counts[p.lifestyle_group] = (counts[p.lifestyle_group] || 0) + 1;
-      });
-      return Object.entries(counts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count);
-    } else {
-      if (!systemStats) return [];
-      return systemStats.lifestyle_group
-        .map((item) => ({ name: item.name, count: Number(item.count) }))
-        .sort((a, b) => b.count - a.count);
-    }
-  }, [products, viewMode, systemStats]);
+    if (!systemStats) return [];
+    return systemStats.lifestyle_group
+      .map((item) => ({ name: item.name, count: Number(item.count) }))
+      .sort((a, b) => b.count - a.count);
+  }, [systemStats]);
 
   return (
     <Card className="bg-card border-border shadow-md transition-all duration-200">
@@ -156,39 +107,11 @@ export function ProductsCharts({ products }: ProductsChartsProps) {
             Phân tích Trực quan Sản phẩm
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
-            {viewMode === 'page'
-              ? `Biểu đồ phân bố các thuộc tính của ${products.length} sản phẩm đang hiển thị.`
-              : 'Biểu đồ phân bố các thuộc tính trên toàn bộ cơ sở dữ liệu hệ thống.'}
+            Biểu đồ phân bố các thuộc tính trên toàn bộ cơ sở dữ liệu hệ thống.
           </CardDescription>
         </div>
         
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          {/* Segmented control for view mode */}
-          <div className="bg-muted/50 p-1 rounded-xl flex items-center border border-border">
-            <button
-              onClick={() => setViewMode('page')}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === 'page'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Layers className="size-3.5" />
-              Trang hiện tại
-            </button>
-            <button
-              onClick={() => setViewMode('system')}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === 'system'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Database className="size-3.5" />
-              Toàn hệ thống
-            </button>
-          </div>
-
           <Button
             variant="ghost"
             size="sm"

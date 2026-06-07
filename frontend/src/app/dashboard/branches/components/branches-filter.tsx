@@ -10,17 +10,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface BranchesFilterProps {
   cityFilter: string;
   onSearchSubmit: (value: string) => void;
   onClearFilter: () => void;
+  isLoading?: boolean;
 }
 
 export function BranchesFilter({
   cityFilter,
   onSearchSubmit,
   onClearFilter,
+  isLoading = false,
 }: BranchesFilterProps) {
   const [tempCity, setTempCity] = useState(cityFilter);
 
@@ -28,6 +31,21 @@ export function BranchesFilter({
   useEffect(() => {
     setTempCity(cityFilter);
   }, [cityFilter]);
+
+  if (isLoading) {
+    return (
+      <Card className="bg-card border-border shadow-sm overflow-hidden">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+            <Skeleton className="h-10 w-full sm:max-w-md" />
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <Skeleton className="h-10 w-24" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const hasAnyFilter = !!cityFilter;
 

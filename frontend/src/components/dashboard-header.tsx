@@ -16,6 +16,8 @@ interface DashboardHeaderProps {
   dialogContent?: React.ReactNode;
   isDialogOpen?: boolean;
   onDialogOpenChange?: (open: boolean) => void;
+  icon?: LucideIcon;
+  iconClassName?: string;
 }
 
 export function DashboardHeader({
@@ -30,6 +32,8 @@ export function DashboardHeader({
   dialogContent,
   isDialogOpen,
   onDialogOpenChange,
+  icon: Icon,
+  iconClassName = 'text-blue-500',
 }: DashboardHeaderProps) {
   const renderButton = () => {
     if (!buttonText) return null;
@@ -51,6 +55,7 @@ export function DashboardHeader({
     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          {Icon && <Icon className={`size-8 ${iconClassName} shrink-0`} />}
           {title}
         </h1>
         {description && <p className="text-muted-foreground text-sm mt-1">{description}</p>}

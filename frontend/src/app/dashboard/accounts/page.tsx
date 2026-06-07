@@ -11,23 +11,23 @@
 import { Users, ShieldAlert } from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
+import { DashboardHeader } from '@/components/dashboard-header';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { accountService } from '@/lib/services/account.service';
 import type { IAccount } from '@/lib/types/account';
 import type { CreateAccountFormValues, EditAccountFormValues } from './accounts.schema';
 import { AccountFilters } from './components/account-filters';
 import { AccountMobileCards } from './components/account-mobile-cards';
 import { AccountPagination } from './components/account-pagination';
+import { AccountSkeleton } from './components/account-skeleton';
 import { AccountStats } from './components/account-stats';
 import { AccountTable } from './components/account-table';
 import { AccountsChart } from './components/accounts-chart';
+import { AccountsDistributionCharts } from './components/accounts-distribution-charts';
 import { CreateAccountModal } from './components/create-account-modal';
 import { DeleteAccountModal } from './components/delete-account-modal';
 import { EditAccountModal } from './components/edit-account-modal';
-import { AccountsDistributionCharts } from './components/accounts-distribution-charts';
-import { AccountSkeleton } from './components/account-skeleton';
-import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardHeader } from '@/components/dashboard-header';
 
 export default function AccountsPage() {
   // ----- State dữ liệu -----
@@ -230,13 +230,18 @@ export default function AccountsPage() {
     // Lọc danh sách tài khoản thuộc kỳ hiện tại
     const currentPeriodAccounts = chartAccounts.filter((acc) => {
       const createdTime = new Date(acc.created_at).getTime();
-      return createdTime >= startOfCurrentPeriod.getTime() && createdTime <= endOfCurrentPeriod.getTime();
+      return (
+        createdTime >= startOfCurrentPeriod.getTime() && createdTime <= endOfCurrentPeriod.getTime()
+      );
     });
 
     // Lọc danh sách tài khoản thuộc kỳ trước đó
     const previousPeriodAccounts = chartAccounts.filter((acc) => {
       const createdTime = new Date(acc.created_at).getTime();
-      return createdTime >= startOfPreviousPeriod.getTime() && createdTime < startOfCurrentPeriod.getTime();
+      return (
+        createdTime >= startOfPreviousPeriod.getTime() &&
+        createdTime < startOfCurrentPeriod.getTime()
+      );
     });
 
     const newInCurrent = currentPeriodAccounts.length;
@@ -286,6 +291,7 @@ export default function AccountsPage() {
         buttonText="Thêm tài khoản"
         onButtonClick={() => setIsCreateOpen(true)}
         isButtonDisabled={!isAdmin}
+        icon={Users}
       />
 
       {/* ===== 3 Thẻ thống kê (tổng, tăng trưởng, đồng hành) ===== */}
@@ -293,9 +299,9 @@ export default function AccountsPage() {
       <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-[110px] w-full" />
-            <Skeleton className="h-[110px] w-full" />
-            <Skeleton className="h-[110px] w-full" />
+            <Skeleton className="h-27.5 w-full" />
+            <Skeleton className="h-27.5 w-full" />
+            <Skeleton className="h-27.5 w-full" />
           </div>
         ) : (
           <AccountStats stats={stats} timeRange={timeRange} />
@@ -305,9 +311,13 @@ export default function AccountsPage() {
       {/* ===== Biểu đồ hoạt động tài khoản ===== */}
       <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
         {isLoading ? (
-          <Skeleton className="h-[380px] w-full" />
+          <Skeleton className="h-95 w-full" />
         ) : (
-          <AccountsChart accounts={chartAccounts} timeRange={timeRange} setTimeRange={setTimeRange} />
+          <AccountsChart
+            accounts={chartAccounts}
+            timeRange={timeRange}
+            setTimeRange={setTimeRange}
+          />
         )}
       </div>
 
@@ -357,9 +367,9 @@ export default function AccountsPage() {
       <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-[280px] w-full" />
-            <Skeleton className="h-[280px] w-full" />
-            <Skeleton className="h-[280px] w-full" />
+            <Skeleton className="h-70 w-full" />
+            <Skeleton className="h-70 w-full" />
+            <Skeleton className="h-70 w-full" />
           </div>
         ) : (
           <AccountsDistributionCharts accounts={chartAccounts} />
@@ -451,5 +461,5 @@ export default function AccountsPage() {
         onConfirm={handleDeleteConfirm}
       />
     </div>
-    );
+  );
 }

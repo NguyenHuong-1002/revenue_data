@@ -11,6 +11,7 @@ export const createAccountSchema = z.object({
   password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
   role: z.enum(['ADMIN', 'STAFF']),
   status_account: z.enum(['ACTIVE', 'INACTIVE', 'LOCKED']),
+  avatarURL: z.string().optional(),
 });
 
 export type CreateAccountFormValues = z.infer<typeof createAccountSchema>;
@@ -23,6 +24,7 @@ export const editAccountSchema = z.object({
   password: z.string().optional().or(z.literal('')),
   role: z.enum(['ADMIN', 'STAFF']),
   status_account: z.enum(['ACTIVE', 'INACTIVE', 'LOCKED']),
+  avatarURL: z.string().optional(),
 });
 
 export type EditAccountFormValues = z.infer<typeof editAccountSchema>;

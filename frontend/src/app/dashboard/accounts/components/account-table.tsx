@@ -4,7 +4,7 @@
 // Hiển thị dạng table, chỉ visible trên màn hình >= md
 // Mỗi dòng = 1 tài khoản với avatar, thông tin, nút sửa/xóa
 
-import { Mail, Calendar, Edit, Trash2 } from 'lucide-react';
+import { Mail, Calendar, Edit, Trash2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +38,13 @@ export function AccountTable({ accounts, currentUser, onEdit, onDelete }: Accoun
           {accounts.map((account) => {
             const isSelf = currentUser?.account_id === account.account_id;
             const displayAvatar = getAvatarUrl(account.avatarURL);
+            const lastLoginDate = account.last_login_at ? new Date(account.last_login_at) : null;
+            const lastLoginTime = lastLoginDate
+              ? lastLoginDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+              : '';
+            const lastLoginDay = lastLoginDate
+              ? lastLoginDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+              : '';
 
             return (
               <tr key={account.account_id} className="hover:bg-muted/10 transition-colors">
@@ -100,15 +107,19 @@ export function AccountTable({ accounts, currentUser, onEdit, onDelete }: Accoun
                 </td>
 
                 {/* Cột Lần đăng nhập cuối */}
-                <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
-                  {account.last_login_at ? (
-                    <span className="text-xs">
-                      {new Date(account.last_login_at).toLocaleString('vi-VN', {
-                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                      })}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {lastLoginDate ? (
+                    <span className="flex items-center gap-1.5 text-xs text-foreground/80">
+                      <Clock className="size-3.5 text-muted-foreground/70" />
+                      <span className="font-medium">{lastLoginTime}</span>
+                      <span className="text-muted-foreground/40">•</span>
+                      <span className="text-muted-foreground/80">{lastLoginDay}</span>
                     </span>
                   ) : (
-                    <span className="text-xs text-muted-foreground/60 italic">Chưa đăng nhập</span>
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50 italic">
+                      <span className="size-1.5 rounded-full bg-muted-foreground/30" />
+                      Chưa đăng nhập
+                    </span>
                   )}
                 </td>
 
