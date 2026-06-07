@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { HomeIcon } from 'lucide-react';
+import { LayoutDashboardIcon } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -26,10 +26,12 @@ const pathMap: Record<string, string> = {
   '/dashboard/profile': 'Hồ sơ cá nhân',
   '/dashboard/report-inventory': 'Quản lý tồn kho',
   '/dashboard/report-sale': 'Quản lý doanh số',
-  '/dashboard/reports': 'Báo cáo doanh thu',
   '/dashboard/revenue-stats': 'Thống kê doanh thu',
+  '/dashboard/inventory-stats': 'Thống kê & Dự báo kho hàng',
   '/dashboard/settings': 'Cài đặt hệ thống',
   '/dashboard/trend-forecast': 'Dự báo xu hướng',
+  '/dashboard/support': 'Trợ giúp & Hỗ trợ',
+  '/dashboard/import': 'Nhập dữ liệu (Excel)',
   '/privacy': 'Chính sách bảo mật',
   '/terms': 'Điều khoản dịch vụ',
   '/auth': 'Xác thực',
@@ -49,10 +51,12 @@ const segmentMap: Record<string, string> = {
   profile: 'Hồ sơ',
   'report-inventory': 'Tồn kho',
   'report-sale': 'Doanh số',
-  reports: 'Báo cáo',
   'revenue-stats': 'Thống kê',
   settings: 'Cài đặt',
-  'trend-forecast': 'Dự báo',
+  'trend-forecast': 'Dự báo xu hướng',
+  'inventory-stats': 'Thống kê kho hàng',
+  support: 'Hỗ trợ',
+  import: 'Nhập dữ liệu',
   privacy: 'Bảo mật',
   terms: 'Điều khoản',
   auth: 'Xác thực',
@@ -71,15 +75,18 @@ export function DynamicBreadcrumb() {
   const segments = pathname.split('/').filter(Boolean);
   const breadcrumbItems = [];
 
-  // Always start with Home (Trang chủ)
+  // Always start with Dashboard (Bảng điều khiển)
   breadcrumbItems.push({
-    label: 'Trang chủ',
-    href: '/',
-    isLast: segments.length === 0,
+    label: 'Bảng điều khiển',
+    href: '/dashboard',
+    isLast: (segments.length === 1 && segments[0] === 'dashboard') || segments.length === 0,
   });
 
-  let currentPath = '';
+  let currentPath = '/dashboard';
   segments.forEach((segment, index) => {
+    // Skip 'dashboard' segment since it is already pushed as the root
+    if (segment === 'dashboard') return;
+
     currentPath += `/${segment}`;
     const isLast = index === segments.length - 1;
 
@@ -114,7 +121,7 @@ export function DynamicBreadcrumb() {
                     href={item.href}
                     className="flex items-center gap-1 hover:text-foreground transition-colors"
                   >
-                    {index === 0 && <HomeIcon className="h-3.5 w-3.5" />}
+                    {index === 0 && <LayoutDashboardIcon className="h-3.5 w-3.5" />}
                     <span>{item.label}</span>
                   </Link>
                 </BreadcrumbLink>

@@ -1,16 +1,14 @@
 'use client';
 
-// ===== Biểu đồ hoạt động tài khoản (AreaChart) =====
-// Hiển thị 3 đường: Tài khoản mới, Ngừng hoạt động/Khóa, Chưa đăng nhập
-// Có bộ lọc thời gian: 7 ngày / 30 ngày / 3 tháng
-
 import * as React from 'react';
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useId } from 'react';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { TrendingUp } from 'lucide-react';
+import { ChartSkeleton } from '@/components/charts/chart-skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+import { ChartZoomButton, ChartZoomDialog, useChartZoom } from '@/components/charts/chart-zoom';
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -22,77 +20,77 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AXIS_TICK_CLASS,
+  CURSOR_STYLE,
+  GRID_CLASS,
+  GRID_DASH,
+  TICK_MARGIN,
+} from '@/lib/chart-constants';
 import type { IAccount } from '@/lib/types/account';
+import { cn } from '@/lib/utils';
 
-// Cấu hình màu sắc và nhãn cho từng đường trên biểu đồ
 const chartConfig = {
-  newAccounts: {
-    label: 'Tài khoản mới',
-    color: 'var(--chart-1)',
-  },
-  inactiveAccounts: {
-    label: 'Ngừng hoạt động/Khóa',
-    color: 'var(--chart-2)',
-  },
-  noLoginAccounts: {
-    label: 'Chưa từng đăng nhập',
-    color: 'var(--chart-3)',
-  },
+  newAccounts: { label: 'Tài khoản mới', color: 'var(--primary)' },
+  inactiveAccounts: { label: 'Ngừng hoạt động/Khóa', color: 'var(--destructive)' },
+  noLoginAccounts: { label: 'Chưa từng đăng nhập', color: 'var(--chart-3)' },
 } satisfies ChartConfig;
 
 interface AccountsChartProps {
   accounts: IAccount[];
   timeRange: string;
   setTimeRange: (value: string) => void;
+  isLoading?: boolean;
 }
 
-export function AccountsChart({ accounts, timeRange, setTimeRange }: AccountsChartProps) {
-  // Tạo dữ liệu biểu đồ động từ danh sách tài khoản
-  const chartData = React.useMemo(() => {
-    const referenceDate = new Date();
-    const days = 365; // Tạo 365 ngày lịch sử để hỗ trợ lọc 1 năm (1year)
-    const dataList = [];
+export function AccountsChart({
+  accounts,
+  timeRange,
+  setTimeRange,
+  isLoading = false,
+}: AccountsChartProps) {
+  const [activeSeries, setActiveSeries] = React.useState({
+    newAccounts: true,
+    inactiveAccounts: true,
+    noLoginAccounts: true,
+  });
 
+  const today = React.useMemo(() => new Date(), []);
+
+  const chartData = React.useMemo(() => {
+    const dataList = [];
+    const days = 365;
     for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(referenceDate);
+      const d = new Date(today);
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().slice(0, 10);
-
-      // Cửa sổ trượt 7 ngày để làm mượt số liệu
       const windowStart = new Date(d);
       windowStart.setDate(windowStart.getDate() - 6);
 
-      // 1. Tài khoản mới trong 7 ngày gần đây
       const newAccounts = accounts.filter((acc) => {
         const createdTime = new Date(acc.created_at).getTime();
         return createdTime >= windowStart.getTime() && createdTime <= d.getTime();
       }).length;
 
-      // 2. Tổng số tài khoản được tạo đến ngày d
       const accountsCreatedUntilD = accounts.filter((acc) => {
         const createdTime = new Date(acc.created_at).getTime();
         return createdTime <= d.getTime();
       });
 
-      // 3. Số tài khoản bị khóa/ngưng hoạt động đến ngày d
       const inactiveAccounts = accountsCreatedUntilD.filter(
         (acc) => acc.status_account === 'INACTIVE' || acc.status_account === 'LOCKED'
       ).length;
 
-      // 4. Số tài khoản chưa từng đăng nhập đến ngày d
       const noLoginAccounts = accountsCreatedUntilD.filter(
         (acc) => !acc.last_login_at || new Date(acc.last_login_at).getTime() > d.getTime()
       ).length;
 
       dataList.push({ date: dateStr, newAccounts, inactiveAccounts, noLoginAccounts });
     }
-
     return dataList;
-  }, [accounts]);
+  }, [accounts, today]);
 
-  // Lọc dữ liệu theo khoảng thời gian đã chọn
   const filteredData = React.useMemo(() => {
-    const referenceDate = new Date('2026-06-03'); // Đồng bộ ngày mốc với chartData để lọc chính xác
     let daysToSubtract;
     switch (timeRange) {
       case '7d':
@@ -106,136 +104,289 @@ export function AccountsChart({ accounts, timeRange, setTimeRange }: AccountsCha
         daysToSubtract = 90;
         break;
       case '6m':
-        daysToSubtract = 180; // 6 tháng tương đương 180 ngày
+        daysToSubtract = 180;
         break;
-      case '1year':
-      case '1y':
-      case '365d':
       default:
-        daysToSubtract = 365; // Lọc 1 năm
+        daysToSubtract = 365;
         break;
     }
-    const startDate = new Date(referenceDate);
+    const startDate = new Date(today);
     startDate.setDate(startDate.getDate() - daysToSubtract);
-
     return chartData.filter((item) => new Date(item.date) >= startDate);
-  }, [chartData, timeRange]);
+  }, [chartData, timeRange, today]);
+
+  const totals = React.useMemo(() => {
+    if (filteredData.length === 0) {
+      return { newAccounts: 0, inactiveAccounts: 0, noLoginAccounts: 0 };
+    }
+    const lastItem = filteredData[filteredData.length - 1];
+    let daysToSubtract = 30;
+    switch (timeRange) {
+      case '7d':
+        daysToSubtract = 7;
+        break;
+      case '1month':
+      case '30d':
+        daysToSubtract = 30;
+        break;
+      case '90d':
+        daysToSubtract = 90;
+        break;
+      case '6m':
+        daysToSubtract = 180;
+        break;
+      default:
+        daysToSubtract = 365;
+        break;
+    }
+    const startFilterDate = new Date(today);
+    startFilterDate.setDate(startFilterDate.getDate() - daysToSubtract);
+
+    const newCreatedCount = accounts.filter((acc) => {
+      const createdTime = new Date(acc.created_at).getTime();
+      return createdTime >= startFilterDate.getTime() && createdTime <= today.getTime();
+    }).length;
+
+    return {
+      newAccounts: newCreatedCount,
+      inactiveAccounts: lastItem.inactiveAccounts,
+      noLoginAccounts: lastItem.noLoginAccounts,
+    };
+  }, [filteredData, accounts, timeRange, today]);
+
+  const reactId = useId();
+  const gradIds = {
+    new: `acc-grad-new-${reactId.replace(/:/g, '')}`,
+    inactive: `acc-grad-inactive-${reactId.replace(/:/g, '')}`,
+    noLogin: `acc-grad-nologin-${reactId.replace(/:/g, '')}`,
+  };
+  const zoom = useChartZoom();
+
+  const chartContent = (
+    <ChartContainer config={chartConfig} className="h-full w-full">
+      <AreaChart data={filteredData} margin={{ left: 12, right: 12, top: 8, bottom: 8 }}>
+        <defs>
+          <linearGradient id={gradIds.new} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id={gradIds.inactive} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--destructive)" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="var(--destructive)" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id={gradIds.noLogin} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--chart-3)" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="var(--chart-3)" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+
+        <CartesianGrid vertical={false} strokeDasharray={GRID_DASH} className={GRID_CLASS} />
+
+        <XAxis
+          dataKey="date"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={TICK_MARGIN}
+          minTickGap={32}
+          tickFormatter={(value) => {
+            const date = new Date(value);
+            return date.toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' });
+          }}
+          className={AXIS_TICK_CLASS}
+        />
+
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          tickMargin={TICK_MARGIN}
+          className={AXIS_TICK_CLASS}
+        />
+
+        <ChartTooltip
+          cursor={CURSOR_STYLE}
+          content={
+            <ChartTooltipContent
+              labelFormatter={(value) =>
+                new Date(value as string).toLocaleDateString('vi-VN', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })
+              }
+              indicator="dot"
+            />
+          }
+        />
+
+        {activeSeries.newAccounts && (
+          <Area
+            dataKey="newAccounts"
+            type="monotone"
+            fill={`url(#${gradIds.new})`}
+            stroke="var(--primary)"
+            strokeWidth={2}
+            activeDot={{ r: 5, strokeWidth: 0 }}
+          />
+        )}
+        {activeSeries.inactiveAccounts && (
+          <Area
+            dataKey="inactiveAccounts"
+            type="monotone"
+            fill={`url(#${gradIds.inactive})`}
+            stroke="var(--destructive)"
+            strokeWidth={2}
+            activeDot={{ r: 5, strokeWidth: 0 }}
+          />
+        )}
+        {activeSeries.noLoginAccounts && (
+          <Area
+            dataKey="noLoginAccounts"
+            type="monotone"
+            fill={`url(#${gradIds.noLogin})`}
+            stroke="var(--chart-3)"
+            strokeWidth={2}
+            activeDot={{ r: 5, strokeWidth: 0 }}
+          />
+        )}
+      </AreaChart>
+    </ChartContainer>
+  );
+
+  if (isLoading) {
+    return (
+      <Card className="pt-0 border border-border/60 bg-card shadow-sm overflow-hidden animate-in fade-in duration-300">
+        <ChartSkeleton height="lg" showLegend />
+      </Card>
+    );
+  }
 
   return (
-    <Card className="pt-0 border-border bg-card shadow-md">
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center gap-4 space-y-0 border-b border-border py-5">
-        {/* Tiêu đề + mô tả */}
-        <div className="grid flex-1 gap-1">
-          <CardTitle className="text-lg font-bold text-foreground">Hoạt động tài khoản</CardTitle>
-          <CardDescription className="text-xs text-muted-foreground">
-            Hiển thị xu hướng tài khoản mới, tài khoản ngưng hoạt động/khóa và chưa đăng nhập.
-          </CardDescription>
+    <Card className="pt-0 border border-border/60 bg-card shadow-sm overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 space-y-0 border-b border-border/60 py-3.5 px-5 bg-muted/10">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <TrendingUp className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-semibold text-foreground">Biểu đồ xu hướng hoạt động</h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              Lọc, theo dõi và click vào các thẻ số liệu dưới đây để bật/tắt hiển thị biểu đồ.
+            </p>
+          </div>
         </div>
-        {/* Bộ lọc thời gian */}
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-45 rounded-lg border-border" aria-label="Select time range">
-            <SelectValue placeholder="1 tháng" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl border-border">
-            <SelectItem value="1year" className="rounded-lg">
-              1 năm
-            </SelectItem>
-            <SelectItem value="6m" className="rounded-lg">
-              6 tháng
-            </SelectItem>
-            <SelectItem value="90d" className="rounded-lg">
-              3 tháng qua
-            </SelectItem>
-            <SelectItem value="1month" className="rounded-lg">
-              1 tháng
-            </SelectItem>
-            <SelectItem value="7d" className="rounded-lg">
-              7 ngày qua
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-          <AreaChart data={filteredData}>
-            {/* Gradient fill cho từng đường */}
-            <defs>
-              <linearGradient id="fillNew" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-newAccounts)" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="var(--color-newAccounts)" stopOpacity={0.02} />
-              </linearGradient>
-              <linearGradient id="fillInactive" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-inactiveAccounts)" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="var(--color-inactiveAccounts)" stopOpacity={0.02} />
-              </linearGradient>
-              <linearGradient id="fillNoLogin" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-noLoginAccounts)" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="var(--color-noLoginAccounts)" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
+        <div className="flex items-center gap-2 shrink-0">
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger
+              className="w-40 rounded-lg border-border h-9 text-xs font-semibold bg-background"
+              aria-label="Select time range"
+            >
+              <SelectValue placeholder="1 tháng" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-border">
+              <SelectItem value="1year" className="rounded-lg text-xs">
+                1 năm gần đây
+              </SelectItem>
+              <SelectItem value="6m" className="rounded-lg text-xs">
+                6 tháng qua
+              </SelectItem>
+              <SelectItem value="90d" className="rounded-lg text-xs">
+                3 tháng qua
+              </SelectItem>
+              <SelectItem value="1month" className="rounded-lg text-xs">
+                1 tháng gần nhất
+              </SelectItem>
+              <SelectItem value="7d" className="rounded-lg text-xs">
+                7 ngày qua
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <ChartZoomButton onClick={zoom.open} />
+        </div>
+      </div>
 
-            {/* Grid nền */}
-            <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 border-b border-border/60 bg-muted/5">
+        <button
+          onClick={() => setActiveSeries((prev) => ({ ...prev, newAccounts: !prev.newAccounts }))}
+          className={cn(
+            'flex flex-col justify-center gap-1.5 px-6 py-4 text-left border-r border-border/60 hover:bg-muted/10 transition-all focus:outline-none cursor-pointer relative',
+            !activeSeries.newAccounts && 'opacity-40 bg-muted/5'
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <span className="size-2.5 rounded-full bg-primary" />
+            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+              Tài khoản mới
+            </span>
+          </div>
+          <span className="text-2xl font-extrabold text-foreground font-mono">
+            +{totals.newAccounts}
+          </span>
+          {activeSeries.newAccounts && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary" />
+          )}
+        </button>
 
-            {/* Trục X (ngày tháng) */}
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' });
-              }}
-              stroke="hsl(var(--muted-foreground))"
-            />
+        <button
+          onClick={() =>
+            setActiveSeries((prev) => ({ ...prev, inactiveAccounts: !prev.inactiveAccounts }))
+          }
+          className={cn(
+            'flex flex-col justify-center gap-1.5 px-6 py-4 text-left border-r border-border/60 hover:bg-muted/10 transition-all focus:outline-none cursor-pointer relative',
+            !activeSeries.inactiveAccounts && 'opacity-40 bg-muted/5'
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <span className="size-2.5 rounded-full bg-destructive" />
+            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+              Bị khóa / Tạm ngưng
+            </span>
+          </div>
+          <span className="text-2xl font-extrabold text-foreground font-mono">
+            {totals.inactiveAccounts}
+          </span>
+          {activeSeries.inactiveAccounts && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-destructive" />
+          )}
+        </button>
 
-            {/* Tooltip khi hover */}
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString('vi-VN', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    })
-                  }
-                  indicator="dot"
-                />
-              }
-            />
+        <button
+          onClick={() =>
+            setActiveSeries((prev) => ({ ...prev, noLoginAccounts: !prev.noLoginAccounts }))
+          }
+          className={cn(
+            'flex flex-col justify-center gap-1.5 px-6 py-4 text-left hover:bg-muted/10 transition-all focus:outline-none cursor-pointer relative',
+            !activeSeries.noLoginAccounts && 'opacity-40 bg-muted/5'
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <span className="size-2.5 rounded-full bg-chart-3" />
+            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+              Chưa đăng nhập
+            </span>
+          </div>
+          <span className="text-2xl font-extrabold text-foreground font-mono">
+            {totals.noLoginAccounts}
+          </span>
+          {activeSeries.noLoginAccounts && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-chart-3" />
+          )}
+        </button>
+      </div>
 
-            {/* 3 đường Area */}
-            <Area
-              dataKey="newAccounts"
-              type="natural"
-              fill="url(#fillNew)"
-              stroke="var(--color-newAccounts)"
-              strokeWidth={2}
-            />
-            <Area
-              dataKey="inactiveAccounts"
-              type="natural"
-              fill="url(#fillInactive)"
-              stroke="var(--color-inactiveAccounts)"
-              strokeWidth={2}
-            />
-            <Area
-              dataKey="noLoginAccounts"
-              type="natural"
-              fill="url(#fillNoLogin)"
-              stroke="var(--color-noLoginAccounts)"
-              strokeWidth={2}
-            />
-
-            {/* Chú thích */}
-            <ChartLegend content={<ChartLegendContent />} />
-          </AreaChart>
-        </ChartContainer>
+      <CardContent className="px-2 pt-6 sm:px-6">
+        <div className="aspect-auto h-[300px] w-full">{chartContent}</div>
       </CardContent>
+
+      <ChartZoomDialog
+        open={zoom.isOpen}
+        onOpenChange={zoom.setOpen}
+        title="Biểu đồ xu hướng hoạt động"
+        description="Lọc, theo dõi và click vào các thẻ số liệu dưới đây để bật/tắt hiển thị biểu đồ."
+        icon={<TrendingUp className="size-4" />}
+        size="xl"
+      >
+        {chartContent}
+      </ChartZoomDialog>
     </Card>
   );
 }

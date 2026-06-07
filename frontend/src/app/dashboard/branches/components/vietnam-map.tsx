@@ -159,8 +159,8 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
       {/* Global styles: custom map styles & hover transitions */}
       <style>{`
         path.province-path:hover {
-          fill: rgba(59, 130, 246, 0.25) !important;
-          stroke: rgba(59, 130, 246, 0.8) !important;
+          fill: rgba(var(--primary-rgb), 0.25) !important;
+          stroke: rgba(var(--primary-rgb), 0.8) !important;
         }
       `}</style>
 
@@ -238,9 +238,9 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
           >
             <defs>
               <linearGradient id="vmap-g" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity=".85" />
-                <stop offset="50%" stopColor="#6366f1" stopOpacity=".85" />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity=".85" />
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity=".85" />
+                <stop offset="50%" stopColor="var(--chart-4)" stopOpacity=".85" />
+                <stop offset="100%" stopColor="var(--chart-4)" stopOpacity=".85" />
               </linearGradient>
             </defs>
 
@@ -270,8 +270,8 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
                     d={province.d}
                     aria-label={province.label}
                     className="province-path transition-all duration-150"
-                    fill={isCitySelected ? 'rgba(59, 130, 246, 0.45)' : 'rgba(30, 41, 59, 0.65)'}
-                    stroke={isCitySelected ? '#3b82f6' : 'rgba(255, 255, 255, 0.08)'}
+                    fill={isCitySelected ? 'rgba(var(--primary-rgb), 0.45)' : 'rgba(30, 41, 59, 0.65)'}
+                    stroke={isCitySelected ? 'var(--primary)' : 'rgba(255, 255, 255, 0.08)'}
                     strokeWidth={isCitySelected ? 1.5 : 0.6}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -384,7 +384,7 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
                       cx={cx}
                       cy={cy}
                       r={sel ? 12 : 7}
-                      fill={sel ? 'rgba(239, 68, 68, 0.25)' : 'rgba(59, 130, 246, 0.2)'}
+                      fill={sel ? 'rgba(239, 68, 68, 0.25)' : 'rgba(var(--primary-rgb), 0.2)'}
                       className={sel ? 'animate-pulse' : ''}
                     />
 
@@ -394,7 +394,7 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
                       cy={cy}
                       r={sel ? 7 : 4.5}
                       fill="none"
-                      stroke={sel ? '#ef4444' : '#3b82f6'}
+                      stroke={sel ? 'var(--destructive)' : 'var(--primary)'}
                       strokeWidth={sel ? 2 : 1.2}
                     />
 
@@ -403,8 +403,8 @@ export function VietnamMap({ branches, selectedCity, onCitySelect }: VietnamMapP
                       cx={cx}
                       cy={cy}
                       r={sel ? 3.5 : 2}
-                      fill={sel ? '#ffffff' : '#3b82f6'}
-                      stroke={sel ? '#ef4444' : '#ffffff'}
+                      fill={sel ? '#ffffff' : 'var(--primary)'}
+                      stroke={sel ? 'var(--destructive)' : '#ffffff'}
                       strokeWidth={sel ? 0 : 0.8}
                     />
                   </g>

@@ -68,7 +68,11 @@ export function PlantModal({ isOpen, onClose, plant, onSubmit }: PlantModalProps
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Sửa thông tin nhà kho' : 'Thêm nhà kho mới'}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? 'Sửa thông tin nhà kho' : 'Thêm nhà kho mới'}
+    >
       <FormProvider {...form}>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <FieldGroup className="gap-3">
@@ -132,8 +136,18 @@ export function PlantModal({ isOpen, onClose, plant, onSubmit }: PlantModalProps
               disabled={isSubmitting}
               className="bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-lg hover:shadow-blue-500/10 cursor-pointer"
             >
-              {isEdit ? <SaveIcon className="size-4 mr-2" /> : <PlusCircle className="size-4 mr-2" />}
-              {isSubmitting ? (isEdit ? 'Đang lưu...' : 'Đang tạo...') : (isEdit ? 'Lưu thay đổi' : 'Thêm nhà kho')}
+              {isEdit ? (
+                <SaveIcon className="size-4 mr-2" />
+              ) : (
+                <PlusCircle className="size-4 mr-2" />
+              )}
+              {isSubmitting
+                ? isEdit
+                  ? 'Đang lưu...'
+                  : 'Đang tạo...'
+                : isEdit
+                  ? 'Lưu thay đổi'
+                  : 'Thêm nhà kho'}
             </Button>
           </div>
         </form>

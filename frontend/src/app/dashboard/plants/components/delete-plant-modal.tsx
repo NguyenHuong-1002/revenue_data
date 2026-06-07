@@ -10,18 +10,9 @@ interface DeletePlantModalProps {
   isLoading: boolean;
 }
 
-export function DeletePlantModal({
-  isOpen,
-  onClose,
-  onConfirm,
-  isLoading,
-}: DeletePlantModalProps) {
+export function DeletePlantModal({ isOpen, onClose, onConfirm, isLoading }: DeletePlantModalProps) {
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Xác nhận xóa nhà kho"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Xác nhận xóa nhà kho">
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground leading-relaxed">
           Bạn có chắc chắn muốn xóa nhà kho này? Hành động này sẽ xóa hoàn toàn thông tin nhà kho

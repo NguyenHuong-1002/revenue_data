@@ -1,22 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import {
-  saveLandingConfig,
-  defaultLandingConfig,
-  LandingConfig,
-} from '@/lib/landing-config';
+import { saveLandingConfig, defaultLandingConfig, LandingConfig } from '@/lib/landing-config';
 import { RotateCcw, Save, Layers, BarChart3, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -32,7 +22,10 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
   };
 
   const handleResetGeneral = () => {
-    if (typeof window !== 'undefined' && window.confirm('Bạn có chắc chắn muốn khôi phục về cấu hình mặc định?')) {
+    if (
+      typeof window !== 'undefined' &&
+      window.confirm('Bạn có chắc chắn muốn khôi phục về cấu hình mặc định?')
+    ) {
       setConfig({ ...defaultLandingConfig });
       saveLandingConfig(defaultLandingConfig);
       toast.success('Đã khôi phục thông tin chung về mặc định!');
@@ -139,10 +132,7 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
         <CardContent className="pt-6">
           <div className="grid gap-6 md:grid-cols-2">
             {config.stats.map((stat, idx) => (
-              <div
-                key={idx}
-                className="p-4 rounded-lg border border-border bg-muted/5 space-y-4"
-              >
+              <div key={idx} className="p-4 rounded-lg border border-border bg-muted/5 space-y-4">
                 <div className="font-semibold text-sm text-blue-500 flex items-center justify-between">
                   <span>Chỉ số {idx + 1}</span>
                 </div>
@@ -189,10 +179,7 @@ export function GeneralTab({ config, setConfig }: GeneralTabProps) {
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           {config.faqs.map((faq, idx) => (
-            <div
-              key={idx}
-              className="p-5 rounded-lg border border-border bg-muted/5 space-y-4"
-            >
+            <div key={idx} className="p-5 rounded-lg border border-border bg-muted/5 space-y-4">
               <div className="font-semibold text-sm text-blue-500">
                 Câu hỏi thường gặp {idx + 1}
               </div>

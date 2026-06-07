@@ -32,26 +32,15 @@ export function PlantsTable({ plants, isAdmin, onEdit, onDelete }: PlantsTablePr
               <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
                 {plant.plant_id}
               </td>
-              <td className="px-6 py-4 font-semibold text-foreground">
-                {plant.name_plant}
-              </td>
+              <td className="px-6 py-4 font-semibold text-foreground">{plant.name_plant}</td>
               <td className="px-6 py-4 text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MapPin className="size-3.5 inline text-blue-500" />
-                  {plant.address}
-                </span>
+                <span className="flex items-center gap-1">{plant.address}</span>
               </td>
               <td className="px-6 py-4 font-medium text-foreground">
-                <span className="flex items-center gap-1">
-                  <User className="size-3.5 inline text-purple-500" />
-                  {plant.manager_name}
-                </span>
+                <span className="flex items-center gap-1">{plant.manager_name}</span>
               </td>
               <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Phone className="size-3.5 inline text-emerald-500" />
-                  {plant.phone}
-                </span>
+                <span className="flex items-center gap-1">{plant.phone}</span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                 <span className="flex items-center gap-1.5 text-xs">
@@ -71,9 +60,7 @@ export function PlantsTable({ plants, isAdmin, onEdit, onDelete }: PlantsTablePr
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                    title={
-                      !isAdmin ? 'Bạn không có quyền sửa nhà kho này' : 'Sửa thông tin'
-                    }
+                    title={!isAdmin ? 'Bạn không có quyền sửa nhà kho này' : 'Sửa thông tin'}
                   >
                     <Edit className="size-4" />
                   </Button>

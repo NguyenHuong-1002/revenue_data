@@ -146,28 +146,74 @@ export class SaleReportsService {
     return success;
   }
 
-  async getSaleReportStats(): Promise<{
+  private async getDateFilter(range?: string): Promise<{ sql: string; params: any[] }> {
+    if (!range) return { sql: '', params: [] };
+
+    // Lấy ngày lớn nhất trong DB để làm mốc thời gian gốc (do dữ liệu mẫu từ năm 2021-2023)
+    const [maxRows] = await this.db.client.query<RowDataPacket[]>(
+      'SELECT MAX(time_report) as max_date FROM saleReport',
+    );
+    const maxDateVal = maxRows[0]?.max_date;
+    const now = maxDateVal ? new Date(maxDateVal) : new Date();
+
+    let diffDays = 7;
+    switch (range) {
+      case '7days':
+        diffDays = 7;
+        break;
+      case '1month':
+        diffDays = 30;
+        break;
+      case '3months':
+        diffDays = 90;
+        break;
+      case '6months':
+        diffDays = 180;
+        break;
+      case '1year':
+        diffDays = 365;
+        break;
+      default:
+        return { sql: '', params: [] };
+    }
+
+    const filterDate = new Date(now.getTime() - diffDays * 24 * 60 * 60 * 1000);
+    const filterDateStr = filterDate.toISOString().slice(0, 19).replace('T', ' ');
+
+    return {
+      sql: 'AND time_report >= ?',
+      params: [filterDateStr],
+    };
+  }
+
+  async getSaleReportStats(range?: string): Promise<{
     distribution_channel: { name: string; count: number }[];
     monthly_sales: { name: string; count: number }[];
     top_branches: { name: string; count: number }[];
   }> {
+    const filter = await this.getDateFilter(range);
+
     const [channelRows] = await this.db.client.query<RowDataPacket[]>(
-      'SELECT distribution_channel as name, SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity >= 0 GROUP BY distribution_channel',
+      `SELECT distribution_channel as name, SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity >= 0 ${filter.sql} GROUP BY distribution_channel`,
+      filter.params,
     );
     const [monthlyRows] = await this.db.client.query<RowDataPacket[]>(
-      "SELECT DATE_FORMAT(time_report, '%Y-%m') as name, SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity >= 0 GROUP BY DATE_FORMAT(time_report, '%Y-%m') ORDER BY name DESC LIMIT 6",
+      `SELECT DATE_FORMAT(time_report, '%Y-%m') as name, SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity >= 0 ${filter.sql} GROUP BY DATE_FORMAT(time_report, '%Y-%m') ORDER BY name DESC LIMIT 6`,
+      filter.params,
     );
     const [branchRows] = await this.db.client.query<RowDataPacket[]>(
       `SELECT COALESCE(sb.name, sr.branch_id) as name, SUM(sr.sold_quantity) as count
        FROM saleReport sr
        LEFT JOIN storeBranch sb ON sb.store_id = sr.branch_id
-       WHERE sr.sold_quantity >= 0
+       WHERE sr.sold_quantity >= 0 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
        GROUP BY sr.branch_id, sb.name
        ORDER BY count DESC`,
+      filter.params,
     );
 
     const [refundRows] = await this.db.client.query<RowDataPacket[]>(
-      'SELECT SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity < 0',
+      `SELECT SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity < 0 ${filter.sql}`,
+      filter.params,
     );
     let refundCount = Number(refundRows[0]?.count ?? 0);
     if (refundCount === 0) {
@@ -175,17 +221,22 @@ export class SaleReportsService {
       refundCount = -Math.round(totalSold * 0.05); // 5% return rate
     }
 
-    const distribution_channel = channelRows.map(r => ({ name: String(r.name), count: Number(r.count ?? 0) }));
+    const distribution_channel = channelRows.map((r) => ({
+      name: String(r.name),
+      count: Number(r.count ?? 0),
+    }));
     distribution_channel.push({ name: 'Đổi trả / Hoàn hàng', count: refundCount });
 
     return {
       distribution_channel,
-      monthly_sales: monthlyRows.reverse().map(r => ({ name: String(r.name), count: Number(r.count ?? 0) })),
-      top_branches: branchRows.map(r => ({ name: String(r.name), count: Number(r.count ?? 0) })),
+      monthly_sales: monthlyRows
+        .reverse()
+        .map((r) => ({ name: String(r.name), count: Number(r.count ?? 0) })),
+      top_branches: branchRows.map((r) => ({ name: String(r.name), count: Number(r.count ?? 0) })),
     };
   }
 
-  async getRevenueDashboardStats(): Promise<{
+  async getRevenueDashboardStats(range?: string): Promise<{
     totalRevenue: number;
     growthRate: number;
     topProductByRevenue: {
@@ -207,11 +258,15 @@ export class SaleReportsService {
       size: number;
     };
   }> {
+    const filter = await this.getDateFilter(range);
+
     // 1. Total revenue
     const [revRows] = await this.db.client.query<RowDataPacket[]>(
       `SELECT SUM(sr.sold_quantity * p.listing_price) as total_revenue
        FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id`
+       INNER JOIN product p ON sr.product_id = p.product_id
+       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}`,
+      filter.params,
     );
     const totalRevenue = Number(revRows[0]?.total_revenue ?? 0);
 
@@ -221,9 +276,11 @@ export class SaleReportsService {
               SUM(sr.sold_quantity * p.listing_price) as revenue
        FROM saleReport sr
        INNER JOIN product p ON sr.product_id = p.product_id
+       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
        GROUP BY month
        ORDER BY month DESC
-       LIMIT 2`
+       LIMIT 2`,
+      filter.params,
     );
 
     let growthRate = 0;
@@ -240,9 +297,11 @@ export class SaleReportsService {
       `SELECT sr.product_id as id, p.color, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue
        FROM saleReport sr
        INNER JOIN product p ON sr.product_id = p.product_id
+       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
        GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
        ORDER BY revenue DESC
-       LIMIT 1`
+       LIMIT 1`,
+      filter.params,
     );
     const topProductByRevenue = {
       id: String(topRevRows[0]?.id ?? 'N/A'),
@@ -259,9 +318,11 @@ export class SaleReportsService {
       `SELECT sr.product_id as id, p.color, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity) as quantity
        FROM saleReport sr
        INNER JOIN product p ON sr.product_id = p.product_id
+       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
        GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
        ORDER BY quantity DESC
-       LIMIT 1`
+       LIMIT 1`,
+      filter.params,
     );
     const topProductByQuantity = {
       id: String(topQtyRows[0]?.id ?? 'N/A'),
@@ -281,7 +342,7 @@ export class SaleReportsService {
     };
   }
 
-  async getHighlightProductsStats(): Promise<{
+  async getHighlightProductsStats(range?: string): Promise<{
     topRevenue: any[];
     bottomRevenue: any[];
     topQuantity: any[];
@@ -289,23 +350,29 @@ export class SaleReportsService {
     topGrowth: any[];
     bottomGrowth: any[];
   }> {
+    const filter = await this.getDateFilter(range);
+
     // 1. Top 10 and Bottom 10 by Revenue
     const [topRevRows] = await this.db.client.query<RowDataPacket[]>(
       `SELECT sr.product_id as id, p.color as name, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue, SUM(sr.sold_quantity) as quantity
        FROM saleReport sr
        INNER JOIN product p ON sr.product_id = p.product_id
+       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
        GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
        ORDER BY revenue DESC
-       LIMIT 10`
+       LIMIT 10`,
+      filter.params,
     );
 
     const [botRevRows] = await this.db.client.query<RowDataPacket[]>(
       `SELECT sr.product_id as id, p.color as name, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue, SUM(sr.sold_quantity) as quantity
        FROM saleReport sr
        INNER JOIN product p ON sr.product_id = p.product_id
+       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
        GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
        ORDER BY revenue ASC
-       LIMIT 10`
+       LIMIT 10`,
+      filter.params,
     );
 
     // 2. Top 10 and Bottom 10 by Quantity
@@ -313,26 +380,32 @@ export class SaleReportsService {
       `SELECT sr.product_id as id, p.color as name, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue, SUM(sr.sold_quantity) as quantity
        FROM saleReport sr
        INNER JOIN product p ON sr.product_id = p.product_id
+       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
        GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
        ORDER BY quantity DESC
-       LIMIT 10`
+       LIMIT 10`,
+      filter.params,
     );
 
     const [botQtyRows] = await this.db.client.query<RowDataPacket[]>(
       `SELECT sr.product_id as id, p.color as name, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue, SUM(sr.sold_quantity) as quantity
        FROM saleReport sr
        INNER JOIN product p ON sr.product_id = p.product_id
+       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
        GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
        ORDER BY quantity ASC
-       LIMIT 10`
+       LIMIT 10`,
+      filter.params,
     );
 
     // 3. Growth rate (latest 2 months)
     const [months] = await this.db.client.query<RowDataPacket[]>(
       `SELECT DISTINCT DATE_FORMAT(time_report, '%Y-%m') as month
        FROM saleReport
+       WHERE 1=1 ${filter.sql}
        ORDER BY month DESC
-       LIMIT 2`
+       LIMIT 2`,
+      filter.params,
     );
 
     let topGrowth: any[] = [];
@@ -355,51 +428,47 @@ export class SaleReportsService {
             COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = ? THEN sr.sold_quantity ELSE 0 END), 0) as qty2
          FROM product p
          INNER JOIN saleReport sr ON sr.product_id = p.product_id
+         WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
          GROUP BY p.product_id, p.color, p.detail_product_group, p.gender, p.size`,
-         [month1, month2, month1, month2]
+        [month1, month2, month1, month2, ...filter.params],
       );
 
-      const computedGrowth = growthRows
-        .map((row) => {
-          const r1 = Number(row.rev1);
-          const r2 = Number(row.rev2);
-          const q1 = Number(row.qty1);
-          const q2 = Number(row.qty2);
+      const computedGrowth = growthRows.map((row) => {
+        const r1 = Number(row.rev1);
+        const r2 = Number(row.rev2);
+        const q1 = Number(row.qty1);
+        const q2 = Number(row.qty2);
 
-          let growthPercent = 0;
-          if (r2 > 0) {
-            growthPercent = Number((((r1 - r2) / r2) * 100).toFixed(2));
-          } else if (r1 > 0) {
-            growthPercent = 100;
-          }
+        let growthPercent = 0;
+        if (r2 > 0) {
+          growthPercent = Number((((r1 - r2) / r2) * 100).toFixed(2));
+        } else if (r1 > 0) {
+          growthPercent = 100;
+        }
 
-          const qtyDiff = q1 - q2;
+        const qtyDiff = q1 - q2;
 
-          return {
-            id: String(row.id),
-            name: String(row.name),
-            detail_product_group: String(row.detail_product_group),
-            gender: String(row.gender),
-            color: String(row.name),
-            size: Number(row.size),
-            rev1: r1,
-            rev2: r2,
-            qty1: q1,
-            qty2: q2,
-            growthPercent,
-            qtyDiff,
-          };
-        });
+        return {
+          id: String(row.id),
+          name: String(row.name),
+          detail_product_group: String(row.detail_product_group),
+          gender: String(row.gender),
+          color: String(row.name),
+          size: Number(row.size),
+          rev1: r1,
+          rev2: r2,
+          qty1: q1,
+          qty2: q2,
+          growthPercent,
+          qtyDiff,
+        };
+      });
 
-      const activeGrowth = computedGrowth.filter(p => p.rev1 > 0 || p.rev2 > 0);
+      const activeGrowth = computedGrowth.filter((p) => p.rev1 > 0 || p.rev2 > 0);
 
-      topGrowth = [...activeGrowth]
-        .sort((a, b) => b.growthPercent - a.growthPercent)
-        .slice(0, 10);
+      topGrowth = [...activeGrowth].sort((a, b) => b.growthPercent - a.growthPercent).slice(0, 10);
 
-      bottomGrowth = [...activeGrowth]
-        .sort((a, b) => a.growthPercent - b.growthPercent)
-        .slice(0, 10);
+      bottomGrowth = [...activeGrowth].sort((a, b) => a.growthPercent - b.growthPercent).slice(0, 10);
     }
 
     return {

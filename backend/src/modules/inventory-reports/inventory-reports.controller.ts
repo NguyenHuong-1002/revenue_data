@@ -44,6 +44,36 @@ export class InventoryReportsController {
     return this.inventoryReportsService.getInventoryReportStats();
   }
 
+  @Get('/kpis')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Lấy KPI tổng quan tồn kho (tổng, nhà máy, tăng trưởng)' })
+  @ApiResponse({ status: 200, description: 'Lấy KPI thành công.' })
+  getInventoryKpis(): Promise<any> {
+    return this.inventoryReportsService.getInventoryKpis();
+  }
+
+  @Get('/rankings')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Xếp hạng sản phẩm & nhà máy theo tồn kho, xu hướng tháng' })
+  @ApiResponse({ status: 200, description: 'Lấy xếp hạng thành công.' })
+  getInventoryRankings(@Query('topN') topN?: string): Promise<any> {
+    return this.inventoryReportsService.getInventoryRankings(topN ? Number(topN) : 10);
+  }
+
+  @Get('/alerts')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Lấy cảnh báo tồn kho thấp / tồn kho cao bất thường' })
+  @ApiResponse({ status: 200, description: 'Lấy cảnh báo thành công.' })
+  getInventoryAlerts(
+    @Query('lowThreshold') low?: string,
+    @Query('highThreshold') high?: string,
+  ): Promise<any> {
+    return this.inventoryReportsService.getInventoryAlerts(
+      low ? Number(low) : 50,
+      high ? Number(high) : 10000,
+    );
+  }
+
   @Get('/:id')
   @ApiOperation({ summary: 'Lấy chi tiết báo cáo tồn kho theo ID' })
   @ApiResponse({ status: 200, description: 'Lấy chi tiết thành công.' })

@@ -1,7 +1,7 @@
 import { ChevronRightIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { faqs as defaultFaqs } from './data/faqs';
 import { FaqItem } from '@/lib/landing-config';
+import { faqs as defaultFaqs } from './data/faqs';
 
 interface FAQProps {
   items?: FaqItem[];

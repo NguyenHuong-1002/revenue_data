@@ -22,16 +22,18 @@ import {
 } from '@/lib/services/landing.service';
 
 export default function Home() {
-  const [config, setConfig] = useState<LandingConfig | null>(null);
+  const [config] = useState<LandingConfig | null>(getLandingConfig);
   const [features, setFeatures] = useState<FeatureItem[]>([]);
   const [aiInsights, setAiInsights] = useState<AiInsightItem[]>([]);
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
   const [pricing, setPricing] = useState<PricingItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setConfig(getLandingConfig());
-
     const fetchDbData = async () => {
+      setIsLoading(true);
+      // Simulate delay to display skeletons beautifully
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       try {
         const [feats, insights, tests, prices] = await Promise.all([
           landingService.getFeatures(),
@@ -48,6 +50,8 @@ export default function Home() {
           'Failed to load landing page database data, fallback to static defaults:',
           err
         );
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -55,15 +59,20 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="landing-surface min-h-screen bg-background text-foreground overflow-hidden">
+    <main className="dark min-h-screen bg-background text-foreground overflow-hidden relative selection:bg-primary/30">
+      {/* Background Glowing Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[30%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-chart-4/5 blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[20%] w-[50vw] h-[50vw] rounded-full bg-chart-2/5 blur-[120px] pointer-events-none" />
+
       <Header />
       <Hero title={config?.heroTitle} subtitle={config?.heroSubtitle} />
-      <Features items={features} />
-      <AiInsights items={aiInsights} />
+      <Features items={features} isLoading={isLoading} />
+      <AiInsights items={aiInsights} isLoading={isLoading} />
       <Stats items={config?.stats} />
       <HowItWorks />
-      <Testimonials items={testimonials} />
-      <Pricing items={pricing} />
+      <Testimonials items={testimonials} isLoading={isLoading} />
+      <Pricing items={pricing} isLoading={isLoading} />
       <FAQ items={config?.faqs} />
       <CTA />
       <Footer />

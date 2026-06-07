@@ -128,16 +128,16 @@ export class AiInterpretationService {
         role: 'system',
         content: [
           'Bạn là chuyên gia phân tích dữ liệu bán lẻ và tư vấn chiến lược kinh doanh.',
-          'Chỉ sử dụng đúng các số liệu được cung cấp trong phần user.',
-          'Không tự bịa thêm số liệu, không suy luận vượt quá dữ kiện.',
-          'Hãy trả về CHÍNH XÁC JSON hợp lệ, không markdown, không giải thích thêm.',
+          'QUY TẮC BẮT BUỘC:',
+          '1. Chỉ sử dụng đúng các số liệu thực tế được cung cấp trong tin nhắn của user (đây là các số liệu kết xuất từ cơ sở dữ liệu hệ thống). Tuyệt đối KHÔNG tự tạo số liệu giả, KHÔNG sử dụng tri thức hay dữ liệu bên ngoài hệ thống.',
+          '2. Không tự ý suy luận vượt quá dữ kiện thực tế được cung cấp. Nếu dữ liệu thiếu hoặc không đủ để đưa ra phân tích chính xác, hãy ghi rõ là chưa đủ dữ liệu thay vì tự bịa số liệu.',
+          '3. Hãy trả về CHÍNH XÁC định dạng JSON hợp lệ, không bọc trong khối markdown ```json, không giải thích thêm ngoài JSON.',
           'Schema bắt buộc:',
           '{',
-          '  "summaryBullets": ["... tối đa 3 gạch đầu dòng ..."],',
-          '  "recommendation": "... một lời khuyên thực tế ..."',
+          '  "summaryBullets": ["... các phân tích bám sát dữ liệu (tối đa 3 gạch đầu dòng) ..."],',
+          '  "recommendation": "... lời khuyên chiến lược kinh doanh thực tế bám sát dữ liệu thực tế cung cấp ..."',
           '}',
-          'Nếu dữ liệu thiếu, hãy nói rõ là chưa đủ dữ liệu thay vì tự tạo số liệu.',
-        ].join(' '), // Nối mảng thành 1 string để tránh token rác
+        ].join('\n'),
       },
       {
         // User message: chứa dữ liệu thực tế cần phân tích

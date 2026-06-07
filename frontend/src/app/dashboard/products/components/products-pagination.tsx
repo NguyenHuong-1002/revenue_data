@@ -23,8 +23,8 @@ export function ProductsPagination({
       <span className="text-xs text-muted-foreground">
         Hiển thị trang <strong className="text-foreground">{currentPage}</strong> trên{' '}
         <strong className="text-foreground">{totalPages}</strong> (Tổng cộng{' '}
-        <strong className="text-foreground">{totalProducts.toLocaleString('vi-VN')}</strong>{' '}
-        sản phẩm)
+        <strong className="text-foreground">{totalProducts.toLocaleString('vi-VN')}</strong> sản
+        phẩm)
       </span>
       <div className="flex items-center gap-2">
         <Button

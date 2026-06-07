@@ -55,10 +55,7 @@ export function CreateSaleReportModal({ isOpen, onClose, onSubmit }: CreateSaleR
   React.useEffect(() => {
     if (isOpen) {
       setIsLoadingDropdowns(true);
-      Promise.all([
-        productService.list({ limit: 200 }),
-        branchService.list({ limit: 100 }),
-      ])
+      Promise.all([productService.list({ limit: 200 }), branchService.list({ limit: 100 })])
         .then(([prodRes, branchRes]) => {
           setProducts(prodRes.data.data || []);
           setBranches(branchRes.data.data || []);

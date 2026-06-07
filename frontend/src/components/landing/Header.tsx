@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-[#0a1628]/80 border-b border-white/5 animate-fade-in">
+    <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-background/80 border-b border-white/5 animate-fade-in">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2 font-semibold text-white">
           <span className="flex size-9 items-center justify-center rounded-4xl bg-primary text-primary-foreground ">

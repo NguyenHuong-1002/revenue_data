@@ -17,7 +17,8 @@ export function ProductsHeader({ isAdmin, onAddClick }: ProductsHeaderProps) {
           Quản lý sản phẩm
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Xem danh sách, thêm, chỉnh sửa hoặc xóa sản phẩm trong hệ thống (Tối đa 30 sản phẩm/trang).
+          Xem danh sách, thêm, chỉnh sửa hoặc xóa sản phẩm trong hệ thống (Tối đa 30 sản
+          phẩm/trang).
         </p>
       </div>
       <Button

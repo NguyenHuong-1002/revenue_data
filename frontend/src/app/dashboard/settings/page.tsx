@@ -1,26 +1,18 @@
 'use client';
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { Globe, Bell, Shield, Settings2, Plus } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Save,
-  Loader2,
-  Plus,
-  Trash2,
-  Settings2,
-  Shield,
-  Bell,
-  Globe,
-  ChevronDown,
-  ChevronRight,
-  Check,
-  X,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { DashboardHeader } from '@/components/dashboard-header';
 import { settingsService } from '@/lib/services/settings.service';
-import type { ISystemSettingGroup, ISystemSetting } from '@/lib/types/settings';
+import type { ISystemSettingGroup } from '@/lib/types/settings';
+import { cn } from '@/lib/utils';
+import { AddSettingCard } from './components/add-setting-card';
+import { SettingItem } from './components/setting-item';
+import { SettingsSkeleton } from './components/settings-skeleton';
 
 const GROUP_LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
   general: { label: 'Chung', icon: <Globe className="size-4" /> },
@@ -28,24 +20,23 @@ const GROUP_LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
   security: { label: 'Bảo mật', icon: <Shield className="size-4" /> },
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  string: 'Chuỗi ký tự',
-  number: 'Số',
-  boolean: 'Boolean',
-  json: 'JSON',
-};
-
 export default function SettingsPage() {
   const [groups, setGroups] = useState<ISystemSettingGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [savingKeys, setSavingKeys] = useState<Set<string>>(new Set());
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['general']));
+  const [activeTab, setActiveTab] = useState<string>('general');
   const [editingValues, setEditingValues] = useState<Record<string, string>>({});
   const [isAddingNew, setIsAddingNew] = useState(false);
-  const [newSetting, setNewSetting] = useState({
+  const [newSetting, setNewSetting] = useState<{
+    key: string;
+    value: string;
+    type: 'string' | 'number' | 'boolean' | 'json';
+    group: string;
+    description: string;
+  }>({
     key: '',
     value: '',
-    type: 'string' as const,
+    type: 'string',
     group: 'general',
     description: '',
   });
@@ -72,15 +63,6 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
-
-  const toggleGroup = (group: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(group)) next.delete(group);
-      else next.add(group);
-      return next;
-    });
-  };
 
   const handleSave = async (key: string) => {
     setSavingKeys((prev) => new Set(prev).add(key));
@@ -109,7 +91,8 @@ export default function SettingsPage() {
       setIsAddingNew(false);
       setNewSetting({ key: '', value: '', type: 'string', group: 'general', description: '' });
       fetchSettings();
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'Không thể tạo cài đặt');
     }
   };
@@ -125,19 +108,15 @@ export default function SettingsPage() {
     }
   };
 
-  const getGroupIcon = (group: string) =>
-    GROUP_LABELS[group]?.icon || <Settings2 className="size-4" />;
-  const getGroupLabel = (group: string) => GROUP_LABELS[group]?.label || group;
+  const activeGroup = groups.find((g) => g.group === activeTab);
 
   return (
-    <div className="flex flex-1 flex-col p-6 gap-6 max-w-4xl mx-auto w-full">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Cài đặt hệ thống</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Quản lý các cấu hình chung cho toàn bộ hệ thống.
-          </p>
-        </div>
+    <div className="flex flex-1 flex-col p-6 gap-6 max-w-7xl mx-auto w-full">
+      <DashboardHeader
+        title="Cài đặt hệ thống"
+        description="Quản lý các cấu hình chung cho toàn bộ hệ thống."
+        icon={Settings2}
+      >
         <Button
           onClick={() => setIsAddingNew(true)}
           className="bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
@@ -145,197 +124,71 @@ export default function SettingsPage() {
           <Plus className="size-4 mr-2" />
           Thêm cài đặt
         </Button>
-      </div>
+      </DashboardHeader>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <span className="text-sm text-muted-foreground">Đang tải cài đặt...</span>
-        </div>
+        <SettingsSkeleton />
       ) : (
-        <div className="space-y-4">
-          {isAddingNew && (
-            <Card className="border-blue-500/30 bg-blue-500/5">
-              <CardContent className="p-5">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Key *
-                    </label>
-                    <Input
-                      placeholder="Ví dụ: MAX_LOGIN_ATTEMPTS"
-                      value={newSetting.key}
-                      onChange={(e) => setNewSetting({ ...newSetting, key: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Value *
-                    </label>
-                    <Input
-                      placeholder="Giá trị"
-                      value={newSetting.value}
-                      onChange={(e) => setNewSetting({ ...newSetting, value: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Type
-                    </label>
-                    <select
-                      value={newSetting.type}
-                      onChange={(e) =>
-                        setNewSetting({ ...newSetting, type: e.target.value as any })
-                      }
-                      className="flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm shadow-sm"
-                    >
-                      <option value="string">String</option>
-                      <option value="number">Number</option>
-                      <option value="boolean">Boolean</option>
-                      <option value="json">JSON</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Group
-                    </label>
-                    <select
-                      value={newSetting.group}
-                      onChange={(e) => setNewSetting({ ...newSetting, group: e.target.value })}
-                      className="flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm shadow-sm"
-                    >
-                      <option value="general">general</option>
-                      <option value="notification">notification</option>
-                      <option value="security">security</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                    Mô tả
-                  </label>
-                  <Input
-                    placeholder="Mô tả ngắn về cài đặt này"
-                    value={newSetting.description}
-                    onChange={(e) => setNewSetting({ ...newSetting, description: e.target.value })}
-                  />
-                </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsAddingNew(false)}
-                    className="cursor-pointer"
-                  >
-                    <X className="size-3.5 mr-1" /> Huỷ
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleCreate}
-                    className="bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
-                  >
-                    <Check className="size-3.5 mr-1" /> Tạo
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+        <div className="space-y-6">
+          {/* Add settings modal */}
+          <AddSettingCard
+            isOpen={isAddingNew}
+            newSetting={newSetting}
+            onNewSettingChange={setNewSetting}
+            onCancel={() => setIsAddingNew(false)}
+            onCreate={handleCreate}
+          />
 
-          {groups.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-3 bg-card border border-border rounded-xl">
-              <Settings2 className="size-12 text-muted-foreground opacity-40" />
-              <p className="text-foreground font-semibold">Chưa có cài đặt nào</p>
-              <p className="text-muted-foreground text-sm">Nhấn "Thêm cài đặt" để bắt đầu.</p>
-            </div>
-          ) : (
-            groups.map((group) => (
-              <Card key={group.group} className="border-border bg-card shadow-sm">
-                <CardHeader
-                  className="cursor-pointer select-none py-4 px-6 flex flex-row items-center justify-between"
-                  onClick={() => toggleGroup(group.group)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-muted/30 flex items-center justify-center text-muted-foreground">
-                      {getGroupIcon(group.group)}
-                    </div>
-                    <div>
-                      <CardTitle className="text-base font-semibold">
-                        {getGroupLabel(group.group)}
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        {group.settings.length} cài đặt
-                      </CardDescription>
-                    </div>
-                  </div>
-                  {expandedGroups.has(group.group) ? (
-                    <ChevronDown className="size-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="size-4 text-muted-foreground" />
+          {/* Group tabs selector */}
+          <div className="flex border-b border-border gap-2 overflow-x-auto select-none">
+            {groups.map((group) => {
+              const info = GROUP_LABELS[group.group] || {
+                label: group.group,
+                icon: <Settings2 className="size-4" />,
+              };
+              return (
+                <button
+                  key={group.group}
+                  onClick={() => setActiveTab(group.group)}
+                  className={cn(
+                    'pb-3 text-sm font-semibold relative transition-all px-4 py-2 flex items-center gap-2 cursor-pointer outline-none border-b-2',
+                    activeTab === group.group
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
-                </CardHeader>
+                >
+                  {info.icon}
+                  <span>{info.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-                {expandedGroups.has(group.group) && (
-                  <CardContent className="px-6 pb-6 pt-0 space-y-4">
-                    {group.settings.map((setting) => (
-                      <div
-                        key={setting.key}
-                        className="flex items-start gap-4 p-4 rounded-lg border border-border bg-muted/10"
-                      >
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <code className="text-xs font-mono font-semibold bg-muted/30 px-1.5 py-0.5 rounded text-foreground">
-                              {setting.key}
-                            </code>
-                            <span className="text-[10px] text-muted-foreground bg-muted/20 px-1.5 py-0.5 rounded-full">
-                              {TYPE_LABELS[setting.type] || setting.type}
-                            </span>
-                          </div>
-                          {setting.description && (
-                            <p className="text-xs text-muted-foreground">{setting.description}</p>
-                          )}
-                          <Input
-                            value={editingValues[setting.key] ?? ''}
-                            onChange={(e) =>
-                              setEditingValues((prev) => ({
-                                ...prev,
-                                [setting.key]: e.target.value,
-                              }))
-                            }
-                            className="mt-2 text-sm font-mono bg-background border-border"
-                          />
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0 pt-6">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-muted-foreground hover:text-green-500 cursor-pointer"
-                            onClick={() => handleSave(setting.key)}
-                            disabled={savingKeys.has(setting.key)}
-                            title="Lưu"
-                          >
-                            {savingKeys.has(setting.key) ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <Save className="size-4" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-muted-foreground hover:text-destructive cursor-pointer"
-                            onClick={() => handleDelete(setting.key)}
-                            title="Xoá"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                )}
-              </Card>
-            ))
-          )}
+          {/* Settings list under active group */}
+          <div className="space-y-4">
+            {!activeGroup || activeGroup.settings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 bg-card border border-border/50 rounded-xl">
+                <Settings2 className="size-10 text-muted-foreground opacity-30 animate-pulse" />
+                <p className="text-foreground font-semibold text-sm">
+                  Không có cài đặt nào trong nhóm này
+                </p>
+              </div>
+            ) : (
+              activeGroup.settings.map((setting) => (
+                <SettingItem
+                  key={setting.key}
+                  setting={setting}
+                  value={editingValues[setting.key] ?? ''}
+                  isSaving={savingKeys.has(setting.key)}
+                  onValueChange={(val) =>
+                    setEditingValues((prev) => ({ ...prev, [setting.key]: val }))
+                  }
+                  onSave={() => handleSave(setting.key)}
+                  onDelete={() => handleDelete(setting.key)}
+                />
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

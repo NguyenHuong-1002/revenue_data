@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { landingService, FeatureItem } from '@/lib/services/landing.service';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { LandingSkeleton } from './landing-skeleton';
 import { toast } from 'sonner';
 import { IconRenderer, AVAILABLE_ICONS } from './icon-renderer';
 
@@ -77,7 +78,10 @@ export function FeaturesTab() {
   };
 
   const handleDeleteFeature = async (id: number) => {
-    if (typeof window !== 'undefined' && window.confirm('Bạn có chắc chắn muốn xóa tính năng này?')) {
+    if (
+      typeof window !== 'undefined' &&
+      window.confirm('Bạn có chắc chắn muốn xóa tính năng này?')
+    ) {
       try {
         await landingService.deleteFeature(id);
         toast.success('Đã xóa tính năng');
@@ -89,11 +93,7 @@ export function FeaturesTab() {
   };
 
   if (isLoading && features.length === 0) {
-    return (
-      <div className="flex h-[30vh] items-center justify-center">
-        <div className="text-muted-foreground animate-pulse">Đang tải tính năng...</div>
-      </div>
-    );
+    return <LandingSkeleton />;
   }
 
   return (
@@ -116,7 +116,7 @@ export function FeaturesTab() {
 
       {/* Feature Form (Create/Edit) */}
       {isEditing && (
-        <Card className="border border-blue-500/30 bg-blue-500/5 dark:bg-blue-950/10 shadow-sm">
+        <Card className="border border-border bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">
               {editingId ? 'Chỉnh sửa tính năng' : 'Thêm tính năng mới vào database'}
@@ -134,9 +134,7 @@ export function FeaturesTab() {
                 </Label>
                 <select
                   value={featureForm.icon}
-                  onChange={(e) =>
-                    setFeatureForm((prev) => ({ ...prev, icon: e.target.value }))
-                  }
+                  onChange={(e) => setFeatureForm((prev) => ({ ...prev, icon: e.target.value }))}
                   className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm shadow-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   {AVAILABLE_ICONS.map((i) => (
@@ -150,9 +148,7 @@ export function FeaturesTab() {
                 <Label className="font-semibold">Tiêu đề tính năng</Label>
                 <Input
                   value={featureForm.title}
-                  onChange={(e) =>
-                    setFeatureForm((prev) => ({ ...prev, title: e.target.value }))
-                  }
+                  onChange={(e) => setFeatureForm((prev) => ({ ...prev, title: e.target.value }))}
                   placeholder="Ví dụ: Nhập dữ liệu tự động"
                 />
               </div>
@@ -170,7 +166,11 @@ export function FeaturesTab() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-2 border-t border-border pt-4">
-            <Button variant="outline" onClick={() => setIsEditing(false)} className="cursor-pointer">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              className="cursor-pointer"
+            >
               Hủy
             </Button>
             <Button
@@ -186,7 +186,10 @@ export function FeaturesTab() {
       {/* Features list */}
       <div className="grid gap-4 md:grid-cols-2">
         {features.map((feat) => (
-          <Card key={feat.id} className="border border-border hover:shadow-sm transition-all bg-card">
+          <Card
+            key={feat.id}
+            className="border border-border hover:shadow-sm transition-all bg-card"
+          >
             <CardHeader className="flex flex-row items-start justify-between pb-2">
               <div className="flex items-center gap-3">
                 <div className="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">

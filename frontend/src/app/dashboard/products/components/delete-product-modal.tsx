@@ -20,11 +20,7 @@ export function DeleteProductModal({
   productId,
 }: DeleteProductModalProps) {
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Xác nhận xóa sản phẩm"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Xác nhận xóa sản phẩm">
       <div className="space-y-4">
         <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm">
           <ShieldAlert className="size-5 shrink-0 mt-0.5" />

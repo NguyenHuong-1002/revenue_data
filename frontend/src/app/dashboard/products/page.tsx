@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Package, Loader2 } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { productService } from '@/lib/services/product.service';
 import { accountService } from '@/lib/services/account.service';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ import { ProductsTable } from './components/products-table';
 import { ProductsCards } from './components/products-cards';
 import { ProductsPagination } from './components/products-pagination';
 import { DeleteProductModal } from './components/delete-product-modal';
+import { ProductsSkeleton, ProductsFilterSkeleton } from './components/products-skeleton';
 import type { IProduct } from '@/lib/types/product';
 import type { IAccount } from '@/lib/types/account';
 import type { CreateProductFormValues, EditProductFormValues } from './products.schema';
@@ -245,66 +246,63 @@ export default function ProductsPage() {
       />
 
       {/* Summary stats */}
-      <ProductsStats
-        totalProducts={totalProducts}
-        currentUser={currentUser}
-        isAdmin={isAdmin}
-      />
+      <ProductsStats totalProducts={totalProducts} isLoading={isLoading} />
 
       {/* Visual Analytics Section */}
       <ProductsCharts />
 
       {/* Advanced Filters Card */}
-      <ProductsFilter
-        productIdFilter={productIdFilter}
-        colorFilter={colorFilter}
-        genderFilter={genderFilter}
-        groupFilter={groupFilter}
-        ageFilter={ageFilter}
-        activityFilter={activityFilter}
-        lifestyleFilter={lifestyleFilter}
-        nameFilter={nameFilter}
-        onProductIdFilterChange={(val) => {
-          setProductIdFilter(val);
-          setCurrentPage(1);
-        }}
-        onColorFilterChange={(val) => {
-          setColorFilter(val);
-          setCurrentPage(1);
-        }}
-        onGenderFilterChange={(val) => {
-          setGenderFilter(val);
-          setCurrentPage(1);
-        }}
-        onGroupFilterChange={(val) => {
-          setGroupFilter(val);
-          setCurrentPage(1);
-        }}
-        onAgeFilterChange={(val) => {
-          setAgeFilter(val);
-          setCurrentPage(1);
-        }}
-        onActivityFilterChange={(val) => {
-          setActivityFilter(val);
-          setCurrentPage(1);
-        }}
-        onLifestyleFilterChange={(val) => {
-          setLifestyleFilter(val);
-          setCurrentPage(1);
-        }}
-        onNameFilterChange={(val) => {
-          setNameFilter(val);
-        }}
-        onClearFilters={handleClearFilters}
-      />
+      {isLoading && products.length === 0 ? (
+        <ProductsFilterSkeleton />
+      ) : (
+        <ProductsFilter
+          productIdFilter={productIdFilter}
+          colorFilter={colorFilter}
+          genderFilter={genderFilter}
+          groupFilter={groupFilter}
+          ageFilter={ageFilter}
+          activityFilter={activityFilter}
+          lifestyleFilter={lifestyleFilter}
+          nameFilter={nameFilter}
+          onProductIdFilterChange={(val) => {
+            setProductIdFilter(val);
+            setCurrentPage(1);
+          }}
+          onColorFilterChange={(val) => {
+            setColorFilter(val);
+            setCurrentPage(1);
+          }}
+          onGenderFilterChange={(val) => {
+            setGenderFilter(val);
+            setCurrentPage(1);
+          }}
+          onGroupFilterChange={(val) => {
+            setGroupFilter(val);
+            setCurrentPage(1);
+          }}
+          onAgeFilterChange={(val) => {
+            setAgeFilter(val);
+            setCurrentPage(1);
+          }}
+          onActivityFilterChange={(val) => {
+            setActivityFilter(val);
+            setCurrentPage(1);
+          }}
+          onLifestyleFilterChange={(val) => {
+            setLifestyleFilter(val);
+            setCurrentPage(1);
+          }}
+          onNameFilterChange={(val) => {
+            setNameFilter(val);
+          }}
+          onClearFilters={handleClearFilters}
+        />
+      )}
 
       {/* Main Table / Grid */}
       <div className="w-full">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-3 bg-card border border-border rounded-xl">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-            <span className="text-sm text-muted-foreground">Đang tải danh sách sản phẩm...</span>
-          </div>
+          <ProductsSkeleton />
         ) : filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3 bg-card border border-border rounded-xl">
             <Package className="size-12 text-muted-foreground opacity-40" />

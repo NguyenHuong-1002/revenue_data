@@ -14,7 +14,14 @@ export interface ISaleReport {
   sale_id: string;
   product_id: string;
   sold_quantity: number;
-  distribution_channel: 'Online' | 'Bán lẻ' | 'Phát sinh' | 'Bán sỉ' | 'Siêu thị' | 'Hợp đồng' | 'Chi nhánh';
+  distribution_channel:
+    | 'Online'
+    | 'Bán lẻ'
+    | 'Phát sinh'
+    | 'Bán sỉ'
+    | 'Siêu thị'
+    | 'Hợp đồng'
+    | 'Chi nhánh';
   branch_id: string;
   time_report: string;
   created_at: string;
@@ -29,6 +36,21 @@ export interface IPaginatedSaleReports {
     total: number;
     totalPages: number;
   };
+}
+
+export interface IHighlightProduct {
+  id: string;
+  name: string;
+  revenue: number;
+  quantity: number;
+  detail_product_group: string;
+  gender: string;
+  color: string;
+  size: number;
+  qty1?: number;
+  qty2?: number;
+  qtyDiff?: number;
+  growthPercent?: number;
 }
 
 export const saleReportService = {
@@ -52,15 +74,15 @@ export const saleReportService = {
     return api.delete<boolean>(`/sale-reports/${id}`);
   },
 
-  getStats() {
+  getStats(range?: string) {
     return api.get<{
       distribution_channel: { name: string; count: number }[];
       monthly_sales: { name: string; count: number }[];
       top_branches: { name: string; count: number }[];
-    }>('/sale-reports/stats');
+    }>('/sale-reports/stats', { params: { range } });
   },
 
-  getRevenueStats() {
+  getRevenueStats(range?: string) {
     return api.get<{
       totalRevenue: number;
       growthRate: number;
@@ -82,17 +104,17 @@ export const saleReportService = {
         color: string;
         size: number;
       };
-    }>('/sale-reports/revenue-stats');
+    }>('/sale-reports/revenue-stats', { params: { range } });
   },
 
-  getHighlightProductsStats() {
+  getHighlightProductsStats(range?: string) {
     return api.get<{
-      topRevenue: any[];
-      bottomRevenue: any[];
-      topQuantity: any[];
-      bottomQuantity: any[];
-      topGrowth: any[];
-      bottomGrowth: any[];
-    }>('/sale-reports/highlight-products-stats');
+      topRevenue: IHighlightProduct[];
+      bottomRevenue: IHighlightProduct[];
+      topQuantity: IHighlightProduct[];
+      bottomQuantity: IHighlightProduct[];
+      topGrowth: IHighlightProduct[];
+      bottomGrowth: IHighlightProduct[];
+    }>('/sale-reports/highlight-products-stats', { params: { range } });
   },
 };

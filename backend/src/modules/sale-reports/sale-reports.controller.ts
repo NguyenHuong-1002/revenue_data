@@ -40,24 +40,24 @@ export class SaleReportsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Lấy thông tin thống kê báo cáo doanh số phục vụ vẽ biểu đồ' })
   @ApiResponse({ status: 200, description: 'Lấy thống kê thành công.' })
-  getSaleReportStats(): Promise<any> {
-    return this.saleReportsService.getSaleReportStats();
+  getSaleReportStats(@Query('range') range?: string): Promise<any> {
+    return this.saleReportsService.getSaleReportStats(range);
   }
 
   @Get('/revenue-stats')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Lấy thông tin thống kê doanh thu phục vụ hiển thị ở sidebar' })
   @ApiResponse({ status: 200, description: 'Lấy thống kê thành công.' })
-  getRevenueDashboardStats(): Promise<any> {
-    return this.saleReportsService.getRevenueDashboardStats();
+  getRevenueDashboardStats(@Query('range') range?: string): Promise<any> {
+    return this.saleReportsService.getRevenueDashboardStats(range);
   }
 
   @Get('/highlight-products-stats')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Lấy danh sách top/bottom sản phẩm tiêu biểu theo nhiều tiêu chí' })
   @ApiResponse({ status: 200, description: 'Lấy thống kê sản phẩm thành công.' })
-  getHighlightProductsStats(): Promise<any> {
-    return this.saleReportsService.getHighlightProductsStats();
+  getHighlightProductsStats(@Query('range') range?: string): Promise<any> {
+    return this.saleReportsService.getHighlightProductsStats(range);
   }
 
   @Get('/:id')

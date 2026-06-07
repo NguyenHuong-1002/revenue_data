@@ -154,9 +154,7 @@ export function ProductsCards({
 
             <div className="grid grid-cols-2 gap-2 text-sm pt-1">
               <div>
-                <span className="text-xs text-muted-foreground block font-medium">
-                  Giới tính
-                </span>
+                <span className="text-xs text-muted-foreground block font-medium">Giới tính</span>
                 <div className="mt-0.5">{getGenderBadge(product.gender)}</div>
               </div>
               <div>
@@ -185,9 +183,7 @@ export function ProductsCards({
             </div>
 
             <div className="bg-muted/30 p-2 rounded-lg text-[10px] text-muted-foreground flex flex-wrap gap-1">
-              <span className="bg-background px-1.5 py-0.5 rounded-sm">
-                {product.age_group}
-              </span>
+              <span className="bg-background px-1.5 py-0.5 rounded-sm">{product.age_group}</span>
               <span className="bg-background px-1.5 py-0.5 rounded-sm">
                 {product.activity_group}
               </span>

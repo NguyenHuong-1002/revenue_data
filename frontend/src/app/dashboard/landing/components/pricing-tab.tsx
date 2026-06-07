@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { landingService, PricingItem } from '@/lib/services/landing.service';
+import { LandingSkeleton } from './landing-skeleton';
 
 // Helper to determine the visual icon representing the pricing plan tier
 function getPlanIcon(name: string) {
@@ -161,13 +162,7 @@ export function PricingTab() {
   };
 
   if (isLoading && pricing.length === 0) {
-    return (
-      <div className="flex h-[30vh] items-center justify-center">
-        <div className="text-muted-foreground animate-pulse">
-          Đang tải danh sách gói bảng giá...
-        </div>
-      </div>
-    );
+    return <LandingSkeleton />;
   }
 
   return (
@@ -197,7 +192,7 @@ export function PricingTab() {
 
       {/* Pricing Form (Create/Edit) */}
       {isEditing && (
-        <Card className="border border-blue-500/30 bg-blue-500/5 dark:bg-blue-950/10 shadow-sm">
+        <Card className="border border-border bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">
               {editingId ? 'Chỉnh sửa gói dịch vụ' : 'Thêm gói dịch vụ mới vào database'}
@@ -302,14 +297,12 @@ export function PricingTab() {
               key={plan.id}
               className={`border transition-all duration-300 flex flex-col justify-between overflow-hidden relative group ${
                 isPopular
-                  ? 'border-blue-500 bg-gradient-to-b from-blue-500/[0.04] to-transparent dark:from-blue-950/20 dark:to-transparent ring-1 ring-blue-500/30 shadow-[0_12px_30px_-10px_rgba(59,130,246,0.15)] dark:shadow-[0_15px_40px_-12px_rgba(59,130,246,0.35)] scale-[1.01] z-10'
+                  ? 'border-blue-500 bg-blue-500/[0.04] dark:bg-blue-950/20 ring-1 ring-blue-500/30 shadow-[0_12px_30px_-10px_rgba(var(--primary-rgb), 0.15)] dark:shadow-[0_15px_40px_-12px_rgba(var(--primary-rgb), 0.35)] scale-[1.01] z-10'
                   : 'border-border bg-card hover:border-border/80 hover:shadow-md'
               }`}
             >
-              {/* Highlight gradient ribbon on top of popular package */}
-              {isPopular && (
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400" />
-              )}
+              {/* Highlight blue ribbon on top of popular package */}
+              {isPopular && <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500" />}
 
               <CardHeader className="pb-3 relative">
                 <div className="flex justify-between items-start">
@@ -354,7 +347,7 @@ export function PricingTab() {
                 )}
 
                 <div className="mt-4 pt-4 border-t border-border/40 flex items-baseline gap-1">
-                  <span className="text-3xl font-black tracking-tight text-foreground bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                  <span className="text-3xl font-black tracking-tight text-blue-600 dark:text-blue-400">
                     {plan.price}
                   </span>
                   {plan.period && (

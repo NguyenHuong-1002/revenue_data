@@ -29,7 +29,12 @@ interface EditSaleReportModalProps {
   report: ISaleReport | null;
 }
 
-export function EditSaleReportModal({ isOpen, onClose, onSubmit, report }: EditSaleReportModalProps) {
+export function EditSaleReportModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  report,
+}: EditSaleReportModalProps) {
   const [products, setProducts] = React.useState<IProduct[]>([]);
   const [branches, setBranches] = React.useState<IBranch[]>([]);
   const [isLoadingDropdowns, setIsLoadingDropdowns] = React.useState(false);
@@ -50,10 +55,7 @@ export function EditSaleReportModal({ isOpen, onClose, onSubmit, report }: EditS
   React.useEffect(() => {
     if (isOpen && report) {
       setIsLoadingDropdowns(true);
-      Promise.all([
-        productService.list({ limit: 200 }),
-        branchService.list({ limit: 100 }),
-      ])
+      Promise.all([productService.list({ limit: 200 }), branchService.list({ limit: 100 })])
         .then(([prodRes, branchRes]) => {
           setProducts(prodRes.data.data || []);
           setBranches(branchRes.data.data || []);

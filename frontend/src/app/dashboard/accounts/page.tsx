@@ -8,18 +8,28 @@
 // - Phối hợp các component con
 // - Xử lý các sự kiện CRUD (thêm/sửa/xóa)
 
-import { Users, ShieldAlert } from 'lucide-react';
+import {
+  Users,
+  ShieldAlert,
+  BarChart3,
+  Table,
+  Plus,
+  FileSpreadsheet,
+  ShieldCheck,
+} from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { DashboardHeader } from '@/components/dashboard-header';
+import { PaginationControls } from '@/components/pagination-controls';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { exportAccountsToExcel } from '@/lib/excel/account-excel';
 import { accountService } from '@/lib/services/account.service';
 import type { IAccount } from '@/lib/types/account';
+import { cn } from '@/lib/utils';
 import type { CreateAccountFormValues, EditAccountFormValues } from './accounts.schema';
 import { AccountFilters } from './components/account-filters';
 import { AccountMobileCards } from './components/account-mobile-cards';
-import { AccountPagination } from './components/account-pagination';
 import { AccountSkeleton } from './components/account-skeleton';
 import { AccountStats } from './components/account-stats';
 import { AccountTable } from './components/account-table';
@@ -45,7 +55,7 @@ export default function AccountsPage() {
   const [endDate, setEndDate] = useState('');
   const [timeRange, setTimeRange] = useState('1month'); // Bộ lọc khoảng thời gian của biểu đồ & stats
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(100);
   const [totalPages, setTotalPages] = useState(1);
   const [totalAccounts, setTotalAccounts] = useState(0);
 
@@ -55,6 +65,7 @@ export default function AccountsPage() {
   const [editingAccount, setEditingAccount] = useState<IAccount | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState<'stats' | 'editor'>('stats');
 
   // ----- Lấy thông tin user đang đăng nhập -----
   useEffect(() => {
@@ -118,7 +129,7 @@ export default function AccountsPage() {
       setAccounts(res.data.data || []);
       setTotalPages(res.data.meta.totalPages || 1);
       setTotalAccounts(res.data.meta.total || 0);
-    } catch (error) {
+    } catch {
       toast.error('Không thể tải danh sách tài khoản.');
     } finally {
       setIsLoading(false);
@@ -188,8 +199,6 @@ export default function AccountsPage() {
 
   // ----- Tính toán thống kê cho 3 thẻ summary -----
   // Các chỉ số: tổng số, % thay đổi, tốc độ tăng trưởng, tỉ lệ active...
-  const adminCount = chartAccounts.filter((acc) => acc.role === 'ADMIN').length;
-  const staffCount = chartAccounts.filter((acc) => acc.role === 'STAFF').length;
 
   const stats = useMemo(() => {
     // Cấu hình số ngày lọc dựa trên timeRange của biểu đồ
@@ -223,7 +232,7 @@ export default function AccountsPage() {
     startOfCurrentPeriod.setDate(startOfCurrentPeriod.getDate() - daysToSubtract);
 
     // Thời gian của kỳ trước đó (để so sánh đối chiếu)
-    const endOfPreviousPeriod = new Date(startOfCurrentPeriod);
+
     const startOfPreviousPeriod = new Date(startOfCurrentPeriod);
     startOfPreviousPeriod.setDate(startOfPreviousPeriod.getDate() - daysToSubtract);
 
@@ -282,155 +291,277 @@ export default function AccountsPage() {
   // Kiểm tra quyền ADMIN để ẩn/hiện các chức năng
   const isAdmin = currentUser?.role === 'ADMIN';
 
+  const handleExportExcel = async () => {
+    toast.loading('Đang tải danh sách tài khoản...', { id: 'export-excel' });
+    try {
+      // Fetch first page with max allowed limit of 100
+      const firstPageRes = await accountService.list({
+        page: 1,
+        limit: 100,
+      });
+
+      let allAccounts = firstPageRes.data.data || [];
+      const totalPages = firstPageRes.data.meta.totalPages || 1;
+
+      if (totalPages > 1) {
+        toast.loading(`Đang tải thêm dữ liệu (1/${totalPages})...`, { id: 'export-excel' });
+        const promises = [];
+        for (let p = 2; p <= totalPages; p++) {
+          promises.push(accountService.list({ page: p, limit: 100 }));
+        }
+
+        const results = await Promise.all(promises);
+        for (const r of results) {
+          allAccounts = allAccounts.concat(r.data.data || []);
+        }
+      }
+
+      if (allAccounts.length === 0) {
+        toast.error('Không có dữ liệu tài khoản để xuất.', { id: 'export-excel' });
+        return;
+      }
+
+      toast.loading('Đang khởi tạo file Excel...', { id: 'export-excel' });
+      exportAccountsToExcel(allAccounts, currentUser?.fullname || currentUser?.username || 'Admin');
+      toast.success('Xuất file Excel thành công!', { id: 'export-excel' });
+    } catch (error) {
+      console.error('Lỗi xuất Excel:', error);
+      toast.error('Có lỗi xảy ra khi tải và xuất file Excel.', { id: 'export-excel' });
+    }
+  };
+
   return (
-    <div className="flex flex-1 flex-col p-6 gap-6 max-w-7xl mx-auto w-full">
-      {/* ===== HEADER: Tiêu đề + Nút thêm tài khoản ===== */}
-      <DashboardHeader
-        title="Quản lý tài khoản"
-        description="Quản lý thông tin, phân quyền truy cập và cài đặt tài khoản của toàn bộ nhân viên."
-        buttonText="Thêm tài khoản"
-        onButtonClick={() => setIsCreateOpen(true)}
-        isButtonDisabled={!isAdmin}
-        icon={Users}
-      />
-
-      {/* ===== 3 Thẻ thống kê (tổng, tăng trưởng, đồng hành) ===== */}
-      {/* Mờ đi nếu không phải ADMIN */}
-      <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-27.5 w-full" />
-            <Skeleton className="h-27.5 w-full" />
-            <Skeleton className="h-27.5 w-full" />
+    <div className="flex flex-1 flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
+      {/* ===== HEADER: Tiêu đề ===== */}
+      {isLoading ? (
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 animate-in fade-in duration-300">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="size-8 rounded-lg" />
+              <Skeleton className="h-8 w-48 rounded-md" />
+            </div>
+            <Skeleton className="h-4 w-[450px] max-w-full rounded-md" />
           </div>
-        ) : (
-          <AccountStats stats={stats} timeRange={timeRange} />
-        )}
-      </div>
-
-      {/* ===== Biểu đồ hoạt động tài khoản ===== */}
-      <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
-        {isLoading ? (
-          <Skeleton className="h-95 w-full" />
-        ) : (
-          <AccountsChart
-            accounts={chartAccounts}
-            timeRange={timeRange}
-            setTimeRange={setTimeRange}
-          />
-        )}
-      </div>
-
-      {/* ===== Thanh tìm kiếm + Bộ lọc nâng cao ===== */}
-      <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
-        <AccountFilters
-          isLoading={isLoading}
-          keyword={keyword}
-          onKeywordChange={(value) => {
-            setKeyword(value);
-            setCurrentPage(1);
-          }}
-          roleFilter={roleFilter}
-          onRoleFilterChange={(value) => {
-            setRoleFilter(value);
-            setCurrentPage(1);
-          }}
-          statusFilter={statusFilter}
-          onStatusFilterChange={(value) => {
-            setStatusFilter(value);
-            setCurrentPage(1);
-          }}
-          startDate={startDate}
-          onStartDateChange={(value) => {
-            setStartDate(value);
-            setCurrentPage(1);
-          }}
-          endDate={endDate}
-          onEndDateChange={(value) => {
-            setEndDate(value);
-            setCurrentPage(1);
-          }}
-          showAdvancedFilters={showAdvancedFilters}
-          onToggleAdvancedFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          onResetFilters={() => {
-            setKeyword('');
-            setRoleFilter('ALL');
-            setStatusFilter('ALL');
-            setStartDate('');
-            setEndDate('');
-            setCurrentPage(1);
-          }}
+        </div>
+      ) : (
+        <DashboardHeader
+          title="Quản lý tài khoản"
+          description="Quản lý thông tin, phân quyền truy cập và cài đặt tài khoản của toàn bộ nhân viên."
+          icon={Users}
         />
-      </div>
+      )}
 
-      {/* ===== Thống kê cơ cấu tài khoản (Vai trò & Trạng thái) ===== */}
-      <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-70 w-full" />
-            <Skeleton className="h-70 w-full" />
-            <Skeleton className="h-70 w-full" />
+      {/* ── THANH CHUYỂN TAB ── */}
+      {isLoading ? (
+        <div className="flex border-b border-border/60 pb-px gap-2 overflow-x-auto scrollbar-none select-none animate-in fade-in duration-300">
+          <div className="flex items-center gap-2 px-4 py-2.5">
+            <Skeleton className="h-4 w-4 rounded-md" />
+            <Skeleton className="h-4 w-28 rounded-md" />
           </div>
-        ) : (
-          <AccountsDistributionCharts accounts={chartAccounts} />
+          <div className="flex items-center gap-2 px-4 py-2.5">
+            <Skeleton className="h-4 w-4 rounded-md" />
+            <Skeleton className="h-4 w-48 rounded-md" />
+          </div>
+        </div>
+      ) : (
+        <div className="flex border-b border-border/60 pb-px gap-2 overflow-x-auto scrollbar-none select-none">
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={cn(
+              'pb-3 text-sm font-semibold relative transition-all px-4 py-2.5 rounded-t-lg cursor-pointer flex items-center gap-2 outline-none',
+              activeTab === 'stats'
+                ? 'text-indigo-600 font-bold dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span>Thống kê dữ liệu</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('editor')}
+            className={cn(
+              'pb-3 text-sm font-semibold relative transition-all px-4 py-2.5 rounded-t-lg cursor-pointer flex items-center gap-2 outline-none',
+              activeTab === 'editor'
+                ? 'text-indigo-600 font-bold dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Table className="h-4 w-4" />
+            <span>Chỉnh sửa cơ sở dữ liệu (Excel Grid)</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── NỘI DUNG TỪNG TAB ── */}
+      <div className="flex flex-col gap-6">
+        {/* ================= TAB 1: THỐNG KÊ DỮ LIỆU ================= */}
+        {activeTab === 'stats' && (
+          <div className="flex flex-col gap-6 animate-in fade-in duration-200">
+            {/* ===== Thống kê cơ cấu tài khoản (Vai trò & Trạng thái) ===== */}
+            <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
+              <AccountsDistributionCharts accounts={chartAccounts} isLoading={isLoading} />
+            </div>
+
+            {/* ===== Biểu đồ hoạt động tài khoản ===== */}
+            <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
+              <AccountsChart
+                accounts={chartAccounts}
+                timeRange={timeRange}
+                setTimeRange={setTimeRange}
+                isLoading={isLoading}
+              />
+            </div>
+
+            {/* ===== 3 Thẻ thống kê (tổng, tăng trưởng, đồng hành) ===== */}
+            <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
+              <AccountStats stats={stats} timeRange={timeRange} isLoading={isLoading} />
+            </div>
+          </div>
         )}
-      </div>
 
-      {/* ===== Nội dung chính: DS tài khoản (table desktop / card mobile) ===== */}
-      <div className="w-full">
-        {!isAdmin ? (
-          /* Trường hợp STAFF — hiển thị thông báo không có quyền */
-          <div className="flex flex-col items-center justify-center py-24 gap-3 bg-muted/10 border border-border border-dashed rounded-xl">
-            <ShieldAlert className="size-12 text-destructive opacity-80" />
-            <p className="text-foreground font-semibold text-base">Quyền truy cập bị hạn chế</p>
-            <p className="text-muted-foreground text-sm text-center max-w-md px-4">
-              Bạn đang đăng nhập với quyền **Nhân viên (STAFF)**. Chỉ **Quản trị viên (ADMIN)** mới
-              có quyền truy cập, chỉnh sửa và quản lý danh sách tài khoản.
-            </p>
-          </div>
-        ) : isLoading ? (
-          /* Trường hợp đang tải */
-          <AccountSkeleton />
-        ) : accounts.length === 0 ? (
-          /* Trường hợp không có kết quả */
-          <div className="flex flex-col items-center justify-center py-24 gap-3 bg-card border border-border rounded-xl">
-            <Users className="size-12 text-muted-foreground opacity-40" />
-            <p className="text-foreground font-semibold text-base">Không tìm thấy tài khoản nào</p>
-            <p className="text-muted-foreground text-sm">
-              Thử thay đổi bộ lọc hoặc tìm kiếm từ khóa khác.
-            </p>
-          </div>
-        ) : (
-          /* Danh sách tài khoản */
-          <div className="space-y-4">
-            {/* Bảng cho desktop (>=md) */}
-            <AccountTable
-              accounts={accounts}
-              currentUser={currentUser}
-              onEdit={(account) => {
-                setEditingAccount(account);
-                setIsEditOpen(true);
-              }}
-              onDelete={(id) => setDeleteConfirmId(id)}
-            />
-            {/* Card cho mobile (<md) */}
-            <AccountMobileCards
-              accounts={accounts}
-              currentUser={currentUser}
-              onEdit={(account) => {
-                setEditingAccount(account);
-                setIsEditOpen(true);
-              }}
-              onDelete={(id) => setDeleteConfirmId(id)}
-            />
-            {/* Phân trang */}
-            <AccountPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalAccounts={totalAccounts}
-              accountsLength={accounts.length}
-              onPageChange={setCurrentPage}
-            />
+        {/* ================= TAB 2: CHỈNH SỬA CƠ SỞ DỮ LIỆU ================= */}
+        {activeTab === 'editor' && (
+          <div className="flex flex-col gap-6 animate-in fade-in duration-200">
+            {/* ===== Thanh tìm kiếm + Bộ lọc nâng cao ===== */}
+            <div className={!isAdmin ? 'opacity-50 pointer-events-none select-none' : ''}>
+              <AccountFilters
+                isLoading={isLoading}
+                keyword={keyword}
+                onKeywordChange={(value) => {
+                  setKeyword(value);
+                  setCurrentPage(1);
+                }}
+                roleFilter={roleFilter}
+                onRoleFilterChange={(value) => {
+                  setRoleFilter(value);
+                  setCurrentPage(1);
+                }}
+                statusFilter={statusFilter}
+                onStatusFilterChange={(value) => {
+                  setStatusFilter(value);
+                  setCurrentPage(1);
+                }}
+                startDate={startDate}
+                onStartDateChange={(value) => {
+                  setStartDate(value);
+                  setCurrentPage(1);
+                }}
+                endDate={endDate}
+                onEndDateChange={(value) => {
+                  setEndDate(value);
+                  setCurrentPage(1);
+                }}
+                showAdvancedFilters={showAdvancedFilters}
+                onToggleAdvancedFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                onResetFilters={() => {
+                  setKeyword('');
+                  setRoleFilter('ALL');
+                  setStatusFilter('ALL');
+                  setStartDate('');
+                  setEndDate('');
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+
+            {/* Thanh thao tác cơ sở dữ liệu (Thêm tài khoản & Xuất Excel) */}
+            {isAdmin &&
+              (isLoading ? (
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card border border-border/60 rounded-xl p-4 shadow-xs gap-3 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="size-4 rounded-md" />
+                    <Skeleton className="h-4 w-40 rounded-md" />
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <Skeleton className="h-9 w-24 rounded-lg" />
+                    <Skeleton className="h-9 w-28 rounded-lg" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-card border border-border/60 rounded-xl p-4 shadow-xs gap-3">
+                  <div className="text-xs md:text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                    <ShieldCheck className="size-4 text-blue-500" />
+                    Quản lý cơ sở dữ liệu tài khoản
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={handleExportExcel}
+                      className="border-emerald-500/30 text-emerald-600 hover:bg-emerald-600 hover:text-white dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-white h-9 px-4 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <FileSpreadsheet className="size-4" />
+                      Xuất Excel
+                    </Button>
+                    <Button
+                      onClick={() => setIsCreateOpen(true)}
+                      className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs h-9 px-4 shadow-sm shrink-0 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Plus className="size-4" />
+                      Thêm tài khoản
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+            {/* ===== Nội dung chính: Excel Sheet Editor / Mobile cards ===== */}
+            <div className="w-full">
+              {!isAdmin ? (
+                /* Trường hợp STAFF — hiển thị thông báo không có quyền */
+                <div className="flex flex-col items-center justify-center py-24 gap-3 bg-muted/10 border border-border border-dashed rounded-xl">
+                  <ShieldAlert className="size-12 text-destructive opacity-80" />
+                  <p className="text-foreground font-semibold text-base">
+                    Quyền truy cập bị hạn chế
+                  </p>
+                  <p className="text-muted-foreground text-sm text-center max-w-md px-4">
+                    Bạn đang đăng nhập với quyền **Nhân viên (STAFF)**. Chỉ **Quản trị viên
+                    (ADMIN)** mới có quyền truy cập, chỉnh sửa và quản lý danh sách tài khoản.
+                  </p>
+                </div>
+              ) : isLoading ? (
+                /* Trường hợp đang tải */
+                <AccountSkeleton />
+              ) : (
+                <div className="space-y-4">
+                  {/* Bảng danh sách tài khoản tối giản cho desktop */}
+                  <div className="hidden md:block">
+                    <AccountTable
+                      accounts={accounts}
+                      currentUser={currentUser}
+                      onEdit={(account) => {
+                        setEditingAccount(account);
+                        setIsEditOpen(true);
+                      }}
+                      onDelete={(id) => setDeleteConfirmId(id)}
+                    />
+                  </div>
+
+                  {/* Truyền thống cho mobile (<md) */}
+                  <div className="md:hidden">
+                    <AccountMobileCards
+                      accounts={accounts}
+                      currentUser={currentUser}
+                      onEdit={(account) => {
+                        setEditingAccount(account);
+                        setIsEditOpen(true);
+                      }}
+                      onDelete={(id) => setDeleteConfirmId(id)}
+                    />
+                  </div>
+
+                  {/* Phân trang */}
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={totalAccounts}
+                    itemsLength={accounts.length}
+                    onPageChange={setCurrentPage}
+                    itemName="tài khoản"
+                    isLoading={isLoading}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

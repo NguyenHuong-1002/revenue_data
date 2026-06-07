@@ -1,9 +1,11 @@
 'use client';
 
-import * as React from 'react';
+/* eslint-disable @next/next/no-img-element */
+
 import { CameraIcon, UserIcon } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import * as React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { getAvatarUrl } from '@/lib/avatar';
 
 interface AvatarCardProps {

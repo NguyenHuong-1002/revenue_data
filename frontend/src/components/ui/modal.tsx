@@ -13,7 +13,18 @@ export interface ModalProps {
   title: string;
   children: React.ReactNode;
   variant?: 'default' | 'info' | 'danger' | 'warning' | 'success';
+  size?: 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 }
+
+const sizeClasses = {
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',
+  '2xl': 'max-w-2xl',
+  '3xl': 'max-w-3xl',
+  '4xl': 'max-w-4xl',
+  '5xl': 'max-w-5xl',
+};
 
 function getVariantStyles(variant: ModalProps['variant']) {
   switch (variant) {
@@ -30,7 +41,14 @@ function getVariantStyles(variant: ModalProps['variant']) {
   }
 }
 
-export function Modal({ isOpen, onClose, title, children, variant = 'default' }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  variant = 'default',
+  size = 'md',
+}: ModalProps) {
   // Bắt sự kiện phím Escape để đóng modal
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -49,6 +67,7 @@ export function Modal({ isOpen, onClose, title, children, variant = 'default' }:
   if (!isOpen) return null;
 
   const accentClass = getVariantStyles(variant);
+  const sizeClass = sizeClasses[size] || 'max-w-md';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -59,7 +78,9 @@ export function Modal({ isOpen, onClose, title, children, variant = 'default' }:
       />
 
       {/* Hộp modal thiết kế cân đối và tinh tế */}
-      <div className="relative w-full max-w-md rounded-2xl bg-card border border-border shadow-[0_15px_45px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 overflow-hidden animate-in fade-in zoom-in-98 slide-in-from-bottom-2 duration-300 z-10">
+      <div
+        className={`relative w-full ${sizeClass} rounded-2xl bg-card border border-border shadow-[0_15px_45px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 overflow-hidden animate-in fade-in zoom-in-98 slide-in-from-bottom-2 duration-300 z-10`}
+      >
         {/* Header: Điểm nhấn tối giản + Tiêu đề + Nút đóng */}
         <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-5">
           <div className="flex items-center gap-2.5">

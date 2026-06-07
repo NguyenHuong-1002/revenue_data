@@ -131,14 +131,14 @@ export function BranchesMapSkeleton() {
           <Skeleton className="h-10 w-14 rounded-full opacity-50" />
           <Skeleton className="h-6 w-20 rounded-full opacity-60" />
         </div>
-        
+
         {/* Zoom controls placeholder */}
         <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 bg-slate-900/40 p-1.5 rounded-lg border border-white/5">
           <Skeleton className="h-7 w-7 rounded bg-slate-800" />
           <Skeleton className="h-7 w-7 rounded bg-slate-800" />
           <Skeleton className="h-7 w-7 rounded bg-slate-800" />
         </div>
-        
+
         {/* Pulsing points representing map markers */}
         <div className="absolute top-[20%] left-[44%]">
           <div className="h-3.5 w-3.5 rounded-full bg-blue-500/30 animate-ping" />
@@ -186,7 +186,10 @@ export function BranchesChartSkeleton() {
         {/* Legend listing region elements */}
         <div className="w-full space-y-3 mt-4">
           {Array.from({ length: 3 }).map((_, idx) => (
-            <div key={idx} className="flex items-center justify-between py-1 border-b border-border/30 last:border-0">
+            <div
+              key={idx}
+              className="flex items-center justify-between py-1 border-b border-border/30 last:border-0"
+            >
               <div className="flex items-center gap-2">
                 <Skeleton className="h-2 w-2 rounded-full" />
                 <Skeleton className="h-4 w-16" />
@@ -199,4 +202,3 @@ export function BranchesChartSkeleton() {
     </Card>
   );
 }
-

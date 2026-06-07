@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="animate-fade-in">
             <Link href="/" className="flex items-center gap-2 font-semibold">
-              <span className="flex size-8 items-center justify-center rounded-4xl bg-gradient-to-br from-primary to-blue-700 text-primary-foreground">
+              <span className="flex size-8 items-center justify-center rounded-4xl bg-primary text-primary-foreground">
                 <BarChart3Icon className="size-3.5" />
               </span>
               Hệ thống Doanh thu

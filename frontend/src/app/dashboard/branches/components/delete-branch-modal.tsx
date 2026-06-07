@@ -17,11 +17,7 @@ export function DeleteBranchModal({
   isLoading,
 }: DeleteBranchModalProps) {
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Xác nhận xóa chi nhánh"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Xác nhận xóa chi nhánh">
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground leading-relaxed">
           Bạn có chắc chắn muốn xóa chi nhánh này? Hành động này sẽ xóa hoàn toàn thông tin chi

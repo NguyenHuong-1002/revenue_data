@@ -19,6 +19,9 @@ import {
   parseDate,
   parseMonthToDateStr,
   normalizeDistributionChannel,
+  normalizeGender,
+  normalizeAgeGroup,
+  normalizeActivityGroup,
 } from './utils/validation.util';
 import { readExcel, listExcelFiles } from './utils/excel-reader.util';
 
@@ -89,11 +92,11 @@ export class DataProcessingService {
     const color = s(row['color']);
     const listing_price = n(row['listing_price']);
     const price_cost = n(row['cost_price']);
-    const gender = s(row['gender']);
+    const gender = normalizeGender(s(row['gender']));
     const detail_product_group = s(row['detail_product_group']);
     const size = n(row['size']);
-    const age_group = s(row['age_group']);
-    const activity_group = s(row['activity_group']);
+    const age_group = normalizeAgeGroup(s(row['age_group']));
+    const activity_group = normalizeActivityGroup(s(row['activity_group']));
     const lifestyle_group = s(row['lifestyle_group']);
 
     const acceptedFields: string[] = [];

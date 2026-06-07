@@ -44,7 +44,9 @@ export function BranchesTable({ branches, isAdmin, onEdit, onDelete }: BranchesT
                 </Badge>
               </td>
               <td className="px-6 py-4 text-muted-foreground">
-                {branch.address || <span className="text-muted-foreground/30 italic">Chưa cập nhật</span>}
+                {branch.address || (
+                  <span className="text-muted-foreground/30 italic">Chưa cập nhật</span>
+                )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                 <span className="flex items-center gap-1.5 text-xs">
@@ -76,9 +78,7 @@ export function BranchesTable({ branches, isAdmin, onEdit, onDelete }: BranchesT
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                    title={
-                      !isAdmin ? 'Bạn không có quyền sửa chi nhánh này' : 'Sửa thông tin'
-                    }
+                    title={!isAdmin ? 'Bạn không có quyền sửa chi nhánh này' : 'Sửa thông tin'}
                   >
                     <Edit className="size-4" />
                   </Button>
@@ -88,9 +88,7 @@ export function BranchesTable({ branches, isAdmin, onEdit, onDelete }: BranchesT
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                    title={
-                      !isAdmin ? 'Bạn không có quyền xóa chi nhánh này' : 'Xóa chi nhánh'
-                    }
+                    title={!isAdmin ? 'Bạn không có quyền xóa chi nhánh này' : 'Xóa chi nhánh'}
                   >
                     <Trash2 className="size-4" />
                   </Button>

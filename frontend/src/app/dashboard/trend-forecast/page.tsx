@@ -1,694 +1,342 @@
 'use client';
 
+import { Database, ShoppingBag } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import * as React from 'react';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Loader2,
-  TrendingUp,
-  Sparkles,
-  Filter,
-  Brain,
-  Sliders,
-  Database,
-  ShoppingBag,
-  Info,
-  Calendar,
-  LineChart,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  ReferenceLine,
-} from 'recharts';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense } from 'react';
 import { toast } from 'sonner';
-import { forecastService, IForecastCombinedResponse, IChartPoint } from '@/lib/services/forecast.service';
-import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { forecastService, IForecastCombinedResponse } from '@/lib/services/forecast.service';
+import { ForecastChart } from './components/forecast-chart';
+import { ForecastFilters } from './components/forecast-filters';
+import { AlgorithmDetails } from './components/algorithm-details';
+import { ForecastGuide } from './components/forecast-guide';
+import { ForecastValuesList } from './components/forecast-values-list';
+import { ForecastWarnings } from './components/forecast-warnings';
+import { ModelMetrics } from './components/model-metrics';
+import { TrendForecastHeader } from './components/trend-forecast-header';
+import { ForecastSummary } from './components/forecast-summary';
 
-export default function TrendForecastPage() {
+function TrendForecastInner() {
+  const searchParams = useSearchParams();
+  const initialScope = (searchParams.get('scope') as 'all' | 'sales' | 'inventory') ?? 'all';
+
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
-  // Filter States
-  const [scope, setScope] = useState<'all' | 'sales' | 'inventory'>('all');
+  // ── Filter state ──────────────────────────────────────────────────────
+  const [scope, setScope] = useState<'all' | 'sales' | 'inventory'>(initialScope);
   const [periodType, setPeriodType] = useState<'month' | 'week' | 'quarter'>('month');
   const [horizon, setHorizon] = useState<number>(3);
-  const [alpha, setAlpha] = useState<number>(0.3);
   const [productId, setProductId] = useState<string>('');
   const [branchId, setBranchId] = useState<string>('');
   const [plantId, setPlantId] = useState<string>('');
   const [distributionChannel, setDistributionChannel] = useState<string>('all-channels');
 
-  // API Data State
+  // ── API data ──────────────────────────────────────────────────────────
   const [forecastData, setForecastData] = useState<IForecastCombinedResponse | null>(null);
 
-  const fetchForecast = useCallback(async (isUpdate = false) => {
-    try {
-      if (isUpdate) setUpdating(true);
-      else setLoading(true);
+  const fetchForecast = useCallback(
+    async (isUpdate = false) => {
+      try {
+        if (isUpdate) setUpdating(true);
+        else setLoading(true);
 
-      const params = {
-        scope,
-        periodType,
-        horizon,
-        alpha,
-        productId: productId.trim() || undefined,
-        branchId: branchId.trim() || undefined,
-        plantId: plantId.trim() || undefined,
-        distributionChannel: distributionChannel === 'all-channels' ? undefined : distributionChannel,
-      };
+        const params = {
+          scope,
+          periodType,
+          horizon,
+          productId: productId.trim() || undefined,
+          branchId: branchId.trim() || undefined,
+          plantId: plantId.trim() || undefined,
+          distributionChannel:
+            distributionChannel === 'all-channels' ? undefined : distributionChannel,
+        };
 
-      const res = await forecastService.getCombinedForecast(params);
-      setForecastData(res.data);
+        const res = await forecastService.getCombinedForecast(params);
+        setForecastData(res.data);
 
-      if (isUpdate) {
-        toast.success('Đã cập nhật mô hình dự báo mới');
+        if (isUpdate) toast.success('Đã cập nhật mô hình dự báo mới');
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        const errMsg = err.response?.data?.message || 'Không thể tải dữ liệu dự báo xu hướng';
+        toast.error(errMsg);
+      } finally {
+        setLoading(false);
+        setUpdating(false);
       }
-    } catch (error: any) {
-      const errMsg = error.response?.data?.message || 'Không thể tải dữ liệu dự báo xu hướng';
-      toast.error(errMsg);
-    } finally {
-      setLoading(false);
-      setUpdating(false);
-    }
-  }, [scope, periodType, horizon, alpha, productId, branchId, plantId, distributionChannel]);
+    },
+    [scope, periodType, horizon, productId, branchId, plantId, distributionChannel]
+  );
 
+  // Keep a ref so onApply always calls the latest fetchForecast
+  // (avoids stale-closure where the button captured an outdated version)
+  const fetchForecastRef = React.useRef(fetchForecast);
   useEffect(() => {
-    fetchForecast();
-  }, []);
+    fetchForecastRef.current = fetchForecast;
+  }, [fetchForecast]);
 
-  // Process data for charts
-  // Backend chartData contains elements with type = 'actual' | 'forecast'
-  // We want to format Recharts data such that actual points and forecast points can be drawn continuously.
+  // Initial load — runs once on mount
+  useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    fetchForecast();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Process chart data ────────────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const salesChartData = useMemo(() => {
     if (!forecastData?.sales?.chartData) return [];
-    // Convert chartData from backend to a format friendly for Recharts multi-line/area display
-    return forecastData.sales.chartData.map((pt) => ({
-      period: pt.period,
-      actual: pt.type === 'actual' ? pt.value : null,
-      ema: pt.algorithm === 'ema' ? pt.value : pt.type === 'actual' ? pt.value : null,
-      linear: pt.algorithm === 'linearRegression' ? pt.value : pt.type === 'actual' ? pt.value : null,
-      type: pt.type,
-    }));
-  }, [forecastData?.sales]);
+    
+    const tempMap: Record<string, {
+      period: string;
+      actual: number | null;
+      ema: number | null;
+      linear: number | null;
+      type: 'actual' | 'forecast';
+    }> = {};
 
+    forecastData.sales.chartData.forEach((pt) => {
+      if (!tempMap[pt.period]) {
+        tempMap[pt.period] = {
+          period: pt.period,
+          actual: null,
+          ema: null,
+          linear: null,
+          type: pt.type,
+        };
+      }
+      
+      if (pt.type === 'actual') {
+        tempMap[pt.period].actual = pt.value;
+        tempMap[pt.period].ema = pt.value;
+        tempMap[pt.period].linear = pt.value;
+      } else {
+        tempMap[pt.period].type = 'forecast';
+        if (pt.algorithm === 'ema') {
+          tempMap[pt.period].ema = pt.value;
+        } else if (pt.algorithm === 'linearRegression') {
+          tempMap[pt.period].linear = pt.value;
+        }
+      }
+    });
+
+    const periodsOrder: string[] = [];
+    forecastData.sales.chartData.forEach((pt) => {
+      if (!periodsOrder.includes(pt.period)) {
+        periodsOrder.push(pt.period);
+      }
+    });
+
+    return periodsOrder.map((p) => tempMap[p]);
+  }, [forecastData?.sales?.chartData]);
+
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const inventoryChartData = useMemo(() => {
     if (!forecastData?.inventory?.chartData) return [];
-    return forecastData.inventory.chartData.map((pt) => ({
-      period: pt.period,
-      actual: pt.type === 'actual' ? pt.value : null,
-      ema: pt.algorithm === 'ema' ? pt.value : pt.type === 'actual' ? pt.value : null,
-      linear: pt.algorithm === 'linearRegression' ? pt.value : pt.type === 'actual' ? pt.value : null,
-      type: pt.type,
-    }));
-  }, [forecastData?.inventory]);
+    
+    const tempMap: Record<string, {
+      period: string;
+      actual: number | null;
+      ema: number | null;
+      linear: number | null;
+      type: 'actual' | 'forecast';
+    }> = {};
 
-  // Find index where forecast starts
-  const salesForecastStartIndex = useMemo(() => {
-    if (!forecastData?.sales?.chartData) return -1;
-    return forecastData.sales.chartData.findIndex(pt => pt.type === 'forecast');
-  }, [forecastData?.sales]);
+    forecastData.inventory.chartData.forEach((pt) => {
+      if (!tempMap[pt.period]) {
+        tempMap[pt.period] = {
+          period: pt.period,
+          actual: null,
+          ema: null,
+          linear: null,
+          type: pt.type,
+        };
+      }
+      
+      if (pt.type === 'actual') {
+        tempMap[pt.period].actual = pt.value;
+        tempMap[pt.period].ema = pt.value;
+        tempMap[pt.period].linear = pt.value;
+      } else {
+        tempMap[pt.period].type = 'forecast';
+        if (pt.algorithm === 'ema') {
+          tempMap[pt.period].ema = pt.value;
+        } else if (pt.algorithm === 'linearRegression') {
+          tempMap[pt.period].linear = pt.value;
+        }
+      }
+    });
 
-  const inventoryForecastStartIndex = useMemo(() => {
-    if (!forecastData?.inventory?.chartData) return -1;
-    return forecastData.inventory.chartData.findIndex(pt => pt.type === 'forecast');
-  }, [forecastData?.inventory]);
+    const periodsOrder: string[] = [];
+    forecastData.inventory.chartData.forEach((pt) => {
+      if (!periodsOrder.includes(pt.period)) {
+        periodsOrder.push(pt.period);
+      }
+    });
 
+    return periodsOrder.map((p) => tempMap[p]);
+  }, [forecastData?.inventory?.chartData]);
+
+  const salesForecastStartIndex = useMemo(
+    () => forecastData?.sales?.chartData?.findIndex((pt) => pt.type === 'forecast') ?? -1,
+    [forecastData?.sales?.chartData]
+  );
+
+  const inventoryForecastStartIndex = useMemo(
+    () => forecastData?.inventory?.chartData?.findIndex((pt) => pt.type === 'forecast') ?? -1,
+    [forecastData?.inventory?.chartData]
+  );
+
+  // ── Loading state ─────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground font-medium">Đang mô phỏng mô hình dự báo AI...</span>
+      <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
+        {/* Header Skeleton */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-start gap-4 w-full max-w-xl">
+            <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
+            <div className="flex flex-col gap-2 w-full">
+              <Skeleton className="h-6 w-1/2 rounded-md" />
+              <Skeleton className="h-4 w-5/6 rounded-md" />
+            </div>
+          </div>
+          <Skeleton className="h-9 w-32 rounded-xl shrink-0" />
+        </div>
+
+        {/* Filters Panel Skeleton */}
+        <div className="rounded-xl border border-border/50 bg-card p-6 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Skeleton className="h-3.5 w-24 rounded-md" />
+              <Skeleton className="h-9 w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+
+        {/* Large Chart Skeleton */}
+        <div className="rounded-xl border border-border/50 bg-card p-6 shadow-sm flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-5 w-44 rounded-md" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-20 rounded-md" />
+              <Skeleton className="h-8 w-20 rounded-md" />
+            </div>
+          </div>
+          <Skeleton className="h-[280px] w-full rounded-xl" />
+        </div>
+
+        {/* Guide Skeleton */}
+        <div className="rounded-xl border border-border/50 bg-card p-6 shadow-sm flex flex-col gap-4">
+          <Skeleton className="h-4 w-48 rounded-md" />
+          <div className="flex flex-col gap-6 pl-1 pt-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex gap-4 items-start">
+                <Skeleton className="size-8 rounded-full shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-32 rounded-md" />
+                  <Skeleton className="h-3 w-5/6 rounded-md animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Brain className="h-8 w-8 text-primary animate-pulse" />
-            Dự báo xu hướng thông minh
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ứng dụng thuật toán Exponential Smoothing (EMA) và Hồi quy tuyến tính (Linear Regression) dự đoán doanh số & tồn kho
-          </p>
-        </div>
-      </div>
+      {/* Header */}
+      <TrendForecastHeader />
 
-      {/* ── Parameters & Filters Panel ── */}
-      <Card className="border border-border/80 bg-card/35 backdrop-blur-xs">
-        <CardHeader className="pb-3 border-b border-border/50">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <Sliders className="h-4 w-4 text-primary" />
-            Cấu hình mô hình dự báo & Bộ lọc dữ liệu
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Điều chỉnh hệ số làm mượt, chu kỳ dự đoán và các chiều dữ liệu để tối ưu kết quả
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Scope */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Phạm vi dự báo</Label>
-              <Select value={scope} onValueChange={(val: any) => setScope(val)}>
-                <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder="Chọn phạm vi" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả (Doanh số & Tồn kho)</SelectItem>
-                  <SelectItem value="sales">Chỉ Doanh số (Sales)</SelectItem>
-                  <SelectItem value="inventory">Chỉ Tồn kho (Inventory)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Filters / Model config panel */}
+      <ForecastFilters
+        scope={scope}
+        periodType={periodType}
+        horizon={horizon}
+        productId={productId}
+        branchId={branchId}
+        plantId={plantId}
+        distributionChannel={distributionChannel}
+        updating={updating}
+        onScopeChange={setScope}
+        onPeriodTypeChange={setPeriodType}
+        onHorizonChange={setHorizon}
+        onProductIdChange={setProductId}
+        onBranchIdChange={setBranchId}
+        onPlantIdChange={setPlantId}
+        onDistributionChannelChange={setDistributionChannel}
+        onApply={() => fetchForecastRef.current(true)}
+      />
 
-            {/* Granularity (for Sales) */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Chu kỳ gom nhóm (Doanh số)</Label>
-              <Select value={periodType} onValueChange={(val: any) => setPeriodType(val)}>
-                <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder="Chọn chu kỳ" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="month">Theo tháng (Month)</SelectItem>
-                  <SelectItem value="week">Theo tuần (Week)</SelectItem>
-                  <SelectItem value="quarter">Theo quý (Quarter)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Warnings banner */}
+      <ForecastWarnings warnings={forecastData?.warnings ?? []} />
 
-            {/* Horizon */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Chu kỳ dự báo (Horizon)</Label>
-              <Input
-                type="number"
-                min={1}
-                max={24}
-                value={horizon}
-                onChange={(e) => setHorizon(Number(e.target.value))}
-                className="text-xs h-9"
-              />
-            </div>
+      {/* Forecast Trend Insights / Summary */}
+      <ForecastSummary
+        sales={forecastData?.sales ?? null}
+        inventory={forecastData?.inventory ?? null}
+        scope={scope}
+      />
 
-            {/* Alpha smoothing factor */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                Hệ số san phẳng (Alpha)
-                <span className="text-[10px] text-muted-foreground">(EMA)</span>
-              </Label>
-              <Input
-                type="number"
-                step="0.05"
-                min={0.01}
-                max={0.99}
-                value={alpha}
-                onChange={(e) => setAlpha(Number(e.target.value))}
-                className="text-xs h-9"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-1">
-            {/* Product ID Filter */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Mã sản phẩm</Label>
-              <Input
-                placeholder="Ví dụ: P001 (Bỏ trống = tất cả)"
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
-                className="text-xs h-9"
-              />
-            </div>
-
-            {/* Branch ID Filter */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Mã chi nhánh (Doanh số)</Label>
-              <Input
-                placeholder="Ví dụ: BR001"
-                value={branchId}
-                onChange={(e) => setBranchId(e.target.value)}
-                className="text-xs h-9"
-              />
-            </div>
-
-            {/* Plant ID Filter */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Mã kho hàng (Tồn kho)</Label>
-              <Input
-                placeholder="Ví dụ: PL001"
-                value={plantId}
-                onChange={(e) => setPlantId(e.target.value)}
-                className="text-xs h-9"
-              />
-            </div>
-
-            {/* Distribution Channel */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Kênh phân phối (Doanh số)</Label>
-              <Select value={distributionChannel} onValueChange={setDistributionChannel}>
-                <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder="Chọn kênh" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all-channels">Tất cả các kênh</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="Bán lẻ">Bán lẻ</SelectItem>
-                  <SelectItem value="Bán sỉ">Bán sỉ</SelectItem>
-                  <SelectItem value="Siêu thị">Siêu thị</SelectItem>
-                  <SelectItem value="Hợp đồng">Hợp đồng</SelectItem>
-                  <SelectItem value="Chi nhánh">Chi nhánh</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2 border-t border-border/40">
-            <Button
-              onClick={() => fetchForecast(true)}
-              disabled={updating}
-              className="gap-2 cursor-pointer shadow-xs text-xs font-semibold px-5 h-9"
-            >
-              {updating ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Đang tính toán...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Cập nhật dự báo
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Warnings & Notices */}
-      {forecastData?.warnings && forecastData.warnings.length > 0 && (
-        <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-xs flex gap-2 items-start">
-          <Info className="h-4 w-4 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <span className="font-semibold">Lưu ý phân tích dữ liệu:</span>
-            <ul className="list-disc pl-4 space-y-0.5">
-              {forecastData.warnings.map((w, idx) => (
-                <li key={idx}>{w}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* ── Grid: Charts & Predictions ── */}
+      {/* Charts + Metrics grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Columns (Charts) */}
+        {/* Left: charts (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Sales Forecast Chart */}
           {(scope === 'all' || scope === 'sales') && (
-            <Card className="border border-border/80 bg-card/35 backdrop-blur-xs">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <ShoppingBag className="h-4 w-4 text-emerald-500" />
-                  Dự báo doanh số (Lượng bán)
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Biểu đồ hiển thị dữ liệu thực tế và hai mô hình dự báo trong tương lai
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                {salesChartData.length > 0 ? (
-                  <div className="h-[320px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={salesChartData}>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/40" />
-                        <XAxis
-                          dataKey="period"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          className="text-[10px] text-muted-foreground fill-muted-foreground"
-                        />
-                        <YAxis
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          className="text-[10px] text-muted-foreground fill-muted-foreground"
-                        />
-                        <Tooltip
-                          content={({ active, payload, label }) => {
-                            if (active && payload && payload.length) {
-                              const isForecast = payload[0].payload.type === 'forecast';
-                              return (
-                                <div className="bg-card border border-border p-2.5 rounded-xl shadow-md text-xs space-y-1.5">
-                                  <p className="font-semibold text-foreground flex items-center gap-1.5">
-                                    {label}
-                                    {isForecast ? (
-                                      <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-primary/10 text-primary">Dự báo</Badge>
-                                    ) : (
-                                      <Badge variant="outline" className="text-[9px] px-1 py-0">Thực tế</Badge>
-                                    )}
-                                  </p>
-                                  {payload.map((item, idx) => {
-                                    if (item.value == null) return null;
-                                    return (
-                                      <p key={idx} style={{ color: item.color }} className="font-medium text-[11px]">
-                                        {item.name === 'actual' ? 'Thực tế: ' :
-                                         item.name === 'ema' ? 'Dự báo EMA: ' : 'Hồi quy tuyến tính: '}
-                                        <span className="font-bold">{Math.round(Number(item.value))} chiếc</span>
-                                      </p>
-                                    );
-                                  })}
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Legend
-                          verticalAlign="top"
-                          height={36}
-                          iconSize={10}
-                          wrapperStyle={{ fontSize: '10px' }}
-                        />
-                        {/* Reference Line dividing actual vs forecast */}
-                        {salesForecastStartIndex !== -1 && salesChartData[salesForecastStartIndex] && (
-                          <ReferenceLine
-                            x={salesChartData[salesForecastStartIndex].period}
-                            stroke="hsl(var(--destructive))"
-                            strokeDasharray="3 3"
-                            label={{ value: 'Mốc dự báo', position: 'top', fill: 'hsl(var(--destructive))', fontSize: 9, fontWeight: 'bold' }}
-                          />
-                        )}
-                        <Area
-                          name="actual"
-                          type="monotone"
-                          dataKey="actual"
-                          stroke="hsl(142.1, 76.2%, 36.3%)"
-                          fill="hsl(142.1, 76.2%, 36.3%)"
-                          fillOpacity={0.06}
-                          strokeWidth={2.5}
-                        />
-                        <Area
-                          name="ema"
-                          type="monotone"
-                          dataKey="ema"
-                          stroke="hsl(262.1, 83.3%, 57.8%)"
-                          fill="none"
-                          strokeDasharray="4 4"
-                          strokeWidth={2}
-                        />
-                        <Area
-                          name="linear"
-                          type="monotone"
-                          dataKey="linear"
-                          stroke="hsl(217.2, 91.2%, 59.8%)"
-                          fill="none"
-                          strokeDasharray="4 4"
-                          strokeWidth={2}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-[320px] border border-dashed border-border rounded-xl">
-                    <span className="text-xs text-muted-foreground">Không có dữ liệu dự báo doanh số</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ForecastChart
+              title="Dự báo doanh số (Lượng bán)"
+              description="Biểu đồ hiển thị dữ liệu thực tế và hai mô hình dự báo trong tương lai"
+              icon={<ShoppingBag className="h-4 w-4 text-chart-2" />}
+              data={salesChartData}
+              forecastStartIndex={salesForecastStartIndex}
+              actualColor="var(--chart-2)"
+              actualLabel="Thực tế"
+              unit="chiếc"
+            />
           )}
 
-          {/* Inventory Forecast Chart */}
           {(scope === 'all' || scope === 'inventory') && (
-            <Card className="border border-border/80 bg-card/35 backdrop-blur-xs">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <Database className="h-4 w-4 text-blue-500" />
-                  Dự báo mức tồn kho
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Biểu đồ mô phỏng xu hướng biến động lượng hàng tồn kho dự đoán ở các chu kỳ tới
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                {inventoryChartData.length > 0 ? (
-                  <div className="h-[320px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={inventoryChartData}>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/40" />
-                        <XAxis
-                          dataKey="period"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          className="text-[10px] text-muted-foreground fill-muted-foreground"
-                        />
-                        <YAxis
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          className="text-[10px] text-muted-foreground fill-muted-foreground"
-                        />
-                        <Tooltip
-                          content={({ active, payload, label }) => {
-                            if (active && payload && payload.length) {
-                              const isForecast = payload[0].payload.type === 'forecast';
-                              return (
-                                <div className="bg-card border border-border p-2.5 rounded-xl shadow-md text-xs space-y-1.5">
-                                  <p className="font-semibold text-foreground flex items-center gap-1.5">
-                                    {label}
-                                    {isForecast ? (
-                                      <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-primary/10 text-primary">Dự báo</Badge>
-                                    ) : (
-                                      <Badge variant="outline" className="text-[9px] px-1 py-0">Thực tế</Badge>
-                                    )}
-                                  </p>
-                                  {payload.map((item, idx) => {
-                                    if (item.value == null) return null;
-                                    return (
-                                      <p key={idx} style={{ color: item.color }} className="font-medium text-[11px]">
-                                        {item.name === 'actual' ? 'Tồn thực tế: ' :
-                                         item.name === 'ema' ? 'Dự báo EMA: ' : 'Hồi quy tuyến tính: '}
-                                        <span className="font-bold">{Math.round(Number(item.value))} chiếc</span>
-                                      </p>
-                                    );
-                                  })}
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Legend
-                          verticalAlign="top"
-                          height={36}
-                          iconSize={10}
-                          wrapperStyle={{ fontSize: '10px' }}
-                        />
-                        {inventoryForecastStartIndex !== -1 && inventoryChartData[inventoryForecastStartIndex] && (
-                          <ReferenceLine
-                            x={inventoryChartData[inventoryForecastStartIndex].period}
-                            stroke="hsl(var(--destructive))"
-                            strokeDasharray="3 3"
-                            label={{ value: 'Mốc dự báo', position: 'top', fill: 'hsl(var(--destructive))', fontSize: 9, fontWeight: 'bold' }}
-                          />
-                        )}
-                        <Area
-                          name="actual"
-                          type="monotone"
-                          dataKey="actual"
-                          stroke="hsl(217.2, 91.2%, 59.8%)"
-                          fill="hsl(217.2, 91.2%, 59.8%)"
-                          fillOpacity={0.06}
-                          strokeWidth={2.5}
-                        />
-                        <Area
-                          name="ema"
-                          type="monotone"
-                          dataKey="ema"
-                          stroke="hsl(262.1, 83.3%, 57.8%)"
-                          fill="none"
-                          strokeDasharray="4 4"
-                          strokeWidth={2}
-                        />
-                        <Area
-                          name="linear"
-                          type="monotone"
-                          dataKey="linear"
-                          stroke="hsl(47.9, 95.8%, 53.1%)"
-                          fill="none"
-                          strokeDasharray="4 4"
-                          strokeWidth={2}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-[320px] border border-dashed border-border rounded-xl">
-                    <span className="text-xs text-muted-foreground">Không có dữ liệu dự báo tồn kho</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ForecastChart
+              title="Dự báo mức tồn kho"
+              description="Biểu đồ mô phỏng xu hướng biến động lượng hàng tồn kho dự đoán ở các chu kỳ tới"
+              icon={<Database className="h-4 w-4 text-primary" />}
+              data={inventoryChartData}
+              forecastStartIndex={inventoryForecastStartIndex}
+              actualColor="var(--chart-1)"
+              actualLabel="Tồn thực tế"
+              unit="chiếc"
+            />
           )}
         </div>
 
-        {/* Right Column (Metrics & Prediction values list) */}
+        {/* Right: model quality + future values list (1/3 width) */}
         <div className="space-y-6">
-          {/* Algorithms KPI details */}
-          <Card className="border border-border/80 bg-card/35 backdrop-blur-xs">
-            <CardHeader className="pb-3 border-b border-border/50">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <LineChart className="h-4 w-4 text-purple-500" />
-                Tham số & Chất lượng mô hình
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4 text-xs">
-              {forecastData?.sales && (
-                <div className="space-y-3">
-                  <div className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    Thuật toán Doanh số (Sales)
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 bg-muted/20 p-2.5 rounded-xl border border-border/40">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Lượng quan sát</p>
-                      <p className="font-bold text-foreground text-sm">{forecastData.sales.observations} chu kỳ</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Alpha áp dụng</p>
-                      <p className="font-bold text-foreground text-sm">{forecastData.sales.ema.alpha}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Độ dốc (Slope)</p>
-                      <p className="font-bold text-foreground text-sm">
-                        {Number(forecastData.sales.linearRegression.slope.toFixed(2))}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Mức cơ sở (Intercept)</p>
-                      <p className="font-bold text-foreground text-sm">
-                        {Math.round(forecastData.sales.linearRegression.intercept)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {forecastData?.inventory && (
-                <div className="space-y-3 pt-2">
-                  <div className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    Thuật toán Tồn kho (Stock)
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 bg-muted/20 p-2.5 rounded-xl border border-border/40">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Lượng quan sát</p>
-                      <p className="font-bold text-foreground text-sm">{forecastData.inventory.observations} chu kỳ</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Alpha áp dụng</p>
-                      <p className="font-bold text-foreground text-sm">{forecastData.inventory.ema.alpha}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Độ dốc (Slope)</p>
-                      <p className="font-bold text-foreground text-sm">
-                        {Number(forecastData.inventory.linearRegression.slope.toFixed(2))}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Mức cơ sở (Intercept)</p>
-                      <p className="font-bold text-foreground text-sm">
-                        {Math.round(forecastData.inventory.linearRegression.intercept)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* List of forecasted future values */}
-          <Card className="border border-border/80 bg-card/35 backdrop-blur-xs">
-            <CardHeader className="pb-3 border-b border-border/50">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                Số liệu dự đoán tương lai
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4 max-h-[420px] overflow-y-auto pr-1">
-              {forecastData?.sales?.ema?.forecast && forecastData.sales.ema.forecast.length > 0 && (
-                <div className="space-y-2.5">
-                  <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Doanh số dự báo hàng kỳ:</div>
-                  {forecastData.sales.ema.forecast.map((pt, idx) => {
-                    const linearVal = forecastData.sales?.linearRegression?.forecast?.[idx]?.value ?? 0;
-                    return (
-                      <div key={idx} className="p-3 bg-muted/20 border border-border/50 rounded-xl flex flex-col gap-1 hover:bg-muted/40 transition-all">
-                        <div className="flex justify-between items-center text-xs font-bold text-foreground">
-                          <span>Chu kỳ: {pt.period}</span>
-                          <span className="text-purple-500">EMA: {Math.round(pt.value)} sp</span>
-                        </div>
-                        <div className="flex justify-between text-[10px] text-muted-foreground">
-                          <span>Dự báo hồi quy tuyến tính:</span>
-                          <span>Hồi quy: {Math.round(linearVal)} sp</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {forecastData?.inventory?.ema?.forecast && forecastData.inventory.ema.forecast.length > 0 && (
-                <div className="space-y-2.5 pt-2">
-                  <div className="text-xs font-bold text-blue-600 dark:text-blue-400">Tồn kho dự báo hàng ngày:</div>
-                  {forecastData.inventory.ema.forecast.map((pt, idx) => {
-                    const linearVal = forecastData.inventory?.linearRegression?.forecast?.[idx]?.value ?? 0;
-                    return (
-                      <div key={idx} className="p-3 bg-muted/20 border border-border/50 rounded-xl flex flex-col gap-1 hover:bg-muted/40 transition-all">
-                        <div className="flex justify-between items-center text-xs font-bold text-foreground">
-                          <span>Ngày dự đoán: {pt.period}</span>
-                          <span className="text-purple-500">EMA: {Math.round(pt.value)} sp</span>
-                        </div>
-                        <div className="flex justify-between text-[10px] text-muted-foreground">
-                          <span>Dự báo hồi quy tuyến tính:</span>
-                          <span>Hồi quy: {Math.round(linearVal)} sp</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {(!forecastData?.sales && !forecastData?.inventory) && (
-                <div className="text-xs text-muted-foreground text-center py-6">
-                  Không có điểm dữ liệu dự báo tương lai nào được tính toán.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ModelMetrics
+            sales={forecastData?.sales ?? null}
+            inventory={forecastData?.inventory ?? null}
+          />
+          <ForecastValuesList
+            sales={forecastData?.sales ?? null}
+            inventory={forecastData?.inventory ?? null}
+          />
         </div>
       </div>
+
+      {/* Stepper Guide */}
+      <ForecastGuide />
+
+      {/* Algorithm Details */}
+      <AlgorithmDetails />
     </div>
+  );
+}
+
+export default function TrendForecastPage() {
+  return (
+    <Suspense fallback={null}>
+      <TrendForecastInner />
+    </Suspense>
   );
 }

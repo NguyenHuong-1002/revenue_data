@@ -1,16 +1,6 @@
 'use client';
 
-import { Search, Settings2, Sparkles } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { DataFilter, FilterField } from '@/components/data-filter';
 
 interface ProductsFilterProps {
   productIdFilter: string;
@@ -32,6 +22,105 @@ interface ProductsFilterProps {
   onClearFilters: () => void;
 }
 
+const FIELDS: FilterField[] = [
+  {
+    key: 'nameFilter',
+    type: 'text',
+    label: 'Tên sản phẩm',
+    colSpan: 2,
+    placeholder: 'Ví dụ: Giày Sneaker SANTD Màu Đen...',
+  },
+  {
+    key: 'productIdFilter',
+    type: 'text',
+    label: 'Mã sản phẩm',
+    placeholder: 'Ví dụ: SP1712...',
+  },
+  {
+    key: 'colorFilter',
+    type: 'text',
+    label: 'Màu sắc',
+    placeholder: 'Nhập màu sắc...',
+  },
+  {
+    key: 'genderFilter',
+    type: 'select',
+    label: 'Giới tính',
+    emptyValue: 'ALL',
+    options: [
+      { value: 'ALL', label: 'Tất cả giới tính' },
+      { value: 'MEN', label: 'Nam (MEN)' },
+      { value: 'WOM', label: 'Nữ (WOM)' },
+      { value: 'BOY', label: 'Bé trai (BOY)' },
+      { value: 'GIR', label: 'Bé gái (GIR)' },
+    ],
+  },
+  {
+    key: 'groupFilter',
+    type: 'select',
+    label: 'Nhóm sản phẩm',
+    emptyValue: 'ALL',
+    options: [
+      { value: 'ALL', label: 'Tất cả nhóm' },
+      { value: 'SANTD', label: 'SANTD' },
+      { value: 'DEPTD', label: 'DEPTD' },
+      { value: 'GTTPC', label: 'GTTPC' },
+      { value: 'GTTCD', label: 'GTTCD' },
+      { value: 'SANTR', label: 'SANTR' },
+      { value: 'GIATR', label: 'GIATR' },
+      { value: 'PKIEN', label: 'PKIEN' },
+      { value: 'TBLTH', label: 'TBLTH' },
+      { value: 'TBLTR', label: 'TBLTR' },
+    ],
+  },
+  {
+    key: 'ageFilter',
+    type: 'select',
+    label: 'Độ tuổi',
+    emptyValue: 'ALL',
+    options: [
+      { value: 'ALL', label: 'Tất cả độ tuổi' },
+      { value: '0 đến <3 tuổi', label: '0 đến <3 tuổi' },
+      { value: '3 đến <6 tuổi', label: '3 đến <6 tuổi' },
+      { value: '6 đến <10 tuổi', label: '6 đến <10 tuổi' },
+      { value: '10 đến <16 tuổi', label: '10 đến <16 tuổi' },
+      { value: '16 đến <24 tuổi', label: '16 đến <24 tuổi' },
+      { value: '24 đến <40 tuổi', label: '24 đến <40 tuổi' },
+      { value: '40 đến <60 tuổi', label: '40 đến <60 tuổi' },
+      { value: 'Trên 60 tuổi', label: 'Trên 60 tuổi' },
+      { value: 'Khác', label: 'Khác' },
+    ],
+  },
+  {
+    key: 'activityFilter',
+    type: 'select',
+    label: 'Hoạt động',
+    emptyValue: 'ALL',
+    options: [
+      { value: 'ALL', label: 'Tất cả hoạt động' },
+      { value: 'Thường nhật/Trường học', label: 'Thường nhật/Trường học' },
+      { value: 'Thể thao', label: 'Thể thao' },
+      { value: 'Văn phòng', label: 'Văn phòng' },
+      { value: 'Chuyên biệt', label: 'Chuyên biệt' },
+      { value: 'Khác', label: 'Khác' },
+    ],
+  },
+  {
+    key: 'lifestyleFilter',
+    type: 'select',
+    label: 'Phong cách sống',
+    emptyValue: 'ALL',
+    options: [
+      { value: 'ALL', label: 'Tất cả phong cách' },
+      { value: 'Sport', label: 'Sport' },
+      { value: 'Casual', label: 'Casual' },
+      { value: 'Fashion', label: 'Fashion' },
+      { value: 'Formal', label: 'Formal' },
+      { value: 'Khác', label: 'Khác' },
+    ],
+  },
+];
+
 export function ProductsFilter({
   productIdFilter,
   colorFilter,
@@ -51,199 +140,40 @@ export function ProductsFilter({
   onNameFilterChange,
   onClearFilters,
 }: ProductsFilterProps) {
-  const hasActiveFilters =
-    !!productIdFilter ||
-    !!colorFilter ||
-    genderFilter !== 'ALL' ||
-    groupFilter !== 'ALL' ||
-    ageFilter !== 'ALL' ||
-    activityFilter !== 'ALL' ||
-    lifestyleFilter !== 'ALL' ||
-    !!nameFilter;
+  const values: Record<string, string> = {
+    nameFilter,
+    productIdFilter,
+    colorFilter,
+    genderFilter,
+    groupFilter,
+    ageFilter,
+    activityFilter,
+    lifestyleFilter,
+  };
+
+  const handlers: Record<string, (val: string) => void> = {
+    nameFilter: onNameFilterChange,
+    productIdFilter: onProductIdFilterChange,
+    colorFilter: onColorFilterChange,
+    genderFilter: onGenderFilterChange,
+    groupFilter: onGroupFilterChange,
+    ageFilter: onAgeFilterChange,
+    activityFilter: onActivityFilterChange,
+    lifestyleFilter: onLifestyleFilterChange,
+  };
+
+  function handleChange(key: string, val: string) {
+    handlers[key]?.(val);
+  }
 
   return (
-    <Card className="bg-card border-border shadow-md">
-      <CardContent className="p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5 border-b border-border pb-2">
-          <Settings2 className="size-4 text-blue-500" />
-          Bộ lọc & Tìm kiếm sản phẩm
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Search Combined Name */}
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-              <Sparkles className="size-3 text-amber-500" />
-              Tìm theo Tên sản phẩm (màu sắc, loại, size...)
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Ví dụ: Giày Sneaker SANTD Màu Đen..."
-                value={nameFilter}
-                onChange={(e) => onNameFilterChange(e.target.value)}
-                className="pl-9 bg-muted/20 border-border"
-              />
-            </div>
-          </div>
-
-          {/* Search ID */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">
-              Mã sản phẩm (DB)
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Ví dụ: SP1712..."
-                value={productIdFilter}
-                onChange={(e) => onProductIdFilterChange(e.target.value)}
-                className="pl-9 bg-muted/20 border-border"
-              />
-            </div>
-          </div>
-
-          {/* Search Color */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">Màu sắc (DB)</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Nhập màu sắc..."
-                value={colorFilter}
-                onChange={(e) => onColorFilterChange(e.target.value)}
-                className="pl-9 bg-muted/20 border-border"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 pt-1">
-          {/* Gender Filter */}
-          <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
-            <label className="text-xs font-semibold text-muted-foreground">Giới tính</label>
-            <Select
-              value={genderFilter}
-              onValueChange={onGenderFilterChange}
-            >
-              <SelectTrigger className="w-full bg-muted/20 border-border rounded-xl">
-                <SelectValue placeholder="Tất cả giới tính" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="ALL">Tất cả giới tính</SelectItem>
-                <SelectItem value="MEN">Nam (MEN)</SelectItem>
-                <SelectItem value="WOM">Nữ (WOM)</SelectItem>
-                <SelectItem value="BOY">Bé trai (BOY)</SelectItem>
-                <SelectItem value="GIR">Bé gái (GIR)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Group Filter */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">Nhóm sản phẩm</label>
-            <Select
-              value={groupFilter}
-              onValueChange={onGroupFilterChange}
-            >
-              <SelectTrigger className="w-full bg-muted/20 border-border rounded-xl">
-                <SelectValue placeholder="Tất cả nhóm" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="ALL">Tất cả nhóm</SelectItem>
-                <SelectItem value="SANTD">SANTD</SelectItem>
-                <SelectItem value="DEPTD">DEPTD</SelectItem>
-                <SelectItem value="GTTPC">GTTPC</SelectItem>
-                <SelectItem value="GTTCD">GTTCD</SelectItem>
-                <SelectItem value="SANTR">SANTR</SelectItem>
-                <SelectItem value="GIATR">GIATR</SelectItem>
-                <SelectItem value="PKIEN">PKIEN</SelectItem>
-                <SelectItem value="TBLTH">TBLTH</SelectItem>
-                <SelectItem value="TBLTR">TBLTR</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Age Group */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">Độ tuổi</label>
-            <Select
-              value={ageFilter}
-              onValueChange={onAgeFilterChange}
-            >
-              <SelectTrigger className="w-full bg-muted/20 border-border rounded-xl">
-                <SelectValue placeholder="Tất cả độ tuổi" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="ALL">Tất cả độ tuổi</SelectItem>
-                <SelectItem value="0 đến <3 tuổi">0 đến &lt;3 tuổi</SelectItem>
-                <SelectItem value="3 đến <6 tuổi">3 đến &lt;6 tuổi</SelectItem>
-                <SelectItem value="6 đến <10 tuổi">6 đến &lt;10 tuổi</SelectItem>
-                <SelectItem value="10 đến <16 tuổi">10 đến &lt;16 tuổi</SelectItem>
-                <SelectItem value="16 đến <24 tuổi">16 đến &lt;24 tuổi</SelectItem>
-                <SelectItem value="24 đến <40 tuổi">24 đến &lt;40 tuổi</SelectItem>
-                <SelectItem value="40 đến <60 tuổi">40 đến &lt;60 tuổi</SelectItem>
-                <SelectItem value="Trên 60 tuổi">Trên 60 tuổi</SelectItem>
-                <SelectItem value="Khác">Khác</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Activity Group */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">Hoạt động</label>
-            <Select
-              value={activityFilter}
-              onValueChange={onActivityFilterChange}
-            >
-              <SelectTrigger className="w-full bg-muted/20 border-border rounded-xl">
-                <SelectValue placeholder="Tất cả hoạt động" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="ALL">Tất cả hoạt động</SelectItem>
-                <SelectItem value="Thường nhật/Trường học">Thường nhật/Trường học</SelectItem>
-                <SelectItem value="Thể thao">Thể thao</SelectItem>
-                <SelectItem value="Văn phòng">Văn phòng</SelectItem>
-                <SelectItem value="Chuyên biệt">Chuyên biệt</SelectItem>
-                <SelectItem value="Khác">Khác</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Lifestyle Group */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">Phong cách sống</label>
-            <Select
-              value={lifestyleFilter}
-              onValueChange={onLifestyleFilterChange}
-            >
-              <SelectTrigger className="w-full bg-muted/20 border-border rounded-xl">
-                <SelectValue placeholder="Tất cả phong cách" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="ALL">Tất cả phong cách</SelectItem>
-                <SelectItem value="Sport">Sport</SelectItem>
-                <SelectItem value="Casual">Casual</SelectItem>
-                <SelectItem value="Fashion">Fashion</SelectItem>
-                <SelectItem value="Formal">Formal</SelectItem>
-                <SelectItem value="Khác">Khác</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {hasActiveFilters && (
-          <div className="flex justify-end pt-2">
-            <Button
-              variant="outline"
-              onClick={onClearFilters}
-              className="h-9 px-4 border-border text-muted-foreground hover:text-foreground cursor-pointer text-xs"
-            >
-              Xóa tất cả bộ lọc
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <DataFilter
+      fields={FIELDS}
+      values={values}
+      onChange={handleChange}
+      onClear={onClearFilters}
+      title="Bộ lọc & Tìm kiếm sản phẩm"
+      cols={4}
+    />
   );
 }

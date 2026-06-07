@@ -34,7 +34,7 @@ export function HowItWorks() {
             Quy trình
           </Badge>
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Bắt đầu chỉ trong <span className="gradient-text">3 bước</span>
+            Bắt đầu chỉ trong <span className="text-primary">3 bước</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
             Không cần cài đặt phức tạp. Không cần đào tạo dài dòng.
@@ -51,7 +51,7 @@ export function HowItWorks() {
                 style={{ animationDelay: `${0.1 + i * 0.15}s` }}
               >
                 {i < 2 && <div className="connector-line hidden sm:block" />}
-                <span className="flex mx-auto size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-700 text-primary-foreground text-lg font-bold shadow-lg shadow-primary/20 transition-transform duration-300 hover:scale-110">
+                <span className="flex mx-auto size-14 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg font-bold shadow-lg shadow-primary/20 transition-transform duration-300 hover:scale-110">
                   {item.step}
                 </span>
                 <div className="mt-4 flex items-center justify-center gap-2">

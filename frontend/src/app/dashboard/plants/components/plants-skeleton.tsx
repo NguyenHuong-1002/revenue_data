@@ -143,7 +143,10 @@ export function PlantsChartSkeleton() {
         {/* Legend listing region elements */}
         <div className="w-full space-y-2.5 mt-2">
           {Array.from({ length: 3 }).map((_, idx) => (
-            <div key={idx} className="flex items-center justify-between py-1 border-b border-border/30 last:border-0">
+            <div
+              key={idx}
+              className="flex items-center justify-between py-1 border-b border-border/30 last:border-0"
+            >
               <div className="flex items-center gap-2">
                 <Skeleton className="h-2 w-2 rounded-full" />
                 <Skeleton className="h-3.5 w-16" />
@@ -156,4 +159,3 @@ export function PlantsChartSkeleton() {
     </Card>
   );
 }
-

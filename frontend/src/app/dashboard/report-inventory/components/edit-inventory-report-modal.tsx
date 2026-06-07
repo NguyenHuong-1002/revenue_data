@@ -14,7 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { editInventoryReportSchema, type EditInventoryReportFormValues } from '../report-inventory.schema';
+import {
+  editInventoryReportSchema,
+  type EditInventoryReportFormValues,
+} from '../report-inventory.schema';
 import { productService } from '@/lib/services/product.service';
 import { plantService } from '@/lib/services/plant.service';
 import { Loader2 } from 'lucide-react';
@@ -29,7 +32,12 @@ interface EditInventoryReportModalProps {
   report: IInventoryReport | null;
 }
 
-export function EditInventoryReportModal({ isOpen, onClose, onSubmit, report }: EditInventoryReportModalProps) {
+export function EditInventoryReportModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  report,
+}: EditInventoryReportModalProps) {
   const [products, setProducts] = React.useState<IProduct[]>([]);
   const [plants, setPlants] = React.useState<IPlant[]>([]);
   const [isLoadingDropdowns, setIsLoadingDropdowns] = React.useState(false);
@@ -50,10 +58,7 @@ export function EditInventoryReportModal({ isOpen, onClose, onSubmit, report }: 
   React.useEffect(() => {
     if (isOpen && report) {
       setIsLoadingDropdowns(true);
-      Promise.all([
-        productService.list({ limit: 200 }),
-        plantService.list({ limit: 100 }),
-      ])
+      Promise.all([productService.list({ limit: 200 }), plantService.list({ limit: 100 })])
         .then(([prodRes, plantRes]) => {
           setProducts(prodRes.data.data || []);
           setPlants(plantRes.data.data || []);
@@ -168,7 +173,11 @@ export function EditInventoryReportModal({ isOpen, onClose, onSubmit, report }: 
               <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                 Hủy
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
-import { stats as defaultStats } from './data/stats';
 import { StatItem } from '@/lib/landing-config';
+import { stats as defaultStats } from './data/stats';
 
 interface StatsProps {
   items?: StatItem[];

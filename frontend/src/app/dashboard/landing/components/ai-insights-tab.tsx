@@ -2,21 +2,17 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { landingService, AiInsightItem } from '@/lib/services/landing.service';
 import { Plus, Edit, Trash2, LayoutGrid, Columns } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { IconRenderer, AVAILABLE_ICONS } from './icon-renderer';
+import { LandingSkeleton } from './landing-skeleton';
 import {
   Carousel,
   CarouselContent,
@@ -84,7 +80,10 @@ export function AiInsightsTab() {
   };
 
   const handleDeleteAi = async (id: number) => {
-    if (typeof window !== 'undefined' && window.confirm('Bạn có chắc chắn muốn xóa chức năng AI này?')) {
+    if (
+      typeof window !== 'undefined' &&
+      window.confirm('Bạn có chắc chắn muốn xóa chức năng AI này?')
+    ) {
       try {
         await landingService.deleteAiInsight(id);
         toast.success('Đã xóa chức năng AI');
@@ -96,11 +95,7 @@ export function AiInsightsTab() {
   };
 
   if (isLoading && aiInsights.length === 0) {
-    return (
-      <div className="flex h-[30vh] items-center justify-center">
-        <div className="text-muted-foreground animate-pulse">Đang tải tính năng AI...</div>
-      </div>
-    );
+    return <LandingSkeleton />;
   }
 
   return (
@@ -108,25 +103,31 @@ export function AiInsightsTab() {
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-bold">Danh sách chức năng AI ({aiInsights.length})</h2>
-          <div className="flex items-center border border-border rounded-lg p-0.5 bg-muted/30">
-            <Button
-              variant={viewMode === 'carousel' ? 'secondary' : 'ghost'}
-              size="icon"
-              className="size-7 rounded-md cursor-pointer"
+          <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+            <button
               onClick={() => setViewMode('carousel')}
+              className={cn(
+                'size-7 rounded-md flex items-center justify-center cursor-pointer transition-all',
+                viewMode === 'carousel'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
               title="Dạng trình trượt (Carousel)"
             >
               <Columns className="size-3.5" />
-            </Button>
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="icon"
-              className="size-7 rounded-md cursor-pointer"
+            </button>
+            <button
               onClick={() => setViewMode('grid')}
+              className={cn(
+                'size-7 rounded-md flex items-center justify-center cursor-pointer transition-all',
+                viewMode === 'grid'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
               title="Dạng lưới (Grid)"
             >
               <LayoutGrid className="size-3.5" />
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -146,7 +147,7 @@ export function AiInsightsTab() {
 
       {/* AI Form (Create/Edit) */}
       {isEditing && (
-        <Card className="border border-blue-500/30 bg-blue-500/5 dark:bg-blue-950/10 shadow-sm">
+        <Card className="border border-border bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">
               {editingId ? 'Chỉnh sửa chức năng AI' : 'Thêm chức năng AI mới vào database'}
@@ -187,16 +188,18 @@ export function AiInsightsTab() {
               <Label className="font-semibold">Mô tả chức năng AI</Label>
               <Textarea
                 value={aiForm.description}
-                onChange={(e) =>
-                  setAiForm((prev) => ({ ...prev, description: e.target.value }))
-                }
+                onChange={(e) => setAiForm((prev) => ({ ...prev, description: e.target.value }))}
                 rows={3}
                 placeholder="Mô tả cách AI hoạt động..."
               />
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-2 border-t border-border pt-4">
-            <Button variant="outline" onClick={() => setIsEditing(false)} className="cursor-pointer">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              className="cursor-pointer"
+            >
               Hủy
             </Button>
             <Button
@@ -216,9 +219,7 @@ export function AiInsightsTab() {
             <CarouselContent>
               {aiInsights.map((ai) => (
                 <CarouselItem key={ai.id} className="md:basis-1/2 lg:basis-1/3">
-                  <Card
-                    className="border border-border hover:shadow-sm transition-all flex flex-col justify-between bg-card h-full"
-                  >
+                  <Card className="border border-border hover:shadow-sm transition-all flex flex-col justify-between bg-card h-full">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <div className="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">

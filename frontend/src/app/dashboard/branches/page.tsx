@@ -12,9 +12,13 @@ import { DashboardHeader } from '@/components/dashboard-header';
 import { BranchesFilter } from './components/branches-filter';
 import { BranchesTable } from './components/branches-table';
 import { BranchesCards } from './components/branches-cards';
-import { BranchesPagination } from './components/branches-pagination';
+import { PaginationControls } from '@/components/pagination-controls';
 import { DeleteBranchModal } from './components/delete-branch-modal';
-import { BranchesSkeleton, BranchesMapSkeleton, BranchesChartSkeleton } from './components/branches-skeleton';
+import {
+  BranchesSkeleton,
+  BranchesMapSkeleton,
+  BranchesChartSkeleton,
+} from './components/branches-skeleton';
 import type { IBranch } from '@/lib/types/branch';
 import type { IAccount } from '@/lib/types/account';
 import type { CreateBranchFormValues, EditBranchFormValues } from './branches.schema';
@@ -239,12 +243,14 @@ export default function BranchesPage() {
             />
 
             {/* Pagination Controls */}
-            <BranchesPagination
+            <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
-              totalBranches={totalBranches}
-              branchesLength={branches.length}
+              totalItems={totalBranches}
+              itemsLength={branches.length}
               onPageChange={setCurrentPage}
+              itemName="chi nhánh"
+              isLoading={isLoading}
             />
           </div>
         )}

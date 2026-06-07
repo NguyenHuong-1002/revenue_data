@@ -19,9 +19,7 @@ export function PlantsCards({ plants, isAdmin, onEdit, onDelete }: PlantsCardsPr
         <Card key={plant.plant_id} className="bg-card border-border shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
-              <h3 className="font-semibold text-foreground text-base">
-                {plant.name_plant}
-              </h3>
+              <h3 className="font-semibold text-foreground text-base">{plant.name_plant}</h3>
               <span className="text-[10px] font-mono text-muted-foreground">
                 ID: {plant.plant_id}
               </span>

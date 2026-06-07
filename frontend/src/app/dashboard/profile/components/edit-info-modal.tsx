@@ -1,13 +1,13 @@
 'use client';
 
-import * as React from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SaveIcon } from 'lucide-react';
-import { Modal } from '@/components/ui/modal';
+import * as React from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Modal } from '@/components/ui/modal';
 import { infoSchema, type InfoFormValues } from '../profile.schema';
 
 interface EditInfoModalProps {

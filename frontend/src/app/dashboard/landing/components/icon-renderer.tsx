@@ -28,10 +28,7 @@ interface IconRendererProps {
   className?: string;
 }
 
-export function IconRenderer({
-  iconName,
-  className = 'h-5 w-5',
-}: IconRendererProps) {
+export function IconRenderer({ iconName, className = 'h-5 w-5' }: IconRendererProps) {
   if (!iconName) return <LucideIcons.HelpCircle className={className} />;
   const IconComponent = (LucideIcons as any)[iconName] || LucideIcons.HelpCircle;
   return <IconComponent className={className} />;

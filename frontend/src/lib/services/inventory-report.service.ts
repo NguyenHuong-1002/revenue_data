@@ -56,4 +56,36 @@ export const inventoryReportService = {
       monthly_inventory: { name: string; count: number }[];
     }>('/inventory-reports/stats');
   },
+
+  getKpis(params?: { fromDate?: string; toDate?: string }) {
+    return api.get<{
+      totalStock: number;
+      totalRecords: number;
+      totalPlants: number;
+      totalProducts: number;
+      currentMonthStock: number;
+      previousMonthStock: number;
+      growthPercent: number | null;
+      topPlant: { plant_id: string; total: number } | null;
+      topProduct: { product_id: string; total: number } | null;
+      avgStockPerPlant: number;
+    }>('/inventory-reports/kpis', { params });
+  },
+
+  getRankings(topN = 10, params?: { fromDate?: string; toDate?: string }) {
+    return api.get<{
+      topStocked: { product_id: string; total: number }[];
+      bottomStocked: { product_id: string; total: number }[];
+      topPlants: { plant_id: string; total: number; record_count: number }[];
+      monthlyTrend: { month: string; total: number; growthPct: number | null }[];
+    }>('/inventory-reports/rankings', { params: { topN, ...params } });
+  },
+
+  getAlerts(lowThreshold = 50, highThreshold = 10000, params?: { fromDate?: string; toDate?: string }) {
+    return api.get<{
+      lowStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
+      highStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
+      totalAlerts: number;
+    }>('/inventory-reports/alerts', { params: { lowThreshold, highThreshold, ...params } });
+  },
 };

@@ -1,12 +1,10 @@
 'use client';
 
-import { EllipsisVerticalIcon, CircleUserRoundIcon, BellIcon, LogOutIcon } from 'lucide-react';
-import Link from 'next/link';
+import { EllipsisVerticalIcon, LogOutIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -85,22 +83,6 @@ export function NavUser({ user }: { user: IUser }) {
                 </div>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/dashboard/profile"
-                  className="flex items-center w-full cursor-pointer gap-2"
-                >
-                  <CircleUserRoundIcon />
-                  Tài khoản
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Thông báo
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleLogout}

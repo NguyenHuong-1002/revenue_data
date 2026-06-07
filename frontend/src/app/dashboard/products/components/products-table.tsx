@@ -1,8 +1,8 @@
 'use client';
 
 import { Copy, Check, Edit, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { IProduct } from '@/lib/types/product';
 
 // Helper function to generate a readable name for a product
@@ -68,40 +68,20 @@ export function ProductsTable({
   const getGenderBadge = (g: string) => {
     switch (g) {
       case 'MEN':
-        return (
-          <Badge
-            variant="outline"
-            className="bg-blue-500/10 text-blue-500 border-blue-500/20 px-2 py-0.5 font-medium"
-          >
-            Nam (MEN)
-          </Badge>
-        );
+        return <p className="px-2 py-0.5 font-medium">Nam</p>;
       case 'WOM':
-        return (
-          <Badge
-            variant="outline"
-            className="bg-pink-500/10 text-pink-500 border-pink-500/20 px-2 py-0.5 font-medium"
-          >
-            Nữ (WOM)
-          </Badge>
-        );
+        return <p className="px-2 py-0.5 font-medium">Nữ</p>;
       case 'BOY':
-        return (
-          <Badge
-            variant="outline"
-            className="bg-teal-500/10 text-teal-500 border-teal-500/20 px-2 py-0.5 font-medium"
-          >
-            Bé trai (BOY)
-          </Badge>
-        );
+        return <p className="px-2 py-0.5 font-medium">Bé nam</p>;
       case 'GIR':
         return (
-          <Badge
-            variant="outline"
-            className="bg-purple-500/10 text-purple-500 border-purple-500/20 px-2 py-0.5 font-medium"
-          >
-            Bé gái (GIR)
-          </Badge>
+          // <Badge
+          //   variant="outline"
+          //   className="bg-purple-500/10 text-purple-500 border-purple-500/20 px-2 py-0.5 font-medium"
+          // >
+
+          // </Badge>
+          <p className="px-2 py-0.5 font-medium">Bé nữ</p>
         );
       default:
         return (
@@ -155,17 +135,15 @@ export function ProductsTable({
                   {getProductDisplayName(product)}
                 </td>
                 <td className="px-5 py-4">{getGenderBadge(product.gender)}</td>
-                <td className="px-5 py-4 font-mono font-medium text-amber-600 dark:text-amber-500">
+                <td className="px-5 py-4 font-mono font-medium text-black dark:text-white">
                   {formatCurrency(product.price_cost)}
                 </td>
-                <td className="px-5 py-4 font-mono font-bold text-emerald-600 dark:text-emerald-500">
+                <td className="px-5 py-4 font-mono font-bold text-gray-700 dark:text-gray-400">
                   {formatCurrency(product.listing_price)}
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex flex-wrap gap-1 text-[11px] text-muted-foreground">
-                    <span className="bg-muted px-1.5 py-0.5 rounded-sm">
-                      {product.age_group}
-                    </span>
+                    <span className="bg-muted px-1.5 py-0.5 rounded-sm">{product.age_group}</span>
                     <span className="bg-muted px-1.5 py-0.5 rounded-sm">
                       {product.activity_group}
                     </span>
@@ -182,9 +160,7 @@ export function ProductsTable({
                       disabled={!isAdmin}
                       onClick={() => onEdit(product)}
                       className="size-8 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                      title={
-                        !isAdmin ? 'Chỉ Quản trị viên mới có quyền chỉnh sửa' : 'Chỉnh sửa'
-                      }
+                      title={!isAdmin ? 'Chỉ Quản trị viên mới có quyền chỉnh sửa' : 'Chỉnh sửa'}
                     >
                       <Edit className="size-4" />
                     </Button>

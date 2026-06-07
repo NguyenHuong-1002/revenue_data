@@ -11,9 +11,13 @@ import { PlantsStats } from './components/plants-stats';
 import { PlantsFilter } from './components/plants-filter';
 import { PlantsTable } from './components/plants-table';
 import { PlantsCards } from './components/plants-cards';
-import { PlantsPagination } from './components/plants-pagination';
+import { PaginationControls } from '@/components/pagination-controls';
 import { DeletePlantModal } from './components/delete-plant-modal';
-import { PlantsSkeleton, PlantsStatsSkeleton, PlantsChartSkeleton } from './components/plants-skeleton';
+import {
+  PlantsSkeleton,
+  PlantsStatsSkeleton,
+  PlantsChartSkeleton,
+} from './components/plants-skeleton';
 import { PlantsRegionChart } from './components/plants-region-chart';
 import type { IPlant } from '@/lib/types/plant';
 import type { IAccount } from '@/lib/types/account';
@@ -21,10 +25,33 @@ import type { CreatePlantFormValues, EditPlantFormValues } from './plants.schema
 
 const classifyRegion = (address: string): 'North' | 'Central' | 'South' => {
   const addr = address.toLowerCase();
-  const north = ['hà nội', 'hanoi', 'hải phòng', 'hai phong', 'lạng sơn', 'lang son', 'vinh', 'bắc ninh', 'hưng yên', 'quảng ninh', 'miền bắc'];
-  const central = ['đà nẵng', 'da nang', 'huế', 'hue', 'nha trang', 'đà lạt', 'da lat', 'quảng nam', 'khánh hòa', 'miền trung'];
-  if (north.some(n => addr.includes(n))) return 'North';
-  if (central.some(ce => addr.includes(ce))) return 'Central';
+  const north = [
+    'hà nội',
+    'hanoi',
+    'hải phòng',
+    'hai phong',
+    'lạng sơn',
+    'lang son',
+    'vinh',
+    'bắc ninh',
+    'hưng yên',
+    'quảng ninh',
+    'miền bắc',
+  ];
+  const central = [
+    'đà nẵng',
+    'da nang',
+    'huế',
+    'hue',
+    'nha trang',
+    'đà lạt',
+    'da lat',
+    'quảng nam',
+    'khánh hòa',
+    'miền trung',
+  ];
+  if (north.some((n) => addr.includes(n))) return 'North';
+  if (central.some((ce) => addr.includes(ce))) return 'Central';
   return 'South';
 };
 
@@ -186,11 +213,7 @@ export default function PlantsPage() {
       {/* Overview Stats + Region Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {isLoading ? (
-            <PlantsStatsSkeleton />
-          ) : (
-            <PlantsStats totalPlants={totalPlants} />
-          )}
+          {isLoading ? <PlantsStatsSkeleton /> : <PlantsStats totalPlants={totalPlants} />}
           <PlantsFilter
             addressFilter={addressFilter}
             managerFilter={managerFilter}
@@ -208,11 +231,7 @@ export default function PlantsPage() {
           />
         </div>
         <div className="lg:col-span-1">
-          {isLoading ? (
-            <PlantsChartSkeleton />
-          ) : (
-            <PlantsRegionChart plants={allPlantsForChart} />
-          )}
+          {isLoading ? <PlantsChartSkeleton /> : <PlantsRegionChart plants={allPlantsForChart} />}
         </div>
       </div>
 
@@ -253,12 +272,14 @@ export default function PlantsPage() {
             />
 
             {/* Pagination Controls */}
-            <PlantsPagination
+            <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
-              totalPlants={totalPlants}
-              plantsLength={filteredPlants.length}
+              totalItems={totalPlants}
+              itemsLength={filteredPlants.length}
               onPageChange={setCurrentPage}
+              itemName="nhà kho"
+              isLoading={isLoading}
             />
           </div>
         )}
@@ -292,4 +313,3 @@ export default function PlantsPage() {
     </div>
   );
 }
-

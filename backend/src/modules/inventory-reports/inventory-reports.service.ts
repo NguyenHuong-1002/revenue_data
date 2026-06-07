@@ -155,4 +155,145 @@ export class InventoryReportsService {
       monthly_inventory: monthlyRows.reverse().map(r => ({ name: String(r.name), count: Number(r.count ?? 0) })),
     };
   }
+
+  /* ═══════════════════════════════════════
+     INVENTORY STATS — KPIs tổng quan
+  ═══════════════════════════════════════ */
+  async getInventoryKpis(): Promise<{
+    totalStock: number;
+    totalRecords: number;
+    totalPlants: number;
+    totalProducts: number;
+    currentMonthStock: number;
+    previousMonthStock: number;
+    growthPercent: number | null;
+    topPlant: { plant_id: string; total: number } | null;
+    topProduct: { product_id: string; total: number } | null;
+    avgStockPerPlant: number;
+  }> {
+    const [[totalsRow]] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT
+         SUM(quantity) AS totalStock,
+         COUNT(*) AS totalRecords,
+         COUNT(DISTINCT plant_id) AS totalPlants,
+         COUNT(DISTINCT product_id) AS totalProducts
+       FROM InventoryReport`,
+    );
+
+    const [[curRow]] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT SUM(quantity) AS stock
+       FROM InventoryReport
+       WHERE DATE_FORMAT(calendar_year_week,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')`,
+    );
+    const [[prevRow]] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT SUM(quantity) AS stock
+       FROM InventoryReport
+       WHERE DATE_FORMAT(calendar_year_week,'%Y-%m') = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH),'%Y-%m')`,
+    );
+
+    const [[topPlantRow]] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT plant_id, SUM(quantity) AS total
+       FROM InventoryReport GROUP BY plant_id ORDER BY total DESC LIMIT 1`,
+    );
+    const [[topProductRow]] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT product_id, SUM(quantity) AS total
+       FROM InventoryReport GROUP BY product_id ORDER BY total DESC LIMIT 1`,
+    );
+
+    const totalStock = Number(totalsRow?.totalStock ?? 0);
+    const totalPlants = Number(totalsRow?.totalPlants ?? 0);
+    const curStock = Number(curRow?.stock ?? 0);
+    const prevStock = Number(prevRow?.stock ?? 0);
+    const growthPercent =
+      prevStock > 0 ? Number((((curStock - prevStock) / prevStock) * 100).toFixed(2)) : null;
+
+    return {
+      totalStock,
+      totalRecords: Number(totalsRow?.totalRecords ?? 0),
+      totalPlants,
+      totalProducts: Number(totalsRow?.totalProducts ?? 0),
+      currentMonthStock: curStock,
+      previousMonthStock: prevStock,
+      growthPercent,
+      topPlant: topPlantRow ? { plant_id: String(topPlantRow.plant_id), total: Number(topPlantRow.total) } : null,
+      topProduct: topProductRow ? { product_id: String(topProductRow.product_id), total: Number(topProductRow.total) } : null,
+      avgStockPerPlant: totalPlants > 0 ? Math.round(totalStock / totalPlants) : 0,
+    };
+  }
+
+  /* ═══════════════════════════════════════
+     INVENTORY STATS — Xếp hạng sản phẩm
+  ═══════════════════════════════════════ */
+  async getInventoryRankings(topN = 10): Promise<{
+    topStocked: { product_id: string; total: number }[];
+    bottomStocked: { product_id: string; total: number }[];
+    topPlants: { plant_id: string; total: number; record_count: number }[];
+    monthlyTrend: { month: string; total: number; growthPct: number | null }[];
+  }> {
+    const [topRows] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT product_id, SUM(quantity) AS total
+       FROM InventoryReport GROUP BY product_id ORDER BY total DESC LIMIT ?`,
+      [topN],
+    );
+    const [bottomRows] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT product_id, SUM(quantity) AS total
+       FROM InventoryReport GROUP BY product_id ORDER BY total ASC LIMIT ?`,
+      [topN],
+    );
+    const [plantRows] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT plant_id, SUM(quantity) AS total, COUNT(*) AS record_count
+       FROM InventoryReport GROUP BY plant_id ORDER BY total DESC LIMIT ?`,
+      [topN],
+    );
+    const [monthlyRows] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT DATE_FORMAT(calendar_year_week,'%Y-%m') AS month, SUM(quantity) AS total
+       FROM InventoryReport
+       GROUP BY DATE_FORMAT(calendar_year_week,'%Y-%m')
+       ORDER BY month ASC`,
+    );
+
+    const monthlyWithGrowth = (monthlyRows as RowDataPacket[]).map((row, i) => {
+      const prev = i > 0 ? Number((monthlyRows as RowDataPacket[])[i - 1].total ?? 0) : 0;
+      const cur = Number(row.total ?? 0);
+      const growthPct = prev > 0 ? Number((((cur - prev) / prev) * 100).toFixed(2)) : null;
+      return { month: String(row.month), total: cur, growthPct };
+    });
+
+    return {
+      topStocked: topRows.map(r => ({ product_id: String(r.product_id), total: Number(r.total) })),
+      bottomStocked: bottomRows.map(r => ({ product_id: String(r.product_id), total: Number(r.total) })),
+      topPlants: plantRows.map(r => ({ plant_id: String(r.plant_id), total: Number(r.total), record_count: Number(r.record_count) })),
+      monthlyTrend: monthlyWithGrowth,
+    };
+  }
+
+  /* ═══════════════════════════════════════
+     INVENTORY STATS — Cảnh báo tồn kho
+  ═══════════════════════════════════════ */
+  async getInventoryAlerts(lowThreshold = 50, highThreshold = 10000): Promise<{
+    lowStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
+    highStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
+    totalAlerts: number;
+  }> {
+    const [lowRows] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT product_id, plant_id, quantity, DATE_FORMAT(calendar_year_week,'%Y-%m-%d') AS last_date
+       FROM InventoryReport
+       WHERE quantity <= ? AND quantity > 0
+       ORDER BY quantity ASC LIMIT 20`,
+      [lowThreshold],
+    );
+    const [highRows] = await this.db.client.query<RowDataPacket[]>(
+      `SELECT product_id, plant_id, quantity, DATE_FORMAT(calendar_year_week,'%Y-%m-%d') AS last_date
+       FROM InventoryReport
+       WHERE quantity >= ?
+       ORDER BY quantity DESC LIMIT 20`,
+      [highThreshold],
+    );
+
+    return {
+      lowStock: lowRows.map(r => ({ product_id: String(r.product_id), plant_id: String(r.plant_id), quantity: Number(r.quantity), last_date: String(r.last_date) })),
+      highStock: highRows.map(r => ({ product_id: String(r.product_id), plant_id: String(r.plant_id), quantity: Number(r.quantity), last_date: String(r.last_date) })),
+      totalAlerts: lowRows.length + highRows.length,
+    };
+  }
 }

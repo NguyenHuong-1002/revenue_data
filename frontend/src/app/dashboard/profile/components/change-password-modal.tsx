@@ -1,13 +1,15 @@
 'use client';
 
-import * as React from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EyeIcon, EyeOffIcon, KeyIcon } from 'lucide-react';
-import { Modal } from '@/components/ui/modal';
+import * as React from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Modal } from '@/components/ui/modal';
 import { passwordChangeSchema, type PasswordChangeFormValues } from '../profile.schema';
 
 interface ChangePasswordModalProps {

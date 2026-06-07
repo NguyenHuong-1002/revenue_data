@@ -1,49 +1,38 @@
-// NestJS core: DI, exception classes
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-// TypeORM: Repository pattern, InjectRepository
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { SaleReportEntity } from '../../entities/sale-report.entity';
-import { InventoryReportEntity } from '../../entities/inventory-report.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import { DatabaseService } from 'src/models/database.service';
+import { ForecastQueryDto } from './DTO/forecast-query.dto';
 import {
-  ForecastGranularity,
   IChartPoint,
+  IForecastAlgorithmResult,
   IForecastCombinedResponse,
   IForecastDatasetResult,
   IForecastPoint,
 } from './interfaces/forecast.interface';
-import { ForecastQueryDto } from './DTO/forecast-query.dto';
+import { RowDataPacket } from 'mysql2';
 
 @Injectable()
-// ─── Service: du bao doanh so & ton kho su dung TypeORM ──────────────────────
 export class ForecastingService {
-  constructor(
-    @InjectRepository(SaleReportEntity)
-    private readonly saleReportRepo: Repository<SaleReportEntity>,
-    @InjectRepository(InventoryReportEntity)
-    private readonly inventoryReportRepo: Repository<InventoryReportEntity>,
-    // eslint-disable-next-line prettier/prettier
-  ) {}
+  private readonly logger = new Logger(ForecastingService.name);
 
-  // ─── GET /forecast — ket hop ca 2 loai du bao ────────────────────────────
+  constructor(private readonly db: DatabaseService) {}
+
   async getCombinedForecast(query: ForecastQueryDto): Promise<IForecastCombinedResponse> {
     const warnings: string[] = [];
-
-    // Chay song song 2 tac vu, cho phep 1 ben loi van tra ve ket qua ben kia
-    const [salesResult, inventoryResult] = await Promise.allSettled([
-      this.getSalesForecast(query),
-      this.getInventoryForecast(query),
-    ]);
-
     const sales =
-      salesResult.status === 'fulfilled'
-        ? salesResult.value
-        : this.extractWarning('sales', salesResult.reason, warnings);
-
+      query.scope === 'all' || query.scope === 'sales'
+        ? await this.getSalesForecast(query)
+        : null;
     const inventory =
-      inventoryResult.status === 'fulfilled'
-        ? inventoryResult.value
-        : this.extractWarning('inventory', inventoryResult.reason, warnings);
+      query.scope === 'all' || query.scope === 'inventory'
+        ? await this.getInventoryForecast(query)
+        : null;
+
+    if (sales && sales.observations < 2) {
+      warnings.push('Not enough sales data points for reliable forecasting');
+    }
+    if (inventory && inventory.observations < 2) {
+      warnings.push('Not enough inventory data points for reliable forecasting');
+    }
 
     return {
       horizon: query.horizon,
@@ -60,324 +49,318 @@ export class ForecastingService {
     };
   }
 
-  // ─── GET /forecast/sales — du bao doanh so ───────────────────────────────
   async getSalesForecast(query: ForecastQueryDto): Promise<IForecastDatasetResult> {
-    const granularity = query.periodType ?? 'month';
-    const series = await this.loadSalesSeries(query, granularity);
-
-    if (series.length === 0) {
-      throw new NotFoundException('No saleReport data found for the selected filters');
-    }
-
-    return this.buildDatasetResult('saleReport', granularity, series, query.horizon, query.alpha);
+    const history = await this.fetchSalesHistory(query);
+    return this.computeForecast(history, 'saleReport', query);
   }
 
-  // ─── GET /forecast/inventory — du bao ton kho ────────────────────────────
   async getInventoryForecast(query: ForecastQueryDto): Promise<IForecastDatasetResult> {
-    const series = await this.loadInventorySeries(query);
-
-    if (series.length === 0) {
-      throw new NotFoundException('No InventoryReport data found for the selected filters');
-    }
-
-    return this.buildDatasetResult('InventoryReport', 'day', series, query.horizon, query.alpha);
+    const history = await this.fetchInventoryHistory(query);
+    return this.computeForecast(history, 'InventoryReport', query);
   }
 
-  // ─── Trich xuat warning tu Promise.allSettled (khong nem lai NotFound) ────
-  private extractWarning(scope: 'sales' | 'inventory', reason: unknown, warnings: string[]): null {
-    if (reason instanceof NotFoundException) {
-      warnings.push(`${scope}: ${reason.message}`);
-      return null;
+  // ─── Data fetching ────────────────────────────────────────────────────────
+
+  private async fetchSalesHistory(query: ForecastQueryDto): Promise<IForecastPoint[]> {
+    const { periodType, startDate, endDate, productId, branchId, distributionChannel } = query;
+    const whereClauses: string[] = [];
+    const values: unknown[] = [];
+
+    if (productId) {
+      whereClauses.push('product_id = ?');
+      values.push(productId);
     }
-    // Cac loi khac (InternalServerError, etc.) van nem len de controller handle
-    throw reason;
+    if (branchId) {
+      whereClauses.push('branch_id = ?');
+      values.push(branchId);
+    }
+    if (distributionChannel) {
+      whereClauses.push('distribution_channel = ?');
+      values.push(distributionChannel);
+    }
+    if (startDate) {
+      whereClauses.push('time_report >= ?');
+      values.push(startDate);
+    }
+    if (endDate) {
+      whereClauses.push('time_report <= ?');
+      values.push(endDate + ' 23:59:59');
+    }
+
+    const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
+    const periodExpr = this.periodExpression('time_report', periodType);
+
+    const sql = `
+      SELECT ${periodExpr} AS period, SUM(sold_quantity) AS value
+      FROM saleReport ${whereSQL}
+      GROUP BY period
+      ORDER BY period ASC
+    `;
+
+    const [rows] = await this.db.client.query<RowDataPacket[]>(sql, values);
+    return rows.map((r) => ({ period: String(r.period), value: Number(r.value) }));
   }
 
-  // ─── Lay chuoi thoi gian doanh so tu DB su dung TypeORM ─────────────────
-  private async loadSalesSeries(
-    query: ForecastQueryDto,
-    granularity: ForecastGranularity,
-  ): Promise<IForecastPoint[]> {
-    // Xay dung SelectQueryBuilder cho bang saleReport (alias 'sr')
-    const qb = this.saleReportRepo
-      .createQueryBuilder('sr')
-      .select(this.buildPeriodExpr(granularity, 'sr'), 'period')
-      .addSelect('SUM(sr.sold_quantity)', 'value');
+  private async fetchInventoryHistory(query: ForecastQueryDto): Promise<IForecastPoint[]> {
+    const { periodType, startDate, endDate, productId, plantId } = query;
+    const whereClauses: string[] = [];
+    const values: unknown[] = [];
 
-    // Dieu kien loc tuy chon
-    if (query.productId) {
-      qb.andWhere('sr.product_id = :productId', { productId: query.productId });
+    if (productId) {
+      whereClauses.push('product_id = ?');
+      values.push(productId);
     }
-    if (query.branchId) {
-      qb.andWhere('sr.branch_id = :branchId', { branchId: query.branchId });
+    if (plantId) {
+      whereClauses.push('plant_id = ?');
+      values.push(plantId);
     }
-    if (query.distributionChannel) {
-      qb.andWhere('sr.distribution_channel = :distributionChannel', {
-        distributionChannel: query.distributionChannel,
-      });
+    if (startDate) {
+      whereClauses.push('calendar_year_week >= ?');
+      values.push(startDate);
     }
-    // Loc theo khoang thoi gian
-    if (query.startDate) {
-      qb.andWhere('sr.time_report >= :startDate', { startDate: query.startDate });
-    }
-    if (query.endDate) {
-      qb.andWhere('sr.time_report <= :endDate', { endDate: query.endDate });
+    if (endDate) {
+      whereClauses.push('calendar_year_week <= ?');
+      values.push(endDate + ' 23:59:59');
     }
 
-    // GROUP BY va ORDER BY
-    qb.groupBy(this.buildPeriodExpr(granularity, 'sr'));
-    qb.orderBy('period', 'ASC');
+    const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
+    const periodExpr = this.periodExpression('calendar_year_week', periodType);
 
-    // getRawMany: tra ve object phang (khong phai entity) vi co SUM/ GROUP BY
-    const rows = await qb.getRawMany<{ period: string; value: string | number }>();
+    const sql = `
+      SELECT ${periodExpr} AS period, SUM(quantity) AS value
+      FROM InventoryReport ${whereSQL}
+      GROUP BY period
+      ORDER BY period ASC
+    `;
 
-    return rows.map((row) => ({
-      period: String(row.period),
-      value: Number(row.value),
-    }));
+    const [rows] = await this.db.client.query<RowDataPacket[]>(sql, values);
+    return rows.map((r) => ({ period: String(r.period), value: Number(r.value) }));
   }
 
-  // ─── Lay chuoi thoi gian ton kho tu DB su dung TypeORM ──────────────────
-  private async loadInventorySeries(query: ForecastQueryDto): Promise<IForecastPoint[]> {
-    const qb = this.inventoryReportRepo
-      .createQueryBuilder('ir')
-      .select('DATE(ir.calendar_year_week)', 'period')
-      .addSelect('SUM(ir.quantity)', 'value')
-      .where('ir.calendar_year_week IS NOT NULL');
+  // ─── Forecasting algorithms ───────────────────────────────────────────────
 
-    if (query.productId) {
-      qb.andWhere('ir.product_id = :productId', { productId: query.productId });
-    }
-    if (query.plantId) {
-      qb.andWhere('ir.plant_id = :plantId', { plantId: query.plantId });
-    }
-
-    qb.groupBy('DATE(ir.calendar_year_week)');
-    qb.orderBy('period', 'ASC');
-
-    const rows = await qb.getRawMany<{ period: string; value: string | number }>();
-
-    return rows.map((row) => ({
-      period: String(row.period),
-      value: Number(row.value),
-    }));
-  }
-
-  // ─── Dong goi ket qua du bao cho 1 nguon (sales / inventory) ────────────
-  private buildDatasetResult(
+  private computeForecast(
+    history: IForecastPoint[],
     source: 'saleReport' | 'InventoryReport',
-    granularity: ForecastGranularity,
-    series: IForecastPoint[],
-    horizon: number,
-    alpha: number,
+    query: ForecastQueryDto,
   ): IForecastDatasetResult {
-    const ema = this.buildEmaForecast(series, horizon, alpha, granularity);
-    const linearRegression = this.buildLinearRegressionForecast(series, horizon, granularity);
+    const values = history.map((p) => p.value);
+    const n = values.length;
 
-    // Gop tat ca diem du lieu vao 1 mang phang, danh nhan day du cho chart
-    const chartData: IChartPoint[] = [
-      // 1. Diem lich su thuc te tu DB
-      ...series.map((p) => ({
-        period: p.period,
-        value: p.value,
-        type: 'actual' as const,
-        algorithm: 'actual' as const,
-      })),
-      // 2. Diem du bao tu EMA (gia tri lam muot cuoi cung)
-      ...ema.forecast.map((p) => ({
-        period: p.period,
-        value: p.value,
-        type: 'forecast' as const,
-        algorithm: 'ema' as const,
-      })),
-      // 3. Diem du bao tu hoi quy tuyen tinh
-      ...linearRegression.forecast.map((p) => ({
-        period: p.period,
-        value: p.value,
-        type: 'forecast' as const,
-        algorithm: 'linearRegression' as const,
-      })),
-    ];
+    const ema = this.computeEMA(values, query.alpha, query.horizon);
+    const linearRegression = this.computeLinearRegression(values, query.horizon);
+    const chartData = this.buildChartData(history, ema, linearRegression, query.alpha);
 
     return {
       source,
-      granularity,
-      observations: series.length,
-      history: series,
+      granularity: query.periodType ?? 'month',
+      observations: n,
+      history,
       ema,
       linearRegression,
       chartData,
     };
   }
 
-  // ─── Thuat toan EMA (Exponential Moving Average) ─────────────────────────
-  // Cong thuc: S(t) = alpha * Y(t) + (1 - alpha) * S(t-1)
-  // - alpha: trong so cho gia tri hien tai (0.01 - 0.99)
-  // - horizon: so ky du bao ve tuong lai (gia tri = S cuoi cung)
-  private buildEmaForecast(
-    series: IForecastPoint[],
-    horizon: number,
+  private computeEMA(
+    values: number[],
     alpha: number,
-    granularity: ForecastGranularity,
-  ): IForecastDatasetResult['ema'] {
-    if (series.length === 0) {
-      throw new BadRequestException('Series is empty');
-    }
-
-    // Tinh gia tri lam muot cho tung diem trong qua khu
-    const smoothedHistory: IForecastPoint[] = [];
-    let lastSmoothed = series[0].value;
-
-    smoothedHistory.push({
-      period: series[0].period,
-      value: this.round(lastSmoothed),
-    });
-
-    for (let i = 1; i < series.length; i += 1) {
-      lastSmoothed = alpha * series[i].value + (1 - alpha) * lastSmoothed;
-      smoothedHistory.push({
-        period: series[i].period,
-        value: this.round(lastSmoothed),
-      });
-    }
-
-    // Du bao: gia tri lam muot cuoi cung duoc giu nguyen cho tat ca cac ky
-    const lastDate = this.parseDateKey(series[series.length - 1].period);
+    horizon: number,
+  ): IForecastAlgorithmResult & { alpha: number; lastSmoothedValue: number } {
+    const history: IForecastPoint[] = [];
     const forecast: IForecastPoint[] = [];
 
-    for (let i = 1; i <= horizon; i += 1) {
-      forecast.push({
-        period: this.formatFuturePeriod(lastDate, i, granularity),
-        value: this.round(lastSmoothed),
-      });
+    if (values.length === 0) {
+      return { history: [], forecast: [], alpha, lastSmoothedValue: 0 };
     }
 
-    return {
-      alpha,
-      history: smoothedHistory,
-      forecast,
-      lastSmoothedValue: this.round(lastSmoothed),
-    };
+    let smoothed = values[0];
+    // We don't have period labels for individual indices; we'll label at the end.
+    // Store raw smoothed values.
+    history.push({ period: '', value: smoothed });
+
+    for (let i = 1; i < values.length; i++) {
+      smoothed = alpha * values[i] + (1 - alpha) * smoothed;
+      history.push({ period: '', value: smoothed });
+    }
+
+    const lastSmoothedValue = smoothed;
+    for (let h = 1; h <= horizon; h++) {
+      // Flat forecast: EMA stays at last smoothed value
+      forecast.push({ period: '', value: lastSmoothedValue });
+    }
+
+    return { history, forecast, alpha, lastSmoothedValue };
   }
 
-  // ─── Thuat toan hoi quy tuyen tinh (Linear Regression) ───────────────────
-  // Y = intercept + slope * x
-  // - slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX^2)
-  // - intercept = (sumY - slope * sumX) / n
-  private buildLinearRegressionForecast(
-    series: IForecastPoint[],
+  private computeLinearRegression(
+    values: number[],
     horizon: number,
-    granularity: ForecastGranularity,
-  ): IForecastDatasetResult['linearRegression'] {
-    if (series.length === 0) {
-      throw new BadRequestException('Series is empty');
-    }
+  ): IForecastAlgorithmResult & { slope: number; intercept: number } {
+    const history: IForecastPoint[] = [];
+    const forecast: IForecastPoint[] = [];
 
-    // Truong hop dac biet: chi co 1 diem du lieu → du bang slope = 0
-    if (series.length === 1) {
-      const forecast: IForecastPoint[] = [];
-      const lastDate = this.parseDateKey(series[0].period);
-
-      for (let i = 1; i <= horizon; i += 1) {
-        forecast.push({
-          period: this.formatFuturePeriod(lastDate, i, granularity),
-          value: this.round(series[0].value),
-        });
-      }
-
+    const n = values.length;
+    if (n < 2) {
       return {
-        history: series,
-        forecast,
+        history: n === 0 ? [] : values.map(() => ({ period: '', value: 0 })),
+        forecast: [],
         slope: 0,
-        intercept: this.round(series[0].value),
+        intercept: n === 1 ? values[0] : 0,
       };
     }
 
-    // Tinh toan cac tong cho phuong trinh hoi quy
-    const n = series.length;
-    const xs = series.map((_, index) => index + 1); // bien doc lap: index + 1
-    const ys = series.map((point) => point.value); // bien phu thuoc: value
+    let sumX = 0;
+    let sumY = 0;
+    let sumXY = 0;
+    let sumX2 = 0;
 
-    const sumX = xs.reduce((acc, value) => acc + value, 0);
-    const sumY = ys.reduce((acc, value) => acc + value, 0);
-    const sumXY = xs.reduce((acc, value, index) => acc + value * ys[index], 0);
-    const sumX2 = xs.reduce((acc, value) => acc + value * value, 0);
+    for (let i = 0; i < n; i++) {
+      sumX += i;
+      sumY += values[i];
+      sumXY += i * values[i];
+      sumX2 += i * i;
+    }
 
-    const denominator = n * sumX2 - sumX * sumX;
-    const slope = denominator === 0 ? 0 : (n * sumXY - sumX * sumY) / denominator;
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
 
-    // Du bao tuong lai: Y(x) = intercept + slope * x
-    const forecast: IForecastPoint[] = [];
-    const lastDate = this.parseDateKey(series[series.length - 1].period);
+    for (let i = 0; i < n; i++) {
+      history.push({ period: '', value: slope * i + intercept });
+    }
 
-    for (let i = 1; i <= horizon; i += 1) {
-      const x = n + i;
-      forecast.push({
-        period: this.formatFuturePeriod(lastDate, i, granularity),
-        value: this.round(intercept + slope * x),
+    for (let h = 1; h <= horizon; h++) {
+      const idx = n + h - 1;
+      forecast.push({ period: '', value: slope * idx + intercept });
+    }
+
+    return { history, forecast, slope, intercept };
+  }
+
+  // ─── Chart data assembly ──────────────────────────────────────────────────
+
+  private buildChartData(
+    actuals: IForecastPoint[],
+    ema: IForecastAlgorithmResult & { alpha: number; lastSmoothedValue: number },
+    lr: IForecastAlgorithmResult & { slope: number; intercept: number },
+    alpha: number,
+  ): IChartPoint[] {
+    const chartData: IChartPoint[] = [];
+
+    for (let i = 0; i < actuals.length; i++) {
+      chartData.push({
+        period: actuals[i].period,
+        value: actuals[i].value,
+        type: 'actual',
+        algorithm: 'actual',
       });
     }
 
-    return {
-      history: series,
-      forecast,
-      slope: this.round(slope),
-      intercept: this.round(intercept),
-    };
+    // Assign period labels to EMA history
+    for (let i = 0; i < ema.history.length && i < actuals.length; i++) {
+      chartData.push({
+        period: actuals[i].period,
+        value: ema.history[i].value,
+        type: 'actual',
+        algorithm: 'ema',
+      });
+    }
+
+    // Assign period labels to LR history
+    for (let i = 0; i < lr.history.length && i < actuals.length; i++) {
+      chartData.push({
+        period: actuals[i].period,
+        value: lr.history[i].value,
+        type: 'actual',
+        algorithm: 'linearRegression',
+      });
+    }
+
+    // Forecast periods: generate next period labels
+    const lastPeriod = actuals.length > 0 ? actuals[actuals.length - 1].period : '';
+    for (let h = 0; h < ema.forecast.length; h++) {
+      const nextPeriod = this.nextPeriod(lastPeriod, h + 1);
+      chartData.push({
+        period: nextPeriod,
+        value: ema.forecast[h].value,
+        type: 'forecast',
+        algorithm: 'ema',
+      });
+    }
+
+    for (let h = 0; h < lr.forecast.length; h++) {
+      const nextPeriod = this.nextPeriod(lastPeriod, h + 1);
+      chartData.push({
+        period: nextPeriod,
+        value: lr.forecast[h].value,
+        type: 'forecast',
+        algorithm: 'linearRegression',
+      });
+    }
+
+    return chartData;
   }
 
-  // ─── Xay dung bieu thuc SQL GROUP BY theo loai ky ────────────────────────
-  private buildPeriodExpr(granularity: ForecastGranularity, alias: string): string {
-    switch (granularity) {
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  private periodExpression(column: string, periodType?: string): string {
+    switch (periodType) {
       case 'week':
-        return `DATE_FORMAT(${alias}.time_report, '%x-%v')`;
+        return `DATE_FORMAT(${column}, '%x-W%v')`;
       case 'quarter':
-        return `CONCAT(YEAR(${alias}.time_report), '-Q', QUARTER(${alias}.time_report))`;
+        return `CONCAT(YEAR(${column}), '-Q', QUARTER(${column}))`;
+      case 'day':
+        return `DATE(${column})`;
       case 'month':
       default:
-        return `DATE_FORMAT(${alias}.time_report, '%Y-%m-01')`;
+        return `DATE_FORMAT(${column}, '%Y-%m-01')`;
     }
   }
 
-  // ─── Parse chuoi ngay thanh Date object ──────────────────────────────────
-  private parseDateKey(value: string): Date {
-    const date = new Date(`${value}T00:00:00Z`);
-    if (Number.isNaN(date.getTime())) {
-      throw new BadRequestException(`Invalid date key: ${value}`);
-    }
-    return date;
-  }
+  private nextPeriod(currentPeriod: string, offset: number): string {
+    if (!currentPeriod) return `period-${offset}`;
 
-  // ─── Tinh ky trong tuong lai dua vao ky hien tai ────────────────────────
-  private formatFuturePeriod(
-    baseDate: Date,
-    step: number,
-    granularity: ForecastGranularity,
-  ): string {
-    const next = new Date(baseDate.getTime());
-
-    switch (granularity) {
-      case 'month':
-        next.setUTCMonth(next.getUTCMonth() + step);
-        next.setUTCDate(1);
-        break;
-      case 'week':
-        next.setUTCDate(next.getUTCDate() + 7 * step);
-        break;
-      case 'quarter':
-        next.setUTCMonth(next.getUTCMonth() + 3 * step);
-        next.setUTCDate(1);
-        break;
-      default:
-        next.setUTCDate(next.getUTCDate() + 7 * step);
+    // Handle month format: YYYY-MM-01
+    const monthMatch = currentPeriod.match(/^(\d{4})-(\d{2})/);
+    if (monthMatch) {
+      const year = Number(monthMatch[1]);
+      const month = Number(monthMatch[2]);
+      const totalMonths = year * 12 + (month - 1) + offset;
+      const newYear = Math.floor(totalMonths / 12);
+      const newMonth = (totalMonths % 12) + 1;
+      return `${newYear}-${String(newMonth).padStart(2, '0')}-01`;
     }
 
-    return next.toISOString().slice(0, 10);
-  }
+    // Handle quarter format: YYYY-QN
+    const qMatch = currentPeriod.match(/^(\d{4})-Q(\d)/);
+    if (qMatch) {
+      const year = Number(qMatch[1]);
+      const q = Number(qMatch[2]);
+      const totalQ = year * 4 + (q - 1) + offset;
+      const newYear = Math.floor(totalQ / 4);
+      const newQ = (totalQ % 4) + 1;
+      return `${newYear}-Q${newQ}`;
+    }
 
-  // ─── Lam tron so ve 2 chu so thap phan ──────────────────────────────────
-  private round(value: number): number {
-    return Number(value.toFixed(2));
+    // Handle week format: YYYY-WNN
+    const wMatch = currentPeriod.match(/^(\d{4})-W(\d+)$/);
+    if (wMatch) {
+      const year = Number(wMatch[1]);
+      const week = Number(wMatch[2]);
+      const totalWeeks = year * 52 + (week - 1) + offset;
+      const newYear = Math.floor(totalWeeks / 52);
+      const newWeek = (totalWeeks % 52) + 1;
+      return `${newYear}-W${String(newWeek).padStart(2, '0')}`;
+    }
+
+    // Day format: YYYY-MM-DD
+    const dayMatch = currentPeriod.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dayMatch) {
+      const d = new Date(currentPeriod);
+      d.setDate(d.getDate() + offset);
+      return d.toISOString().slice(0, 10);
+    }
+
+    return `${currentPeriod}+${offset}`;
   }
 }
