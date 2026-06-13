@@ -98,10 +98,10 @@ export class AccountService {
     };
   }
 
-  /*
-   * Lấy thông tin chi tiết một tài khoản bằng Khóa chính(ID)
+  /**
+   * Lấy thông tin chi tiết một tài khoản bằng Khóa chính (ID)
    * @param id Chuỗi định danh UUID của tài khoản cần tìm
-   * @returns Trả về Object thông tin tài khoản nếu tìm thấy
+   * @returns Object thông tin tài khoản nếu tìm thấy
    * @throws NotFoundException Nếu ID tài khoản không tồn tại trong Database
    */
   async getAccountById(id: string): Promise<IAccount> {
@@ -411,8 +411,9 @@ export class AccountService {
   }
 
   /**
-   * Hàm nội bộ: Mã hóa mật khẩu bằng thuật toán Scrypt kết hợp chuỗi muối ngẫu nhiên (Salt)
-   * Định dạng chuỗi Hash trả về để lưu DB: `scrypt$salt$hash`
+   * Mã hóa mật khẩu bằng thuật toán Scrypt kết hợp chuỗi muối ngẫu nhiên (Salt)
+   * @param password Mật khẩu dạng văn bản thuần túy cần mã hóa
+   * @returns Chuỗi hash với định dạng `scrypt$<salt>$<hash>` dùng để lưu vào Database
    */
   private hashPassword(password: string): string {
     const salt = randomBytes(16).toString('hex');
@@ -421,8 +422,11 @@ export class AccountService {
   }
 
   /**
-   * Hàm nội bộ: Xác thực kiểm tra mật khẩu thô nhập vào xem có trùng khớp với chuỗi mã hóa trong DB không
-   * Sử dụng cơ chế `timingSafeEqual` nhằm chống kiểu tấn công dò tìm độ trễ thời gian (Timing Attack)
+   * Xác thực mật khẩu thuần túy nhập vào với chuỗi hash đã lưu trong Database
+   * Sử dụng `timingSafeEqual` nhằm chống tấn công dò tìm độ trễ thời gian (Timing Attack)
+   * @param password Mật khẩu văn bản thuần túy cần kiểm tra
+   * @param passwordHash Chuỗi hash đã lưu trong DB (định dạng `scrypt$salt$hash`)
+   * @returns `true` nếu khớp, ngược lại `false`
    */
   private verifyPassword(password: string, passwordHash: string): boolean {
     const [algorithm, salt, storedHash] = passwordHash.split('$');

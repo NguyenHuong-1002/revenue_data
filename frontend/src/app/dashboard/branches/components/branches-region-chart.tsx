@@ -31,6 +31,26 @@ const classifyRegion = (city: string): 'North' | 'Central' | 'South' => {
   return 'South'; // Mặc định phía Nam (Hồ Chí Minh, Cần Thơ, miền Tây, miền Đông)
 };
 
+// Custom Tooltip cho biểu đồ quạt
+const CustomTooltip = ({ active, payload, total }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const percent = ((data.value / total) * 100).toFixed(1);
+    return (
+      <div className="bg-slate-900/95 dark:bg-slate-950/98 border border-white/10 text-white p-3 rounded-xl shadow-xl text-xs">
+        <div className="font-bold flex items-center gap-1.5 mb-1 text-slate-100">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: data.fill }} />
+          {data.name}
+        </div>
+        <div className="text-[11px] text-slate-300 font-semibold">
+          {data.value} chi nhánh ({percent}%)
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function BranchesRegionChart({ branches }: BranchesRegionChartProps) {
   const [isZoomed, setIsZoomed] = React.useState(false);
 
@@ -77,25 +97,6 @@ export function BranchesRegionChart({ branches }: BranchesRegionChartProps) {
     return regionalData.reduce((acc, curr) => acc + curr.value, 0);
   }, [regionalData]);
 
-  // Custom Tooltip cho biểu đồ quạt
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const percent = ((data.value / total) * 100).toFixed(1);
-      return (
-        <div className="bg-slate-900/95 dark:bg-slate-950/98 border border-white/10 text-white p-3 rounded-xl shadow-xl text-xs">
-          <div className="font-bold flex items-center gap-1.5 mb-1 text-slate-100">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: data.fill }} />
-            {data.name}
-          </div>
-          <div className="text-[11px] text-slate-300 font-semibold">
-            {data.value} chi nhánh ({percent}%)
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <>
@@ -132,7 +133,7 @@ export function BranchesRegionChart({ branches }: BranchesRegionChartProps) {
               <>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip total={total} />} />
                     <Pie
                       data={regionalData}
                       cx="50%"
@@ -215,7 +216,7 @@ export function BranchesRegionChart({ branches }: BranchesRegionChartProps) {
                 <>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip content={<CustomTooltip total={total} />} />
                       <Pie
                         data={regionalData}
                         cx="50%"

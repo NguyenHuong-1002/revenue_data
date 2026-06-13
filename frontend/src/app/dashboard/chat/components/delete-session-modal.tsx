@@ -21,8 +21,8 @@ export function DeleteSessionModal({ sessionTitle, onConfirm, onCancel }: Delete
         </div>
         <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
           Bạn có chắc chắn muốn xóa cuộc hội thoại{' '}
-          <span className="font-semibold text-foreground">"{sessionTitle}"</span>? Tất cả tin nhắn
-          trong phiên chat này sẽ bị xóa vĩnh viễn và{' '}
+          <span className="font-semibold text-foreground">&quot;{sessionTitle}&quot;</span>? Tất cả
+          tin nhắn trong phiên chat này sẽ bị xóa vĩnh viễn và{' '}
           <span className="text-destructive font-medium">không thể khôi phục</span>.
         </p>
         <div className="flex gap-2 justify-end">

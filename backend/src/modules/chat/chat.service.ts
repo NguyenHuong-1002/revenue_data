@@ -30,6 +30,11 @@ export class ChatService {
 
   // ─── Sessions ────────────────────────────────────────────────────────────────
 
+  /**
+   * Lấy danh sách tất cả các cuộc hội thoại (sessions)
+   * Sắp xếp theo thứ tự: Ghim lên đầu trước, sau đó đến thời gian truy cập gần nhất/cập nhật gần đây nhất
+   * @returns Danh sách các session chat
+   */
   async getSessions(): Promise<ChatSession[]> {
     // Pinned first, then by last_accessed_at desc, then by updated_at desc
     return this.sessionRepo
@@ -39,6 +44,11 @@ export class ChatService {
       .getMany();
   }
 
+  /**
+   * Tạo một cuộc hội thoại mới
+   * @param title Tiêu đề cuộc hội thoại (mặc định: 'Cuộc hội thoại mới')
+   * @returns Thông tin cuộc hội thoại vừa tạo
+   */
   async createSession(title?: string): Promise<ChatSession> {
     const session = this.sessionRepo.create({
       title: title || 'Cuộc hội thoại mới',
@@ -47,39 +57,78 @@ export class ChatService {
     return this.sessionRepo.save(session);
   }
 
+  /**
+   * Cập nhật tiêu đề của một cuộc hội thoại
+   * @param id ID của cuộc hội thoại
+   * @param title Tiêu đề mới
+   * @returns Thông tin cuộc hội thoại sau khi cập nhật
+   * @throws NotFoundException Nếu không tìm thấy cuộc hội thoại với ID tương ứng
+   */
   async updateSessionTitle(id: number, title: string): Promise<ChatSession> {
     const session = await this.findSessionOrFail(id);
     session.title = title;
     return this.sessionRepo.save(session);
   }
 
+  /**
+   * Cập nhật mô tả của một cuộc hội thoại
+   * @param id ID của cuộc hội thoại
+   * @param description Mô tả mới
+   * @returns Thông tin cuộc hội thoại sau khi cập nhật
+   * @throws NotFoundException Nếu không tìm thấy cuộc hội thoại với ID tương ứng
+   */
   async updateSessionDescription(id: number, description: string): Promise<ChatSession> {
     const session = await this.findSessionOrFail(id);
     session.description = description;
     return this.sessionRepo.save(session);
   }
 
+  /**
+   * Ghim hoặc hủy ghim một cuộc hội thoại
+   * @param id ID của cuộc hội thoại
+   * @returns Thông tin cuộc hội thoại sau khi thay đổi trạng thái ghim
+   * @throws NotFoundException Nếu không tìm thấy cuộc hội thoại với ID tương ứng
+   */
   async togglePin(id: number): Promise<ChatSession> {
     const session = await this.findSessionOrFail(id);
     session.isPinned = !session.isPinned;
     return this.sessionRepo.save(session);
   }
 
+  /**
+   * Cập nhật thời gian truy cập gần nhất (lastAccessedAt) của cuộc hội thoại
+   * @param id ID của cuộc hội thoại
+   */
   async touchSession(id: number): Promise<void> {
     await this.sessionRepo.update(id, { lastAccessedAt: new Date() });
   }
 
+  /**
+   * Xóa một cuộc hội thoại khỏi hệ thống
+   * @param id ID của cuộc hội thoại cần xóa
+   * @throws NotFoundException Nếu không tìm thấy cuộc hội thoại với ID tương ứng
+   */
   async deleteSession(id: number): Promise<void> {
     const session = await this.findSessionOrFail(id);
     await this.sessionRepo.remove(session);
   }
 
+  /**
+   * Xóa toàn bộ các cuộc hội thoại trong hệ thống
+   * @returns Trạng thái chứa số lượng cuộc hội thoại đã bị xóa
+   */
   async deleteAllSessions(): Promise<{ deleted: number }> {
     const all = await this.sessionRepo.find();
     await this.sessionRepo.remove(all);
     return { deleted: all.length };
   }
 
+  /**
+   * Lấy danh sách tin nhắn của một cuộc hội thoại cụ thể
+   * @param sessionId ID của cuộc hội thoại
+   * @returns Danh sách các tin nhắn được sắp xếp tăng dần theo thời gian tạo
+   * @throws NotFoundException Nếu không tìm thấy cuộc hội thoại tương ứng
+   */
   async getMessages(sessionId: number): Promise<ChatMessage[]> {
     await this.findSessionOrFail(sessionId);
     // Touch last accessed
@@ -90,12 +139,24 @@ export class ChatService {
     });
   }
 
+  /**
+   * Xóa toàn bộ tin nhắn thuộc một cuộc hội thoại
+   * @param sessionId ID của cuộc hội thoại cần xóa tin nhắn
+   */
   async clearMessages(sessionId: number): Promise<void> {
     await this.messageRepo.delete({ sessionId });
   }
 
   // ─── AI Chat Completion ───────────────────────────────────────────────────────
 
+  /**
+   * Gửi danh sách tin nhắn tới AI model (DeepSeek hoặc OpenRouter) để nhận phản hồi
+   * Tự động bổ sung thông tin ngữ cảnh từ cơ sở dữ liệu dựa trên câu hỏi của người dùng
+   * @param messages Mảng chứa lịch sử tin nhắn của cuộc hội thoại
+   * @param sessionId ID của cuộc hội thoại hiện tại (nếu có để tự động lưu tin nhắn và cập nhật tiêu đề/mô tả)
+   * @returns Phản hồi của trợ lý AI gồm vai trò (role) và nội dung (content)
+   * @throws InternalServerErrorException Nếu thiếu API Key hoặc yêu cầu gọi API thất bại
+   */
   async getChatCompletion(
     messages: ChatMessagePayload[],
     sessionId?: number,
@@ -230,12 +291,24 @@ export class ChatService {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+  /**
+   * Tìm kiếm cuộc hội thoại bằng ID, ném lỗi nếu không tồn tại
+   * @param id ID của cuộc hội thoại
+   * @returns Thông tin cuộc hội thoại
+   * @throws NotFoundException Nếu không tìm thấy cuộc hội thoại với ID tương ứng
+   */
   private async findSessionOrFail(id: number): Promise<ChatSession> {
     const session = await this.sessionRepo.findOne({ where: { id } });
     if (!session) throw new NotFoundException(`Session #${id} not found`);
     return session;
   }
 
+  /**
+   * Tóm tắt nội dung cuộc hội thoại trong nền (background) để tạo mô tả ngắn gọn
+   * @param sessionId ID của cuộc hội thoại
+   * @param userContent Nội dung tin nhắn của người dùng
+   * @param assistantContent Nội dung phản hồi của trợ lý AI
+   */
   private async generateBackgroundDescription(
     sessionId: number,
     userContent: string,
@@ -291,6 +364,12 @@ export class ChatService {
     }
   }
 
+  /**
+   * Phân tích câu hỏi của người dùng và truy vấn dữ liệu ngữ cảnh phù hợp từ cơ sở dữ liệu
+   * Hỗ trợ tìm kiếm thông tin về doanh thu chi nhánh, dự báo tài chính, sản phẩm bán chạy, tồn kho nhà kho
+   * @param userQuery Câu hỏi hoặc truy vấn từ người dùng
+   * @returns Chuỗi văn bản chứa thông tin ngữ cảnh được trích xuất từ database
+   */
   private async getDatabaseContextForQuery(userQuery: string): Promise<string> {
     const queryLower = userQuery.toLowerCase();
 

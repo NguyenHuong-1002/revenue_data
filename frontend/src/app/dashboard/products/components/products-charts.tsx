@@ -46,9 +46,7 @@ const GENDER_LABELS: Record<string, string> = {
   GIR: 'Bé gái (GIR)',
 };
 
-interface ProductsChartsProps {}
-
-export function ProductsCharts({}: ProductsChartsProps) {
+export function ProductsCharts() {
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [systemStats, setSystemStats] = React.useState<IProductStats | null>(null);
   const [isStatsLoading, setIsStatsLoading] = React.useState(false);

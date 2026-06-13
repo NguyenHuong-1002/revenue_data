@@ -10,12 +10,24 @@ import {
 } from './interfaces/forecast.interface';
 import { RowDataPacket } from 'mysql2';
 
+/**
+ * Dịch vụ dự báo (Forecasting Service) cung cấp các thuật toán dự báo doanh thu và hàng tồn kho
+ */
 @Injectable()
 export class ForecastingService {
   private readonly logger = new Logger(ForecastingService.name);
 
+  /**
+   * Khởi tạo class ForecastingService
+   * @param db DatabaseService kết nối cơ sở dữ liệu
+   */
   constructor(private readonly db: DatabaseService) {}
 
+  /**
+   * Lấy dữ liệu dự báo kết hợp cho cả doanh thu và hàng tồn kho
+   * @param query DTO chứa các tham số truy vấn và cấu hình dự báo
+   * @returns Kết quả dự báo kết hợp bao gồm thông tin chi tiết của doanh thu, hàng tồn kho và các cảnh báo
+   */
   async getCombinedForecast(query: ForecastQueryDto): Promise<IForecastCombinedResponse> {
     const warnings: string[] = [];
     const sales =
@@ -47,11 +59,21 @@ export class ForecastingService {
     };
   }
 
+  /**
+   * Lấy kết quả dự báo doanh thu dựa trên lịch sử bán hàng và thuật toán được cấu hình
+   * @param query DTO chứa các tham số lọc và thông tin cấu hình dự báo
+   * @returns Kết quả dự báo doanh thu chi tiết (lịch sử, EMA, hồi quy tuyến tính, dữ liệu biểu đồ)
+   */
   async getSalesForecast(query: ForecastQueryDto): Promise<IForecastDatasetResult> {
     const history = await this.fetchSalesHistory(query);
     return this.computeForecast(history, 'saleReport', query);
   }
 
+  /**
+   * Lấy kết quả dự báo hàng tồn kho dựa trên lịch sử tồn kho và thuật toán được cấu hình
+   * @param query DTO chứa các tham số lọc và thông tin cấu hình dự báo
+   * @returns Kết quả dự báo hàng tồn kho chi tiết (lịch sử, EMA, hồi quy tuyến tính, dữ liệu biểu đồ)
+   */
   async getInventoryForecast(query: ForecastQueryDto): Promise<IForecastDatasetResult> {
     const history = await this.fetchInventoryHistory(query);
     return this.computeForecast(history, 'InventoryReport', query);
@@ -59,6 +81,11 @@ export class ForecastingService {
 
   // ─── Data fetching ────────────────────────────────────────────────────────
 
+  /**
+   * Truy vấn lịch sử doanh thu từ cơ sở dữ liệu dựa trên các điều kiện lọc và nhóm theo chu kỳ
+   * @param query DTO chứa các tham số lọc (sản phẩm, chi nhánh, kênh phân phối, thời gian) và loại chu kỳ
+   * @returns Danh sách các điểm dữ liệu lịch sử doanh thu
+   */
   private async fetchSalesHistory(query: ForecastQueryDto): Promise<IForecastPoint[]> {
     const { periodType, startDate, endDate, productId, branchId, distributionChannel } = query;
     const whereClauses: string[] = [];
@@ -99,6 +126,11 @@ export class ForecastingService {
     return rows.map((r) => ({ period: String(r.period), value: Number(r.value) }));
   }
 
+  /**
+   * Truy vấn lịch sử tồn kho từ cơ sở dữ liệu dựa trên các điều kiện lọc và nhóm theo chu kỳ
+   * @param query DTO chứa các tham số lọc (sản phẩm, nhà máy, thời gian) và loại chu kỳ
+   * @returns Danh sách các điểm dữ liệu lịch sử tồn kho
+   */
   private async fetchInventoryHistory(query: ForecastQueryDto): Promise<IForecastPoint[]> {
     const { periodType, startDate, endDate, productId, plantId } = query;
     const whereClauses: string[] = [];
@@ -137,6 +169,13 @@ export class ForecastingService {
 
   // ─── Forecasting algorithms ───────────────────────────────────────────────
 
+  /**
+   * Tính toán các chỉ số dự báo (EMA, hồi quy tuyến tính) và tổng hợp dữ liệu biểu đồ từ lịch sử
+   * @param history Danh sách điểm dữ liệu lịch sử thực tế
+   * @param source Nguồn dữ liệu báo cáo (doanh thu hoặc tồn kho)
+   * @param query DTO chứa các thông số dự báo (alpha, horizon, chu kỳ)
+   * @returns Đối tượng kết quả dự báo tổng hợp cho tập dữ liệu
+   */
   private computeForecast(
     history: IForecastPoint[],
     source: 'saleReport' | 'InventoryReport',
@@ -160,6 +199,13 @@ export class ForecastingService {
     };
   }
 
+  /**
+   * Tính toán dự báo theo thuật toán Trung bình động lũy thừa (Exponential Moving Average - EMA)
+   * @param values Mảng các giá trị số thực tế từ lịch sử
+   * @param alpha Hệ số san bằng lũy thừa (0 < alpha <= 1)
+   * @param horizon Khoảng thời gian dự báo tương lai
+   * @returns Kết quả tính toán EMA cho lịch sử và dự báo tương lai, kèm theo các tham số
+   */
   private computeEMA(
     values: number[],
     alpha: number,
@@ -191,6 +237,12 @@ export class ForecastingService {
     return { history, forecast, alpha, lastSmoothedValue };
   }
 
+  /**
+   * Tính toán dự báo theo phương pháp Hồi quy tuyến tính (Linear Regression)
+   * @param values Mảng các giá trị số thực tế từ lịch sử
+   * @param horizon Khoảng thời gian dự báo tương lai
+   * @returns Kết quả tính toán đường hồi quy cho lịch sử và dự báo tương lai, kèm theo hệ số góc và điểm cắt
+   */
   private computeLinearRegression(
     values: number[],
     horizon: number,
@@ -237,6 +289,14 @@ export class ForecastingService {
 
   // ─── Chart data assembly ──────────────────────────────────────────────────
 
+  /**
+   * Tổng hợp và chuẩn hóa dữ liệu lịch sử cùng các kết quả dự báo thành cấu trúc hiển thị biểu đồ
+   * @param actuals Danh sách các điểm dữ liệu thực tế lịch sử
+   * @param ema Kết quả thuật toán EMA bao gồm lịch sử đã san bằng và dự báo
+   * @param lr Kết quả thuật toán hồi quy tuyến tính bao gồm đường xu hướng và dự báo
+   * @param alpha Hệ số alpha sử dụng trong tính toán EMA
+   * @returns Danh sách các điểm dữ liệu biểu đồ đã được gán loại và thuật toán tương ứng
+   */
   private buildChartData(
     actuals: IForecastPoint[],
     ema: IForecastAlgorithmResult & { alpha: number; lastSmoothedValue: number },
@@ -301,6 +361,12 @@ export class ForecastingService {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
+  /**
+   * Chuyển đổi loại chu kỳ thời gian thành biểu thức SQL tương ứng trên MySQL để nhóm dữ liệu
+   * @param column Tên cột dữ liệu thời gian trong bảng
+   * @param periodType Loại chu kỳ (day, week, month, quarter)
+   * @returns Biểu thức SQL định dạng thời gian phù hợp
+   */
   private periodExpression(column: string, periodType?: string): string {
     switch (periodType) {
       case 'week':
@@ -315,6 +381,12 @@ export class ForecastingService {
     }
   }
 
+  /**
+   * Tính toán nhãn chu kỳ tiếp theo dựa trên nhãn chu kỳ hiện tại và số bước dịch chuyển
+   * @param currentPeriod Nhãn chu kỳ thời gian hiện tại
+   * @param offset Khoảng dịch chuyển thời gian về phía trước (số bước)
+   * @returns Nhãn chu kỳ tiếp theo tương ứng định dạng
+   */
   private nextPeriod(currentPeriod: string, offset: number): string {
     if (!currentPeriod) return `period-${offset}`;
 

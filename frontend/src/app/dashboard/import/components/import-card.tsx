@@ -1381,7 +1381,7 @@ export function ImportCard({
                     </p>
                   ) : (
                     <p className="text-[11.5px] text-muted-foreground mt-1 leading-relaxed">
-                      Bạn có thể chọn <strong>"Chấp nhận bỏ dòng lỗi"</strong> để hệ thống tự động
+                      Bạn có thể chọn <strong>&quot;Chấp nhận bỏ dòng lỗi&quot;</strong> để hệ thống tự động
                       lọc bỏ {validationResults.invalidRowsCount} dòng lỗi và chỉ tải lên{' '}
                       {validationResults.validRowsCount} dòng dữ liệu hợp lệ.
                     </p>

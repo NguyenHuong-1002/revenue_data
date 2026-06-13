@@ -53,7 +53,7 @@ export interface CreateProductDto {
   lifestyle_group: string;
 }
 
-export interface UpdateProductDto extends Partial<CreateProductDto> {}
+export type UpdateProductDto = Partial<CreateProductDto>;
 
 export interface GetProductAllDto {
   skip?: number;

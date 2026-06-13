@@ -18,8 +18,9 @@ export function Pricing({ items, isLoading = false }: PricingProps) {
       ? items.map((plan) => {
           let parsedFeatures: string[] = [];
           try {
-            parsedFeatures =
+            const parsed =
               typeof plan.features === 'string' ? JSON.parse(plan.features) : plan.features;
+            parsedFeatures = Array.isArray(parsed) ? parsed : [String(parsed)];
           } catch {
             parsedFeatures = plan.features
               ? String(plan.features)
@@ -107,8 +108,8 @@ export function Pricing({ items, isLoading = false }: PricingProps) {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-3">
-                      {plan.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2 text-sm">
+                      {plan.features.map((f, idx) => (
+                        <li key={`${f}-${idx}`} className="flex items-start gap-2 text-sm">
                           <CheckCircleIcon className="mt-0.5 size-4 shrink-0 text-chart-2" />
                           <span>{f}</span>
                         </li>

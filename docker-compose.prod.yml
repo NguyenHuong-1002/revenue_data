@@ -1,0 +1,35 @@
+services:
+  backend:
+    # Cấu hình kéo image từ Docker Hub của bạn
+    image: tnanh1407xyz/revenue-backend:latest
+    container_name: revenue-backend
+    restart: always
+    ports:
+      - "${BACKEND_PORT}:3000"
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      PORT: 3000
+      ACCESS_TOKEN_JWT: ${ACCESS_TOKEN_JWT}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/data
+
+  frontend:
+    # Cấu hình kéo image từ Docker Hub của bạn
+    image: tnanh1407xyz/revenue-frontend:latest
+    container_name: revenue-frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT}:5000"
+    depends_on:
+      - backend

@@ -33,7 +33,13 @@ export class AiInterpretationService {
   // Logger riêng cho service, prefix là tên class
   private readonly logger = new Logger(AiInterpretationService.name);
 
-  // ─── Public method: entry point ──────────────────────────────────────────
+  /**
+   * Điểm đầu vào của service — phân tích và diễn giải dữ liệu doanh thu bằng AI
+   * Gọi API DeepSeek / OpenRouter, nhận phản hồi dạng JSON đã parse sẵn
+   * @param dto DTO chứa thông tin báo cáo và dữ liệu doanh thu cần phân tích
+   * @returns Object chứa provider, model, nội dung phân tích (summaryBullets + recommendation) và rawContent gốc
+   * @throws InternalServerErrorException Nếu thiếu API Key hoặc API trả về lỗi/nội dung rỗng
+   */
   async interpret(dto: InterpretationRequestDto): Promise<IInterpretationResponse> {
     this.validateInput(dto);
 
@@ -108,14 +114,24 @@ export class AiInterpretationService {
     };
   }
 
-  // ─── Validation cơ bản ──────────────────────────────────────────────────
+  /**
+   * Kiểm tra dữ liệu đầu vào hợp lệ trước khi gọi AI
+   * @param dto DTO cần kiểm tra
+   * @throws BadRequestException Nếu reportTitle bị thiếu hoặc chỉ chứa khoảng trắng
+   */
   private validateInput(dto: InterpretationRequestDto): void {
     if (!dto.reportTitle || !dto.reportTitle.trim()) {
       throw new BadRequestException('reportTitle is required');
     }
   }
 
-  // ─── Xây dựng messages gửi lên DeepSeek ──────────────────────────────────
+  /**
+   * Xây dựng mảng messages (system prompt + user message) gửi lên API Chat Completion
+   * System prompt định hướng vai trò chuyên gia phân tích và format JSON đầu ra
+   * User message chứa dữ liệu thực tế (facts) cần phân tích
+   * @param dto DTO chứa thông tin báo cáo và dữ liệu đầu vào
+   * @returns Mảng các message với role 'system' và 'user' tương ứng
+   */
   private buildMessages(dto: InterpretationRequestDto): DeepSeekChatMessage[] {
     const facts = this.buildFacts(dto);
     // Chọn ngôn ngữ theo yêu cầu từ client
@@ -154,7 +170,12 @@ export class AiInterpretationService {
     ];
   }
 
-  // ─── Xây chuỗi fact từ DTO ──────────────────────────────────────────────
+  /**
+   * Tạo chuỗi dữ liệu thực tế (facts) từ DTO để đưa vào prompt cho AI
+   * Bao gồm: tổng doanh thu, % thay đổi, sản phẩm bán chạy nhất, tồn kho & trọng lượng
+   * @param dto DTO chứa các trường dữ liệu doanh thu cần diễn giải
+   * @returns Chuỗi văn bản chứa các dòng fact, mỗi dòng cách nhau bởi xuống dòng
+   */
   private buildFacts(dto: InterpretationRequestDto): string {
     const lines: string[] = [];
 
@@ -196,8 +217,12 @@ export class AiInterpretationService {
     return lines.join('\n');
   }
 
-  // ─── Parse JSON từ assistant reply ──────────────────────────────────────
-  // DeepSeek trả về text, ta cần trích xuất JSON object từ text đó
+  /**
+   * Phân tích chuỗi JSON từ phản hồi của AI assistant thành đối tượng có cấu trúc
+   * Tự động fallback nếu không tìm thấy JSON hoặc parse thất bại
+   * @param rawContent Chuỗi text thô từ phản hồi của AI
+   * @returns Object IInterpretationSummary gồm summaryBullets (tối đa 3 gạch đầu dòng) và recommendation
+   */
   private parseAssistantContent(rawContent: string): IInterpretationSummary {
     const jsonText = this.extractJsonObject(rawContent);
     // Nếu không tìm thấy JSON → fallback: dùng rawContent làm bullet duy nhất
@@ -233,7 +258,12 @@ export class AiInterpretationService {
     }
   }
 
-  // ─── Trích xuất JSON object từ 1 chuỗi text ─────────────────────────────
+  /**
+   * Trích xuất chuỗi JSON object hợp lệ từ một chuỗi text bất kỳ
+   * Xử lý cả trường hợp toàn bộ text là JSON hoặc JSON nằm lẫn trong văn bản
+   * @param text Chuỗi văn bản có khả năng chứa JSON object
+   * @returns Chuỗi JSON nếu tìm thấy, ngược lại trả về null
+   */
   private extractJsonObject(text: string): string | null {
     const trimmed = text.trim();
 

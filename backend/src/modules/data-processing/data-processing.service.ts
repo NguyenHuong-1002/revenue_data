@@ -36,6 +36,11 @@ export class DataProcessingService {
 
   constructor(private readonly db: DatabaseService) {}
 
+  /**
+   * Kiểm tra bảng có dữ liệu hay chưa (dùng để quyết định có cần import hay bỏ qua)
+   * @param table Tên bảng cần kiểm tra trong database
+   * @returns `true` nếu bảng không có bản ghi nào, ngược lại `false`
+   */
   private async isTableEmpty(table: string): Promise<boolean> {
     const [rows] = await this.db.client.query<RowDataPacket[]>(
       `SELECT COUNT(*) AS cnt FROM ${table}`,
@@ -43,6 +48,12 @@ export class DataProcessingService {
     return Number(rows[0].cnt) === 0;
   }
 
+  /**
+   * Chia mảng lớn thành các mảng nhỏ hơn (batch) để xử lý theo lô
+   * @param items Mảng dữ liệu gốc cần chia nhỏ
+   * @param size Kích thước tối đa mỗi batch
+   * @returns Mảng chứa các mảng con có độ dài tối đa bằng `size`
+   */
   private chunk<T>(items: T[], size: number): T[][] {
     const chunks: T[][] = [];
     for (let i = 0; i < items.length; i += size) {
@@ -51,6 +62,13 @@ export class DataProcessingService {
     return chunks;
   }
 
+  /**
+   * Chèn hàng loạt bản ghi vào bảng với cơ chế `INSERT IGNORE` (bỏ qua bản ghi trùng khoá chính)
+   * Tự động chia nhỏ theo batch để tránh quá tải query
+   * @param table Tên bảng đích trong database
+   * @param columns Danh sách tên cột cần chèn
+   * @param rows Mảng 2 chiều chứa dữ liệu các dòng cần chèn
+   */
   private async bulkInsertIgnore(
     table: string,
     columns: string[],
@@ -73,6 +91,11 @@ export class DataProcessingService {
     }
   }
 
+  /**
+   * Nạp toàn bộ danh sách product_id hiện có từ database vào Set để tra cứu nhanh
+   * Dùng để kiểm tra khoá ngoại trước khi import báo cáo bán hàng / tồn kho
+   * @returns Set chứa tất cả product_id dạng string
+   */
   private async loadExistingProductIds(): Promise<Set<string>> {
     const [rows] = await this.db.client.query<RowDataPacket[]>(`SELECT product_id FROM product`);
     return new Set(rows.map((row) => String(row.product_id)));
@@ -272,6 +295,13 @@ export class DataProcessingService {
   // ───────────────────────────
   //  Product Import
   // ───────────────────────────
+  /**
+   * Import dữ liệu sản phẩm từ file Excel vào bảng `product`
+   * Tự động kiểm tra trùng lặp (ON DUPLICATE KEY UPDATE) và validate từng trường
+   * @param filePath Đường dẫn file Excel hoặc Buffer chứa dữ liệu (mặc định đọc từ `data/product/Productmaster.xlsx`)
+   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
+   * @returns ImportResult chứa tổng số dòng, số đã chèn, số bị bỏ qua và thống kê từng trường
+   */
   async importProducts(
     filePath?: string | Buffer,
     bypassEmptyCheck = false,
@@ -383,6 +413,13 @@ export class DataProcessingService {
   // ───────────────────────────
   //  SaleReport Import
   // ───────────────────────────
+  /**
+   * Import dữ liệu báo cáo bán hàng từ các file Excel vào bảng `saleReport`
+   * Delegate xử lý thực tế sang `importSaleReportsFast`
+   * @param filePaths Danh sách đường dẫn file Excel hoặc Buffer (mặc định đọc từ `data/sales/`)
+   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
+   * @returns Object chứa tổng số dòng, số đã chèn và số bị bỏ qua
+   */
   async importSaleReports(
     filePaths?: string[] | Buffer,
     bypassEmptyCheck = false,
@@ -395,8 +432,13 @@ export class DataProcessingService {
     return this.importSaleReportsFast(filePaths, bypassEmptyCheck);
   }
 
-  //  InventoryReport Import
-  // ───────────────────────────
+  /**
+   * Import dữ liệu báo cáo tồn kho từ các file Excel vào bảng `InventoryReport`
+   * Delegate xử lý thực tế sang `importInventoryReportsFast`
+   * @param filePaths Danh sách đường dẫn file Excel hoặc Buffer (mặc định đọc từ `data/inventorys/`)
+   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
+   * @returns Object chứa tổng số dòng, số đã chèn và số bị bỏ qua
+   */
   async importInventoryReports(
     filePaths?: string[] | Buffer,
     bypassEmptyCheck = false,
@@ -409,8 +451,13 @@ export class DataProcessingService {
     return this.importInventoryReportsFast(filePaths, bypassEmptyCheck);
   }
 
-  //  Import all
-  // ───────────────────────────
+  /**
+   * Xử lý import chi tiết cho báo cáo bán hàng: đọc file, validate dữ liệu, kiểm tra khoá ngoại,
+   * đồng thời tự động thêm storeBranch mới và chèn hàng loạt vào DB
+   * @param filePaths Danh sách đường dẫn file Excel hoặc Buffer (mặc định đọc từ `data/sales/`)
+   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
+   * @returns Object chứa tổng số dòng, số đã chèn và số bị bỏ qua
+   */
   private async importSaleReportsFast(
     filePaths?: string[] | Buffer,
     bypassEmptyCheck = false,
@@ -502,6 +549,13 @@ export class DataProcessingService {
     return { total, inserted, skipped };
   }
 
+  /**
+   * Xử lý import chi tiết cho báo cáo tồn kho: đọc file, validate dữ liệu, kiểm tra khoá ngoại,
+   * đồng thời tự động thêm Plant mới và chèn hàng loạt vào DB
+   * @param filePaths Danh sách đường dẫn file Excel hoặc Buffer (mặc định đọc từ `data/inventorys/`)
+   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
+   * @returns Object chứa tổng số dòng, số đã chèn và số bị bỏ qua
+   */
   private async importInventoryReportsFast(
     filePaths?: string[] | Buffer,
     bypassEmptyCheck = false,
@@ -591,15 +645,17 @@ export class DataProcessingService {
     return { total, inserted, skipped };
   }
 
+  /**
+   * Import toàn bộ dữ liệu theo thứ tự: Sản phẩm → (Bán hàng + Tồn kho song song)
+   * Import sản phẩm trước để đảm bảo khoá ngoại (Foreign Key) tồn tại trước khi import báo cáo
+   * @returns Object tổng hợp kết quả import của cả 3 loại dữ liệu
+   */
   async importAll(): Promise<{
     product: { total: number; inserted: number; skipped: number };
     sale: { total: number; inserted: number; skipped: number };
     inventory: { total: number; inserted: number; skipped: number };
   }> {
-    // 1. Bắt buộc chạy tuần tự Sản phẩm trước tiên để đảm bảo khóa ngoại (Foreign Keys) đã tồn tại trong DB
     const product = await this.importProducts();
-
-    // 2. Chạy song song Báo cáo bán hàng và Báo cáo tồn kho vì chúng độc lập với nhau
     const [sale, inventory] = await Promise.all([
       this.importSaleReports(),
       this.importInventoryReports(),
@@ -612,6 +668,10 @@ export class DataProcessingService {
   //  Helpers
   // ───────────────────────────
 
+  /**
+   * Đảm bảo bản ghi storeBranch tồn tại trong DB, nếu chưa có thì tự động thêm mới
+   * @param branchId Mã định danh của cửa hàng / chi nhánh
+   */
   private async ensureStoreBranch(branchId: string): Promise<void> {
     await this.db.client.query<ResultSetHeader>(
       `INSERT IGNORE INTO storeBranch (store_id, name) VALUES (?, ?)`,
@@ -619,6 +679,10 @@ export class DataProcessingService {
     );
   }
 
+  /**
+   * Đảm bảo bản ghi Plant tồn tại trong DB, nếu chưa có thì tự động thêm mới
+   * @param plantId Mã định danh của nhà máy / kho
+   */
   private async ensurePlant(plantId: string): Promise<void> {
     await this.db.client.query<ResultSetHeader>(
       `INSERT IGNORE INTO Plant (plant_id, name_plant) VALUES (?, ?)`,
@@ -626,6 +690,11 @@ export class DataProcessingService {
     );
   }
 
+  /**
+   * Kiểm tra một sản phẩm đã tồn tại trong bảng `product` hay chưa
+   * @param productId Mã sản phẩm cần kiểm tra
+   * @returns `true` nếu sản phẩm đã tồn tại, ngược lại `false`
+   */
   private async checkProductExists(productId: string): Promise<boolean> {
     const [rows] = await this.db.client.query<RowDataPacket[]>(
       `SELECT 1 FROM product WHERE product_id = ? LIMIT 1`,

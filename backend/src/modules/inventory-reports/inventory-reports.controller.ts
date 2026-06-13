@@ -13,7 +13,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import * as authGuard from 'src/middlewares/auth.guard';
+import * as authGuard from '@/middlewares/auth.guard';
 import { InventoryReportsService } from './inventory-reports.service';
 import { CreateInventoryReportDto } from './DTO/create-inventory-report.dto';
 import { GetInventoryReportAllDto } from './DTO/get-inventory-report-all.dto';
@@ -27,7 +27,7 @@ import {
 @UseGuards(authGuard.AuthGuard)
 @Controller('inventory-reports')
 export class InventoryReportsController {
-  constructor(private readonly inventoryReportsService: InventoryReportsService) {}
+  constructor(private readonly inventoryReportsService: InventoryReportsService) { }
 
   @Get()
   @HttpCode(HttpStatus.OK)

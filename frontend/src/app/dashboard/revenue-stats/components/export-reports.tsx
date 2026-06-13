@@ -486,7 +486,7 @@ export function ExportReports() {
             </div>
             <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu xem trước</p>
             <p className="text-xs text-muted-foreground/70">
-              Nhấn <strong>"Tải xem trước dữ liệu"</strong> ở trên để kiểm tra số liệu trước khi
+              Nhấn <strong>&quot;Tải xem trước dữ liệu&quot;</strong> ở trên để kiểm tra số liệu trước khi
               xuất
             </p>
           </div>
