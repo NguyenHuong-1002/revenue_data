@@ -1,4 +1,3 @@
-// NestJS core: Controller, GET, query params, validation pipe
 import {
   Controller,
   Get,
@@ -8,29 +7,17 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import * as authGuard from 'src/middlewares/auth.guard';
 import { ForecastQueryDto } from './DTO/forecast-query.dto';
 import { IForecastCombinedResponse, IForecastDatasetResult } from './interfaces/forecast.interface';
-// Service layer: business logic
 import { ForecastingService } from './forecasting.service';
-import {
-  ApiGetCombinedForecastSwagger,
-  ApiGetSalesForecastSwagger,
-  ApiGetInventoryForecastSwagger,
-} from './forecasting.swagger';
 
-// ─── Controller Metadata ──────────────────────────────────────────────────────
-@ApiTags('Du bao (Forecasting)')
-@ApiBearerAuth()
 @UseGuards(authGuard.AuthGuard)
 @authGuard.Roles('ADMIN')
 @Controller('forecast')
 export class ForecastingController {
   constructor(private readonly forecastingService: ForecastingService) {}
 
-  // ─── GET /forecast — kết hợp doanh số + tồn kho ──────────────────────────
-  @ApiGetCombinedForecastSwagger()
   @Get()
   @HttpCode(HttpStatus.OK)
   getCombinedForecast(
@@ -39,8 +26,6 @@ export class ForecastingController {
     return this.forecastingService.getCombinedForecast(query);
   }
 
-  // ─── GET /forecast/sales — dự báo doanh số ──────────────────────────────
-  @ApiGetSalesForecastSwagger()
   @Get('sales')
   @HttpCode(HttpStatus.OK)
   getSalesForecast(
@@ -49,8 +34,6 @@ export class ForecastingController {
     return this.forecastingService.getSalesForecast(query);
   }
 
-  // ─── GET /forecast/inventory — dự báo tồn kho ───────────────────────────
-  @ApiGetInventoryForecastSwagger()
   @Get('inventory')
   @HttpCode(HttpStatus.OK)
   getInventoryForecast(

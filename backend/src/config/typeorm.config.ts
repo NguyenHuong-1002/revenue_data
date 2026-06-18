@@ -10,6 +10,6 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   database: process.env.MYSQL_DATABASE,
   autoLoadEntities: true, //Tự động nạp các Entity)
   synchronize: false, //(Không tự động đồng bộ cấu hình bảng)
-  migrations: [join(__dirname, '../migrations/*.ts')],
+  migrations: [join(__dirname, '../migrations/*')],
   migrationsRun: true, // tự động chạy run migrations khi nestjs start
 };

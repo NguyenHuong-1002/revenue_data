@@ -238,24 +238,4 @@ CREATE TABLE IF NOT EXISTS chat_message (
   FOREIGN KEY (session_id) REFERENCES chat_session(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================================
--- 16. system_settings (Cài đặt hệ thống)
--- ============================================================
-CREATE TABLE IF NOT EXISTS system_settings (
-  `key`       VARCHAR(100) NOT NULL PRIMARY KEY,
-  `value`     TEXT         NOT NULL,
-  description VARCHAR(255) NOT NULL DEFAULT '',
-  `type`      VARCHAR(20)  NOT NULL DEFAULT 'string',
-  `group`     VARCHAR(50)  NOT NULL DEFAULT 'general',
-  created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
-  updated_at  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Seed default settings
-INSERT IGNORE INTO system_settings (`key`, `value`, `description`, `type`, `group`) VALUES
-('SYSTEM_NAME', 'Hệ thống Quản lý Doanh thu', 'Tên hệ thống', 'string', 'general'),
-('SYSTEM_LOGO', '', 'URL logo hệ thống', 'string', 'general'),
-('SYSTEM_DESCRIPTION', 'Hệ thống quản lý doanh thu, dự báo và phân tích bán hàng', 'Mô tả ngắn hệ thống', 'string', 'general'),
-('NOTIFICATION_RETENTION_DAYS', '90', 'Số ngày lưu trữ thông báo', 'number', 'notification'),
-('MAX_LOGIN_ATTEMPTS', '5', 'Số lần đăng nhập sai tối đa trước khi khóa', 'number', 'security'),
-('SESSION_TIMEOUT_MINUTES', '60', 'Thời gian hết hạn session (phút)', 'number', 'security');
+-- (removed system_settings table)

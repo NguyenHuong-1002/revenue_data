@@ -11,15 +11,6 @@ export class StoreBranchEntity {
   @Column({ type: 'varchar', length: 100 })
   city!: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true, default: null })
-  address!: string | null;
-
-  @Column({ type: 'double', nullable: true, default: null })
-  latitude!: number | null;
-
-  @Column({ type: 'double', nullable: true, default: null })
-  longitude!: number | null;
-
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at!: Date;
 

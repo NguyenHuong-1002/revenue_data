@@ -1,7 +1,8 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import type { LoggerService } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 type ErrorMessage = string | string[];
 
@@ -19,8 +20,10 @@ type NestErrorResponse = {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logDir = join(process.cwd(), 'logs');
-  private readonly logFile = join(this.logDir, 'error.log');
+  constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
+  ) { }
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -36,7 +39,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
     };
 
-    this.writeLog(exception, errorResponse);
+    this.logger.error(
+      exception instanceof Error ? exception.message : 'Internal server error',
+      exception instanceof Error ? exception.stack : undefined,
+      `${request.method} ${request.url} ${statusCode}`,
+    );
+
     response.status(statusCode).json(errorResponse);
   }
 
@@ -68,37 +76,5 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   private hasMessage(value: unknown): value is NestErrorResponse {
     return typeof value === 'object' && value !== null && 'message' in value;
-  }
-
-  private writeLog(exception: unknown, errorResponse: ErrorResponse) {
-    this.createLogDir();
-
-    const logMessage = [
-      `[${errorResponse.timestamp}] ${errorResponse.method} ${errorResponse.path}`,
-      `Status: ${errorResponse.statusCode}`,
-      `Message: ${this.formatMessage(errorResponse.message)}`,
-      `Stack: ${this.getStack(exception)}`,
-      '',
-    ].join('\n');
-
-    appendFileSync(this.logFile, logMessage);
-  }
-
-  private createLogDir() {
-    if (!existsSync(this.logDir)) {
-      mkdirSync(this.logDir, { recursive: true });
-    }
-  }
-
-  private formatMessage(message: ErrorMessage): string {
-    return Array.isArray(message) ? message.join(', ') : message;
-  }
-
-  private getStack(exception: unknown): string {
-    if (exception instanceof Error) {
-      return exception.stack ?? exception.message;
-    }
-
-    return JSON.stringify(exception, null, 2);
   }
 }

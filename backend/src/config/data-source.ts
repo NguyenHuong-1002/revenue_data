@@ -1,4 +1,6 @@
-import { join } from 'path';
+import { config } from 'dotenv';
+config();
+import { join } from 'node:path';
 import { DataSource } from 'typeorm';
 
 export const AppDataSource = new DataSource({
@@ -13,4 +15,4 @@ export const AppDataSource = new DataSource({
   migrationsTableName: 'typeorm_migrations',
 });
 
-// file này cấu hình cho generate/run migrations 
+// file này cấu hình cho generate/run migrations

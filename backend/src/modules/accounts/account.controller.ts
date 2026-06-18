@@ -29,30 +29,14 @@ import {
   ILoginResponse,
   IPaginatedAccounts,
 } from './interfaces/account.interface';
-import { ApiTags, ApiBearerAuth, ApiConsumes, ApiBody, ApiOperation } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiGetUsersAllSwagger,
-  ApiGetMeSwagger,
-  ApiGetAccountByIdSwagger,
-  ApiCreateAccountSwagger,
-  ApiRegisterSwagger,
-  ApiLoginSwagger,
-  ApiUpdateAccountSwagger,
-  ApiDeleteAccountSwagger,
-  ApiSoftDeleteAccountSwagger,
-  ApiSearchAccountsSwagger,
-} from './account.swagger';
 
-@ApiTags('Tài khoản (Accounts)')
-@ApiBearerAuth()
 @UseGuards(authGuard.AuthGuard)
 @Controller('accounts')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
   @authGuard.Roles('ADMIN')
-  @ApiGetUsersAllSwagger()
   @Get()
   @HttpCode(HttpStatus.OK)
   getUsersAll(
@@ -62,7 +46,6 @@ export class AccountController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiSearchAccountsSwagger()
   @Get('/search')
   @HttpCode(HttpStatus.OK)
   searchAccounts(
@@ -71,7 +54,6 @@ export class AccountController {
     return this.accountService.searchAccounts(dto);
   }
 
-  @ApiGetMeSwagger()
   @Get('/me')
   @HttpCode(HttpStatus.OK)
   getMe(@authGuard.CurrentUser() AdminUser: authGuard.JwtPayload): Promise<IAccount> {
@@ -79,7 +61,6 @@ export class AccountController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiGetAccountByIdSwagger()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
   getAccountById(@Param('id') id: string): Promise<IAccount> {
@@ -87,7 +68,6 @@ export class AccountController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiCreateAccountSwagger()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   createAccount(
@@ -98,7 +78,6 @@ export class AccountController {
   }
 
   @authGuard.Public()
-  @ApiRegisterSwagger()
   @Post('/register')
   @HttpCode(HttpStatus.CREATED)
   async register(
@@ -108,7 +87,6 @@ export class AccountController {
   }
 
   @authGuard.Public()
-  @ApiLoginSwagger()
   @Post('/login')
   @HttpCode(HttpStatus.OK)
   login(
@@ -117,7 +95,6 @@ export class AccountController {
     return this.accountService.login(dto);
   }
 
-  @ApiUpdateAccountSwagger()
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
   updateAccount(
@@ -135,7 +112,6 @@ export class AccountController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiDeleteAccountSwagger()
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteAccount(
@@ -146,7 +122,6 @@ export class AccountController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiSoftDeleteAccountSwagger()
   @Delete('/:id/soft')
   @HttpCode(HttpStatus.OK)
   softDeleteAccount(
@@ -159,19 +134,6 @@ export class AccountController {
   @Post('/avatar')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file', avatarMulterOptions))
-  @ApiOperation({ summary: 'Cập nhật ảnh đại diện (Avatar) cho tài khoản hiện tại' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
   async updateAvatar(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @UploadedFile() file: Express.Multer.File,

@@ -8,7 +8,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountModule } from './modules/accounts/account.module';
 import { typeOrmConfig } from './config/typeorm.config';
 import { NotificationModule } from './modules/notifications/notification.module';
+import { WinstonModule } from 'nest-winston';
 import { ApiLoggerMiddleware } from './middlewares/api-logger.middleware';
+import { CorrelationIdMiddleware } from './global/correlation-id.middleware';
+import { createWinstonLoggerOptions } from './global/logger.config';
 import { DataImportModule } from './modules/data-import/data-import.module';
 import { BranchModule } from './modules/branches/branch.module';
 import { PlantModule } from './modules/plants/plant.module';
@@ -17,7 +20,6 @@ import { AiInterpretationModule } from './modules/ai-interpretation/ai-interpret
 import { ReportsModule } from './modules/reports/reports.module';
 import { LandingModule } from './modules/landing/landing.module';
 import { ChatModule } from './modules/chat/chat.module';
-import { SettingsModule } from './modules/settings/settings.module';
 import { SaleReportsModule } from './modules/sale-reports/sale-reports.module';
 import { InventoryReportsModule } from './modules/inventory-reports/inventory-reports.module';
 
@@ -25,6 +27,7 @@ dotenv.config();
 
 @Module({
   imports: [
+    WinstonModule.forRoot(createWinstonLoggerOptions()),
     TypeOrmModule.forRoot(typeOrmConfig),
     JwtModule.register({
       global: true,
@@ -44,13 +47,12 @@ dotenv.config();
     ReportsModule,
     LandingModule,
     ChatModule,
-    SettingsModule,
     SaleReportsModule,
     InventoryReportsModule,
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(ApiLoggerMiddleware).forRoutes('*');
+    consumer.apply(CorrelationIdMiddleware, ApiLoggerMiddleware).forRoutes('*');
   }
 }

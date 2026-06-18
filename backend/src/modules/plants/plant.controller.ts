@@ -18,24 +18,13 @@ import { PlantService } from './plant.service';
 import { CreatePlantDto } from './DTO/create-plant.dto';
 import { GetPlantAllDto } from './DTO/get-plant-all.dto';
 import { UpdatePlantDto } from './DTO/update-plant.dto';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import {
-  ApiGetPlantsSwagger,
-  ApiGetPlantByIdSwagger,
-  ApiCreatePlantSwagger,
-  ApiUpdatePlantSwagger,
-  ApiDeletePlantSwagger,
-} from './plant.swagger';
 
-@ApiTags('Nhà máy (Plants)')
-@ApiBearerAuth()
 @UseGuards(authGuard.AuthGuard)
 @Controller('plants')
 export class PlantController {
   constructor(private readonly plantService: PlantService) {}
 
   @authGuard.Public()
-  @ApiGetPlantsSwagger()
   @Get()
   @HttpCode(HttpStatus.OK)
   getAll(
@@ -43,8 +32,8 @@ export class PlantController {
   ): Promise<IPaginatedPlants> {
     return this.plantService.getAll(query);
   }
+
   @authGuard.Public()
-  @ApiGetPlantByIdSwagger()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
   getById(@Param('id') id: string): Promise<IPlant> {
@@ -52,7 +41,6 @@ export class PlantController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiCreatePlantSwagger()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -63,7 +51,6 @@ export class PlantController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiUpdatePlantSwagger()
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
   update(
@@ -75,7 +62,6 @@ export class PlantController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiDeletePlantSwagger()
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(

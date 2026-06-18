@@ -18,58 +18,42 @@ import { IProduct, IPaginatedProducts } from './interfaces/product.interface';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './DTO/create-product.dto';
 import { GetProductAllDto } from './DTO/get-product-all.dto';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import {
-  ApiGetProductsSwagger,
-  ApiPostProductSwagger,
-  ApiGetDetailProductSwagger,
-  ApiUpdateProductSwagger,
-  ApiDeleteProductSwagger,
-  ApiGetProductStatsSwagger,
-} from './product.swagger';
 
-@ApiTags('Sản phẩm (Products)')
-@ApiBearerAuth()
 @UseGuards(authGuard.AuthGuard)
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @ApiGetProductsSwagger()
   @Get()
   @HttpCode(HttpStatus.OK)
-  getProductsController(
+  getProducts(
     @Query(new ValidationPipe({ transform: true })) query: GetProductAllDto,
   ): Promise<IPaginatedProducts> {
     return this.productService.getProductsAll(query);
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiPostProductSwagger()
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  postProduct(
+  createProduct(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Body(new ValidationPipe({ transform: true })) productDTO: CreateProductDto,
   ): Promise<IProduct> {
     return this.productService.createProduct(productDTO, admin.username);
   }
 
-  @ApiGetProductStatsSwagger()
   @Get('/stats')
   @HttpCode(HttpStatus.OK)
   getProductStats(): Promise<any> {
     return this.productService.getProductStats();
   }
 
-  @ApiGetDetailProductSwagger()
   @Get('/:id')
   getDetailProduct(@Param('id') id: string): Promise<IProduct> {
     return this.productService.getDetailProduct(id);
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiUpdateProductSwagger()
   @Put('/:id')
   @HttpCode(HttpStatus.OK)
   updateProduct(
@@ -81,7 +65,6 @@ export class ProductController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiDeleteProductSwagger()
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteProduct(

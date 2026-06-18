@@ -12,15 +12,12 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import * as authGuard from 'src/middlewares/auth.guard';
 import { SaleReportsService } from './sale-reports.service';
 import { CreateSaleReportDto } from './DTO/create-sale-report.dto';
 import { GetSaleReportAllDto } from './DTO/get-sale-report-all.dto';
 import { ISaleReport, IPaginatedSaleReports } from './interfaces/sale-report.interface';
 
-@ApiTags('Quản lý báo cáo doanh số (Sale Reports)')
-@ApiBearerAuth()
 @UseGuards(authGuard.AuthGuard)
 @Controller('sale-reports')
 export class SaleReportsController {
@@ -28,8 +25,6 @@ export class SaleReportsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lấy danh sách báo cáo doanh số với phân trang và bộ lọc' })
-  @ApiResponse({ status: 200, description: 'Lấy danh sách thành công.' })
   getSaleReports(
     @Query(new ValidationPipe({ transform: true })) query: GetSaleReportAllDto,
   ): Promise<IPaginatedSaleReports> {
@@ -38,32 +33,23 @@ export class SaleReportsController {
 
   @Get('/stats')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lấy thông tin thống kê báo cáo doanh số phục vụ vẽ biểu đồ' })
-  @ApiResponse({ status: 200, description: 'Lấy thống kê thành công.' })
   getSaleReportStats(@Query('range') range?: string): Promise<any> {
     return this.saleReportsService.getSaleReportStats(range);
   }
 
   @Get('/revenue-stats')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lấy thông tin thống kê doanh thu phục vụ hiển thị ở sidebar' })
-  @ApiResponse({ status: 200, description: 'Lấy thống kê thành công.' })
   getRevenueDashboardStats(@Query('range') range?: string): Promise<any> {
     return this.saleReportsService.getRevenueDashboardStats(range);
   }
 
   @Get('/highlight-products-stats')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lấy danh sách top/bottom sản phẩm tiêu biểu theo nhiều tiêu chí' })
-  @ApiResponse({ status: 200, description: 'Lấy thống kê sản phẩm thành công.' })
   getHighlightProductsStats(@Query('range') range?: string): Promise<any> {
     return this.saleReportsService.getHighlightProductsStats(range);
   }
 
   @Get('/:id')
-  @ApiOperation({ summary: 'Lấy chi tiết báo cáo doanh số theo ID' })
-  @ApiResponse({ status: 200, description: 'Lấy chi tiết thành công.' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy báo cáo.' })
   getDetailSaleReport(@Param('id') id: string): Promise<ISaleReport> {
     return this.saleReportsService.getDetailSaleReport(id);
   }
@@ -71,8 +57,6 @@ export class SaleReportsController {
   @authGuard.Roles('ADMIN')
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Tạo mới một báo cáo doanh số (Chỉ dành cho ADMIN)' })
-  @ApiResponse({ status: 201, description: 'Tạo mới thành công.' })
   createSaleReport(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Body(new ValidationPipe({ transform: true })) dto: CreateSaleReportDto,
@@ -83,9 +67,6 @@ export class SaleReportsController {
   @authGuard.Roles('ADMIN')
   @Put('/:id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Cập nhật một báo cáo doanh số (Chỉ dành cho ADMIN)' })
-  @ApiResponse({ status: 200, description: 'Cập nhật thành công.' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy báo cáo.' })
   updateSaleReport(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Body(new ValidationPipe({ transform: true })) dto: CreateSaleReportDto,
@@ -97,9 +78,6 @@ export class SaleReportsController {
   @authGuard.Roles('ADMIN')
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Xóa một báo cáo doanh số (Chỉ dành cho ADMIN)' })
-  @ApiResponse({ status: 204, description: 'Xóa thành công.' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy báo cáo.' })
   deleteSaleReport(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,

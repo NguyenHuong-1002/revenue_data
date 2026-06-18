@@ -3,16 +3,15 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './global/all-exceptions.filter';
 import { ValidationPipe } from '@nestjs/common';
-import { FileLogger } from './global/file-logger';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'node:path';
 
 declare const module: any;
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: new FileLogger(),
-  });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   // Cấu hình phục vụ file tĩnh (static assets) từ thư mục public
   app.useStaticAssets(path.join(__dirname, '..', 'public'), {
@@ -27,7 +26,7 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter(app.get(WINSTON_MODULE_NEST_PROVIDER)));
 
   // Kích hoạt CORS hỗ trợ gửi Authorization headers và credentials từ frontend
   app.enableCors({
@@ -36,22 +35,10 @@ async function bootstrap() {
     credentials: true, // Cho phép truyền gửi access tokens / cookies bảo mật
   });
 
-  // Cấu hình tài liệu tự động Swagger (OpenAPI)
-  const config = new DocumentBuilder()
-    .setTitle('Hệ thống Doanh thu - API Backend')
-    .setDescription(
-      'Tài liệu hướng dẫn tích hợp và chi tiết các đầu endpoints API phục vụ quản lý doanh thu, sản phẩm và tài khoản.',
-    )
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
-
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📑 Swagger API Document is available at: http://localhost:${port}/api/docs`);
+  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  logger.log(`🚀 Application is running on: http://localhost:${port}`);
 
   // 3. Webpack Hot Module Replacement (HMR)
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

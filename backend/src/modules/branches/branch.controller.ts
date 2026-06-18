@@ -18,24 +18,13 @@ import { BranchService } from './branch.service';
 import { CreateBranchDto } from './DTO/create-branch.dto';
 import { GetBranchAllDto } from './DTO/get-branch-all.dto';
 import { UpdateBranchDto } from './DTO/update-branch.dto';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import {
-  ApiGetBranchesSwagger,
-  ApiGetBranchByIdSwagger,
-  ApiCreateBranchSwagger,
-  ApiUpdateBranchSwagger,
-  ApiDeleteBranchSwagger,
-} from './branch.swagger';
 
-@ApiTags('Chi nhánh (Branches)')
-@ApiBearerAuth()
 @UseGuards(authGuard.AuthGuard)
 @Controller('branches')
 export class BranchController {
   constructor(private readonly branchService: BranchService) {}
 
   @authGuard.Public()
-  @ApiGetBranchesSwagger()
   @Get()
   @HttpCode(HttpStatus.OK)
   getAll(
@@ -45,7 +34,6 @@ export class BranchController {
   }
 
   @authGuard.Public()
-  @ApiGetBranchByIdSwagger()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
   getById(@Param('id') id: string): Promise<IBranch> {
@@ -53,7 +41,6 @@ export class BranchController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiCreateBranchSwagger()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
@@ -64,7 +51,6 @@ export class BranchController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiUpdateBranchSwagger()
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
   update(
@@ -76,7 +62,6 @@ export class BranchController {
   }
 
   @authGuard.Roles('ADMIN')
-  @ApiDeleteBranchSwagger()
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(

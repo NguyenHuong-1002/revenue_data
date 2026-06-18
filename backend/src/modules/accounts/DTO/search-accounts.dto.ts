@@ -1,32 +1,16 @@
 import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SearchAccountsDto {
-  @ApiPropertyOptional({
-    example: 'tran ngoc anh',
-    description:
-      'Từ khoá tìm kiếm — khớp một phần với fullname, username hoặc mail (không phân biệt hoa thường)',
-  })
   @IsOptional()
   @IsString()
   keyword?: string;
 
-  @ApiPropertyOptional({
-    example: 'STAFF',
-    enum: ['ADMIN', 'STAFF'],
-    description: 'Lọc theo vai trò tài khoản',
-  })
   @IsOptional()
   @IsString()
   @IsIn(['ADMIN', 'STAFF'], { message: 'Role chỉ chấp nhận: ADMIN, STAFF' })
   role?: 'ADMIN' | 'STAFF';
 
-  @ApiPropertyOptional({
-    example: 'ACTIVE',
-    enum: ['ACTIVE', 'INACTIVE', 'LOCKED'],
-    description: 'Lọc theo trạng thái tài khoản',
-  })
   @IsOptional()
   @IsString()
   @IsIn(['ACTIVE', 'INACTIVE', 'LOCKED'], {
@@ -34,38 +18,20 @@ export class SearchAccountsDto {
   })
   status_account?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
 
-  @ApiPropertyOptional({
-    example: '2024-04-01',
-    description: 'Lọc tài khoản tạo từ ngày (YYYY-MM-DD)',
-  })
   @IsOptional()
   @IsString()
   startDate?: string;
 
-  @ApiPropertyOptional({
-    example: '2024-06-30',
-    description: 'Lọc tài khoản tạo đến ngày (YYYY-MM-DD)',
-  })
   @IsOptional()
   @IsString()
   endDate?: string;
 
-  @ApiPropertyOptional({
-    example: 1,
-    default: 1,
-    description: 'Số trang hiện tại (tối thiểu: 1)',
-  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   page = 1;
 
-  @ApiPropertyOptional({
-    example: 10,
-    default: 10,
-    description: 'Số bản ghi mỗi trang (tối đa: 100)',
-  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

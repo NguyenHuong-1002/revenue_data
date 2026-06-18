@@ -2,14 +2,17 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Inject,
   Injectable,
   SetMetadata,
   UnauthorizedException,
   createParamDecorator,
 } from '@nestjs/common';
+import type { LoggerService } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 // Các từ khóa định danh (Key) dùng để lưu và đọc dữ liệu Metadata của một API Route
 export const ROLES_KEY = 'roles';
@@ -62,9 +65,10 @@ export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionC
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    // Reflector là một tiện ích của NestJS dùng để đọc các Metadata được gắn từ các Decorator (@Public, @Roles)
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
   ) {}
 
   /**
@@ -86,27 +90,13 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractToken(request);
 
-    const fs = require('fs');
-    const path = require('path');
-    const logDir = path.join(process.cwd(), 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-    const logPath = path.join(logDir, 'auth-debug.log');
-
     let user: JwtPayload;
     try {
       user = this.jwtService.verify<JwtPayload>(token || '');
       request.user = user;
-      fs.appendFileSync(
-        logPath,
-        `[SUCCESS] ${request.method} ${request.url} | Token: ${token ? token.substring(0, 15) + '...' : 'NONE'} | User: ${user.username} | Role: ${user.role}\n`,
-      );
+      this.logger.log(`[SUCCESS] ${request.method} ${request.url} | User: ${user.username} | Role: ${user.role}`, 'AuthGuard');
     } catch (err: any) {
-      fs.appendFileSync(
-        logPath,
-        `[FAILED] ${request.method} ${request.url} | Token: ${token ? token.substring(0, 20) + '...' : 'NONE'} | Raw Token Length: ${token ? token.length : 0} | Error: ${err.message}\n`,
-      );
+      this.logger.warn(`[FAILED] ${request.method} ${request.url} | Token: ${token ? token.substring(0, 20) + '...' : 'NONE'} | Error: ${err.message}`, 'AuthGuard');
       throw new UnauthorizedException('Invalid or expired token');
     }
 
