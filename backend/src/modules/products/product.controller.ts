@@ -16,8 +16,8 @@ import {
 import * as authGuard from 'src/middlewares/auth.guard';
 import { IProduct, IPaginatedProducts } from './interfaces/product.interface';
 import { ProductService } from './product.service';
-import { CreateProductDto } from './DTO/create-product.dto';
-import { GetProductAllDto } from './DTO/get-product-all.dto';
+import { CreateProductDto } from './dto/create-product.dto';
+import { GetProductAllDto } from './dto/get-product-all.dto';
 
 @UseGuards(authGuard.AuthGuard)
 @Controller('products')
@@ -44,12 +44,17 @@ export class ProductController {
 
   @Get('/stats')
   @HttpCode(HttpStatus.OK)
-  getProductStats(): Promise<any> {
+  getProductStats(): Promise<{
+    gender: { name: string; count: number }[];
+    age_group: { name: string; count: number }[];
+    activity_group: { name: string; count: number }[];
+    lifestyle_group: { name: string; count: number }[];
+  }> {
     return this.productService.getProductStats();
   }
 
   @Get('/:id')
-  getDetailProduct(@Param('id') id: string): Promise<IProduct> {
+  getProductById(@Param('id') id: string): Promise<IProduct> {
     return this.productService.getDetailProduct(id);
   }
 

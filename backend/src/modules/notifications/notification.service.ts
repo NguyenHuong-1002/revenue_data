@@ -4,8 +4,8 @@ import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { NotificationEntity } from 'src/entities/notification.entity';
 import { AccountNotificationEntity } from 'src/entities/account-notification.entity';
-import { CreateNotificationDto } from './DTO/create-notification.dto';
-import { GetNotificationsDto } from './DTO/get-notifications.dto';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import { GetNotificationsDto } from './dto/get-notifications-all.dto';
 import { INotification, IPaginatedNotifications } from './interfaces/notification.interface';
 import { AccountNotificationService } from './account-notification.service';
 

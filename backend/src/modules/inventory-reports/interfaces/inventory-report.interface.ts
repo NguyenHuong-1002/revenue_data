@@ -11,7 +11,7 @@ export interface IInventoryReport {
 export interface IPaginatedInventoryReports {
   data: IInventoryReport[];
   meta: {
-    skip: number;
+    page: number;
     limit: number;
     total: number;
     totalPages: number;

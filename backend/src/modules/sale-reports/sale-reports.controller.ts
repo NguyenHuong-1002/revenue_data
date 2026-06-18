@@ -14,8 +14,8 @@ import {
 } from '@nestjs/common';
 import * as authGuard from 'src/middlewares/auth.guard';
 import { SaleReportsService } from './sale-reports.service';
-import { CreateSaleReportDto } from './DTO/create-sale-report.dto';
-import { GetSaleReportAllDto } from './DTO/get-sale-report-all.dto';
+import { CreateSaleReportDto } from './dto/create-sale-report.dto';
+import { GetSaleReportAllDto } from './dto/get-sale-report-all.dto';
 import { ISaleReport, IPaginatedSaleReports } from './interfaces/sale-report.interface';
 
 @UseGuards(authGuard.AuthGuard)
@@ -33,24 +33,56 @@ export class SaleReportsController {
 
   @Get('/stats')
   @HttpCode(HttpStatus.OK)
-  getSaleReportStats(@Query('range') range?: string): Promise<any> {
+  getSaleReportStats(@Query('range') range?: string): Promise<{
+    distribution_channel: { name: string; count: number }[];
+    monthly_sales: { name: string; count: number }[];
+    top_branches: { name: string; count: number }[];
+  }> {
     return this.saleReportsService.getSaleReportStats(range);
   }
 
   @Get('/revenue-stats')
   @HttpCode(HttpStatus.OK)
-  getRevenueDashboardStats(@Query('range') range?: string): Promise<any> {
+  getRevenueDashboardStats(@Query('range') range?: string): Promise<{
+    totalRevenue: number;
+    growthRate: number;
+    topProductByRevenue: {
+      id: string;
+      name: string;
+      revenue: number;
+      detail_product_group: string;
+      gender: string;
+      color: string;
+      size: number;
+    };
+    topProductByQuantity: {
+      id: string;
+      name: string;
+      quantity: number;
+      detail_product_group: string;
+      gender: string;
+      color: string;
+      size: number;
+    };
+  }> {
     return this.saleReportsService.getRevenueDashboardStats(range);
   }
 
   @Get('/highlight-products-stats')
   @HttpCode(HttpStatus.OK)
-  getHighlightProductsStats(@Query('range') range?: string): Promise<any> {
+  getHighlightProductsStats(@Query('range') range?: string): Promise<{
+    topRevenue: any[];
+    bottomRevenue: any[];
+    topQuantity: any[];
+    bottomQuantity: any[];
+    topGrowth: any[];
+    bottomGrowth: any[];
+  }> {
     return this.saleReportsService.getHighlightProductsStats(range);
   }
 
   @Get('/:id')
-  getDetailSaleReport(@Param('id') id: string): Promise<ISaleReport> {
+  getSaleReportById(@Param('id') id: string): Promise<ISaleReport> {
     return this.saleReportsService.getDetailSaleReport(id);
   }
 

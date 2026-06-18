@@ -8,7 +8,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import * as authGuard from 'src/middlewares/auth.guard';
-import { ForecastQueryDto } from './DTO/forecast-query.dto';
+import { ForecastQueryDto } from './dto/forecast-query.dto';
 import { IForecastCombinedResponse, IForecastDatasetResult } from './interfaces/forecast.interface';
 import { ForecastingService } from './forecasting.service';
 

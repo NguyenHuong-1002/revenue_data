@@ -15,9 +15,9 @@ import {
 import * as authGuard from 'src/middlewares/auth.guard';
 import { IBranch, IPaginatedBranches } from './interfaces/branch.interface';
 import { BranchService } from './branch.service';
-import { CreateBranchDto } from './DTO/create-branch.dto';
-import { GetBranchAllDto } from './DTO/get-branch-all.dto';
-import { UpdateBranchDto } from './DTO/update-branch.dto';
+import { CreateBranchDto } from './dto/create-branch.dto';
+import { GetBranchAllDto } from './dto/get-branch-all.dto';
+import { UpdateBranchDto } from './dto/update-branch.dto';
 
 @UseGuards(authGuard.AuthGuard)
 @Controller('branches')
@@ -27,7 +27,7 @@ export class BranchController {
   @authGuard.Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAll(
+  getBranches(
     @Query(new ValidationPipe({ transform: true })) query: GetBranchAllDto,
   ): Promise<IPaginatedBranches> {
     return this.branchService.getAll(query);
@@ -36,14 +36,14 @@ export class BranchController {
   @authGuard.Public()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
-  getById(@Param('id') id: string): Promise<IBranch> {
+  getBranchById(@Param('id') id: string): Promise<IBranch> {
     return this.branchService.getById(id);
   }
 
   @authGuard.Roles('ADMIN')
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(
+  createBranch(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Body(new ValidationPipe({ transform: true })) dto: CreateBranchDto,
   ): Promise<IBranch> {
@@ -53,7 +53,7 @@ export class BranchController {
   @authGuard.Roles('ADMIN')
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
-  update(
+  updateBranch(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,
     @Body(new ValidationPipe({ transform: true })) dto: UpdateBranchDto,
@@ -64,7 +64,7 @@ export class BranchController {
   @authGuard.Roles('ADMIN')
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(
+  deleteBranch(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,
   ): Promise<void> {

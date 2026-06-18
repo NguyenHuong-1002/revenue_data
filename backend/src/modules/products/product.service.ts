@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/models/database.service';
-import { CreateProductDto } from './DTO/create-product.dto';
-import { GetProductAllDto } from './DTO/get-product-all.dto';
+import { CreateProductDto } from './dto/create-product.dto';
+import { GetProductAllDto } from './dto/get-product-all.dto';
 import { IProduct, IPaginatedProducts } from './interfaces/product.interface';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
@@ -68,7 +68,8 @@ export class ProductService {
     const [countRows] = await this.db.client.query<RowDataPacket[]>(countSQL, values);
     const total = Number(countRows[0].total);
 
-    const { skip, limit } = filters;
+    const { page, limit } = filters;
+    const skip = (page - 1) * limit;
     const dataSQL = `SELECT * FROM product ${whereSQL} ORDER BY product_id ASC LIMIT ? OFFSET ?`;
     const [dataRows] = await this.db.client.query<RowDataPacket[]>(dataSQL, [
       ...values,
@@ -79,7 +80,7 @@ export class ProductService {
     return {
       data: dataRows as IProduct[],
       meta: {
-        skip,
+        page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),

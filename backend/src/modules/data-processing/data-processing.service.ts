@@ -15,7 +15,6 @@ import {
   safeString,
   safeNumber,
   isValidProductString as isValidProduct,
-  generateId,
   parseDate,
   parseMonthToDateStr,
   normalizeDistributionChannel,

@@ -1,38 +1,38 @@
 import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateAccountDto {
-  @IsNotEmpty({ message: 'Fullname khong duoc de trong!' })
-  @IsString({ message: 'Fullname phai la chuoi ky tu!' })
+  @IsNotEmpty({ message: 'Fullname không được để trống!' })
+  @IsString({ message: 'Fullname phải là chuỗi ký tự!' })
   fullname!: string;
 
-  @IsNotEmpty({ message: 'Username khong duoc de trong!' })
-  @IsString({ message: 'Username phai la chuoi ky tu!' })
+  @IsNotEmpty({ message: 'Username không được để trống!' })
+  @IsString({ message: 'Username phải là chuỗi ký tự!' })
   username!: string;
 
-  @IsNotEmpty({ message: 'Password khong duoc de trong!' })
-  @IsString({ message: 'Password phai la chuoi ky tu!' })
-  @MinLength(6, { message: 'Password phai co it nhat 6 ky tu!' })
+  @IsNotEmpty({ message: 'Password không được để trống!' })
+  @IsString({ message: 'Password phải là chuỗi ký tự!' })
+  @MinLength(6, { message: 'Password phải có ít nhất 6 ký tự!' })
   password!: string;
 
-  @IsNotEmpty({ message: 'Email khong duoc de trong!' })
-  @IsEmail({}, { message: 'Email khong dung dinh dang!' })
+  @IsNotEmpty({ message: 'Email không được để trống!' })
+  @IsEmail({}, { message: 'Email không đúng định dạng!' })
   mail!: string;
 
   @IsOptional()
-  @IsString({ message: 'AvatarURL phai la chuoi ky tu!' })
+  @IsString({ message: 'AvatarURL phải là chuỗi ký tự!' })
   avatarURL?: string;
 
   @IsOptional()
-  @IsString({ message: 'Role phai la chuoi ky tu!' })
+  @IsString({ message: 'Role phải là chuỗi ký tự!' })
   @IsIn(['ADMIN', 'STAFF'], {
-    message: 'Role chi chap nhan: ADMIN, STAFF!',
+    message: 'Role chỉ chấp nhận: ADMIN, STAFF!',
   })
   role?: 'ADMIN' | 'STAFF';
 
   @IsOptional()
-  @IsString({ message: 'Status_account phai la chuoi ky tu!' })
+  @IsString({ message: 'Status_account phải là chuỗi ký tự!' })
   @IsIn(['ACTIVE', 'INACTIVE', 'LOCKED'], {
-    message: 'Status_account chi chap nhan: ACTIVE, INACTIVE, LOCKED!',
+    message: 'Status_account chỉ chấp nhận: ACTIVE, INACTIVE, LOCKED!',
   })
   status_account?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
 }

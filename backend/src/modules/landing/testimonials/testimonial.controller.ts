@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import * as authGuard from 'src/middlewares/auth.guard';
 import { TestimonialService } from './testimonial.service';
 import { LandingTestimonialEntity } from '../../../entities/landing-testimonial.entity';
 
+@UseGuards(authGuard.AuthGuard)
 @Controller('landing/testimonials')
 export class TestimonialController {
   constructor(private readonly testimonialService: TestimonialService) {}
 
+  @authGuard.Public()
   @Get()
   getTestimonials() {
     return this.testimonialService.getTestimonials();

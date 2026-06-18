@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AccountEntity } from 'src/entities/account.entity';
 import { AccountNotificationEntity } from 'src/entities/account-notification.entity';
-import { GetNotificationsDto } from './DTO/get-notifications.dto';
+import { GetNotificationsDto } from './dto/get-notifications-all.dto';
 import {
   IAccountNotificationMapping,
   IAccountNotificationStats,

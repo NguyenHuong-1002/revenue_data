@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/models/database.service';
-import { CreateSaleReportDto } from './DTO/create-sale-report.dto';
-import { GetSaleReportAllDto } from './DTO/get-sale-report-all.dto';
+import { CreateSaleReportDto } from './dto/create-sale-report.dto';
+import { GetSaleReportAllDto } from './dto/get-sale-report-all.dto';
 import { ISaleReport, IPaginatedSaleReports } from './interfaces/sale-report.interface';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
@@ -47,7 +47,8 @@ export class SaleReportsService {
     const [countRows] = await this.db.client.query<RowDataPacket[]>(countSQL, values);
     const total = Number(countRows[0].total);
 
-    const { skip, limit } = filters;
+    const { page, limit } = filters;
+    const skip = (page - 1) * limit;
     const dataSQL = `SELECT * FROM saleReport ${whereSQL} ORDER BY time_report DESC, sale_id DESC LIMIT ? OFFSET ?`;
     const [dataRows] = await this.db.client.query<RowDataPacket[]>(dataSQL, [
       ...values,
@@ -58,7 +59,7 @@ export class SaleReportsService {
     return {
       data: dataRows as ISaleReport[],
       meta: {
-        skip,
+        page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),

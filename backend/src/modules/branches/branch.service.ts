@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { StoreBranchEntity } from 'src/entities/branch.entity';
-import { CreateBranchDto } from './DTO/create-branch.dto';
-import { GetBranchAllDto } from './DTO/get-branch-all.dto';
-import { UpdateBranchDto } from './DTO/update-branch.dto';
+import { CreateBranchDto } from './dto/create-branch.dto';
+import { GetBranchAllDto } from './dto/get-branch-all.dto';
+import { UpdateBranchDto } from './dto/update-branch.dto';
 import { IBranch, IPaginatedBranches } from './interfaces/branch.interface';
 import { NotificationService } from '../notifications/notification.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -50,7 +50,6 @@ export class BranchService {
       store_id: id,
       name: dto.name,
       city: dto.city,
-      address: dto.address ?? null,
     });
     await this.branchRepository.save(branch);
 
@@ -71,7 +70,6 @@ export class BranchService {
 
     if (dto.name !== undefined) branch.name = dto.name;
     if (dto.city !== undefined) branch.city = dto.city;
-    if (dto.address !== undefined) branch.address = dto.address ?? null;
 
     await this.branchRepository.save(branch);
 

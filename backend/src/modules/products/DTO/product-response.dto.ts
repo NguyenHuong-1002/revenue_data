@@ -14,7 +14,7 @@ export class ProductItemDto {
 export class PaginatedProductsResponseDto {
   data!: ProductItemDto[];
   meta!: {
-    skip: number;
+    page: number;
     limit: number;
     total: number;
     totalPages: number;

@@ -15,9 +15,9 @@ import {
 import * as authGuard from 'src/middlewares/auth.guard';
 import { IPlant, IPaginatedPlants } from './interfaces/plant.interface';
 import { PlantService } from './plant.service';
-import { CreatePlantDto } from './DTO/create-plant.dto';
-import { GetPlantAllDto } from './DTO/get-plant-all.dto';
-import { UpdatePlantDto } from './DTO/update-plant.dto';
+import { CreatePlantDto } from './dto/create-plant.dto';
+import { GetPlantAllDto } from './dto/get-plant-all.dto';
+import { UpdatePlantDto } from './dto/update-plant.dto';
 
 @UseGuards(authGuard.AuthGuard)
 @Controller('plants')
@@ -27,7 +27,7 @@ export class PlantController {
   @authGuard.Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAll(
+  getPlants(
     @Query(new ValidationPipe({ transform: true })) query: GetPlantAllDto,
   ): Promise<IPaginatedPlants> {
     return this.plantService.getAll(query);
@@ -36,14 +36,14 @@ export class PlantController {
   @authGuard.Public()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
-  getById(@Param('id') id: string): Promise<IPlant> {
+  getPlantById(@Param('id') id: string): Promise<IPlant> {
     return this.plantService.getById(id);
   }
 
   @authGuard.Roles('ADMIN')
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(
+  createPlant(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Body(new ValidationPipe({ transform: true })) dto: CreatePlantDto,
   ): Promise<IPlant> {
@@ -53,7 +53,7 @@ export class PlantController {
   @authGuard.Roles('ADMIN')
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
-  update(
+  updatePlant(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,
     @Body(new ValidationPipe({ transform: true })) dto: UpdatePlantDto,
@@ -64,7 +64,7 @@ export class PlantController {
   @authGuard.Roles('ADMIN')
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(
+  deletePlant(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @Param('id') id: string,
   ): Promise<void> {

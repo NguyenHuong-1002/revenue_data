@@ -16,8 +16,8 @@ import {
 import { AuthGuard, CurrentUser, type JwtPayload, Roles } from 'src/middlewares/auth.guard';
 import { NotificationService } from './notification.service';
 import { AccountNotificationService } from './account-notification.service';
-import { CreateNotificationDto } from './DTO/create-notification.dto';
-import { GetNotificationsDto } from './DTO/get-notifications.dto';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import { GetNotificationsDto } from './dto/get-notifications-all.dto';
 import {
   IAccountNotificationStats,
   INotification,
@@ -53,7 +53,7 @@ export class NotificationController {
   @Roles('ADMIN')
   @Delete('/accounts/:accountId/notifications/:notificationId/unlink')
   @HttpCode(HttpStatus.OK)
-  unlinkNotificationForAccount(
+  unlinkAccountNotification(
     @Param('accountId', ParseUUIDPipe) accountId: string,
     @Param('notificationId', ParseUUIDPipe) notificationId: string,
   ): Promise<{ success: boolean }> {
@@ -69,12 +69,15 @@ export class NotificationController {
   }
 
   @Patch('/:id/read')
-  markAsRead(@CurrentUser() user: JwtPayload, @Param('id') id: string): Promise<INotification> {
+  markNotificationAsRead(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ): Promise<INotification> {
     return this.notificationService.markAsRead(id, user.sub);
   }
 
   @Post('/read-all')
-  async markAllAsRead(@CurrentUser() user: JwtPayload): Promise<{ success: boolean }> {
+  async markAllNotificationsAsRead(@CurrentUser() user: JwtPayload): Promise<{ success: boolean }> {
     await this.notificationService.markAllAsRead(user.sub);
     return { success: true };
   }

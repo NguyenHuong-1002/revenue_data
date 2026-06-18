@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { InterpretationRequestDto, InterpretationLanguage } from './DTO/interpretation-request.dto';
+import { InterpretationRequestDto, InterpretationLanguage } from './dto/interpretation-request.dto';
 import {
   IInterpretationResponse,
   IInterpretationSummary,

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from 'src/models/database.service';
-import { ForecastQueryDto } from './DTO/forecast-query.dto';
+import { ForecastQueryDto } from './dto/forecast-query.dto';
 import {
   IChartPoint,
   IForecastAlgorithmResult,

@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import * as authGuard from 'src/middlewares/auth.guard';
 import { PricingService } from './pricing.service';
 import { LandingPricingEntity } from '../../../entities/landing-pricing.entity';
 
+@UseGuards(authGuard.AuthGuard)
 @Controller('landing/pricing')
 export class PricingController {
   constructor(private readonly pricingService: PricingService) {}
 
+  @authGuard.Public()
   @Get()
   getPricing() {
     return this.pricingService.getPricing();

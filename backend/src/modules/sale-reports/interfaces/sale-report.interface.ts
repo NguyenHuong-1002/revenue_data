@@ -19,7 +19,7 @@ export interface ISaleReport {
 export interface IPaginatedSaleReports {
   data: ISaleReport[];
   meta: {
-    skip: number;
+    page: number;
     limit: number;
     total: number;
     totalPages: number;

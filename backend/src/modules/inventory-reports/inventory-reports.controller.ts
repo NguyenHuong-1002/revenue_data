@@ -14,8 +14,8 @@ import {
 } from '@nestjs/common';
 import * as authGuard from '@/middlewares/auth.guard';
 import { InventoryReportsService } from './inventory-reports.service';
-import { CreateInventoryReportDto } from './DTO/create-inventory-report.dto';
-import { GetInventoryReportAllDto } from './DTO/get-inventory-report-all.dto';
+import { CreateInventoryReportDto } from './dto/create-inventory-report.dto';
+import { GetInventoryReportAllDto } from './dto/get-inventory-report-all.dto';
 import {
   IInventoryReport,
   IPaginatedInventoryReports,
@@ -36,19 +36,38 @@ export class InventoryReportsController {
 
   @Get('/stats')
   @HttpCode(HttpStatus.OK)
-  getInventoryReportStats(): Promise<any> {
+  getInventoryReportStats(): Promise<{
+    plant_inventory: { name: string; count: number }[];
+    monthly_inventory: { name: string; count: number }[];
+  }> {
     return this.inventoryReportsService.getInventoryReportStats();
   }
 
   @Get('/kpis')
   @HttpCode(HttpStatus.OK)
-  getInventoryKpis(): Promise<any> {
+  getInventoryKpis(): Promise<{
+    totalStock: number;
+    totalRecords: number;
+    totalPlants: number;
+    totalProducts: number;
+    currentMonthStock: number;
+    previousMonthStock: number;
+    growthPercent: number | null;
+    topPlant: { plant_id: string; total: number } | null;
+    topProduct: { product_id: string; total: number } | null;
+    avgStockPerPlant: number;
+  }> {
     return this.inventoryReportsService.getInventoryKpis();
   }
 
   @Get('/rankings')
   @HttpCode(HttpStatus.OK)
-  getInventoryRankings(@Query('topN') topN?: string): Promise<any> {
+  getInventoryRankings(@Query('topN') topN?: string): Promise<{
+    topStocked: { product_id: string; total: number }[];
+    bottomStocked: { product_id: string; total: number }[];
+    topPlants: { plant_id: string; total: number; record_count: number }[];
+    monthlyTrend: { month: string; total: number; growthPct: number | null }[];
+  }> {
     return this.inventoryReportsService.getInventoryRankings(topN ? Number(topN) : 10);
   }
 
@@ -57,7 +76,11 @@ export class InventoryReportsController {
   getInventoryAlerts(
     @Query('lowThreshold') low?: string,
     @Query('highThreshold') high?: string,
-  ): Promise<any> {
+  ): Promise<{
+    lowStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
+    highStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
+    totalAlerts: number;
+  }> {
     return this.inventoryReportsService.getInventoryAlerts(
       low ? Number(low) : 50,
       high ? Number(high) : 10000,
@@ -65,7 +88,7 @@ export class InventoryReportsController {
   }
 
   @Get('/:id')
-  getDetailInventoryReport(@Param('id') id: string): Promise<IInventoryReport> {
+  getInventoryReportById(@Param('id') id: string): Promise<IInventoryReport> {
     return this.inventoryReportsService.getDetailInventoryReport(id);
   }
 

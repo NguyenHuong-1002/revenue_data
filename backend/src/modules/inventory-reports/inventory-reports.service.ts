@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/models/database.service';
-import { CreateInventoryReportDto } from './DTO/create-inventory-report.dto';
-import { GetInventoryReportAllDto } from './DTO/get-inventory-report-all.dto';
+import { CreateInventoryReportDto } from './dto/create-inventory-report.dto';
+import { GetInventoryReportAllDto } from './dto/get-inventory-report-all.dto';
 import {
   IInventoryReport,
   IPaginatedInventoryReports,
@@ -47,7 +47,8 @@ export class InventoryReportsService {
     const [countRows] = await this.db.client.query<RowDataPacket[]>(countSQL, values);
     const total = Number(countRows[0].total);
 
-    const { skip, limit } = filters;
+    const { page, limit } = filters;
+    const skip = (page - 1) * limit;
     const dataSQL = `SELECT * FROM InventoryReport ${whereSQL} ORDER BY calendar_year_week DESC, inventory_id DESC LIMIT ? OFFSET ?`;
     const [dataRows] = await this.db.client.query<RowDataPacket[]>(dataSQL, [
       ...values,
@@ -58,7 +59,7 @@ export class InventoryReportsService {
     return {
       data: dataRows as IInventoryReport[],
       meta: {
-        skip,
+        page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),

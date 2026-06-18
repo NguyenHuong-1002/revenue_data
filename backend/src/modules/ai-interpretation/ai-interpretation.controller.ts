@@ -8,7 +8,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import * as authGuard from 'src/middlewares/auth.guard';
-import { InterpretationRequestDto } from './DTO/interpretation-request.dto';
+import { InterpretationRequestDto } from './dto/interpretation-request.dto';
 import { IInterpretationResponse } from './interfaces/interpretation.interface';
 import { AiInterpretationService } from './ai-interpretation.service';
 
@@ -20,7 +20,7 @@ export class AiInterpretationController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  interpret(
+  createInterpretation(
     @Body(new ValidationPipe({ transform: true })) dto: InterpretationRequestDto,
   ): Promise<IInterpretationResponse> {
     return this.aiInterpretationService.interpret(dto);

@@ -4,9 +4,9 @@ import { IsString, IsOptional, IsInt, Min, Max } from 'class-validator';
 export class GetSaleReportAllDto {
   @IsOptional()
   @Type(() => Number)
-  @IsInt({ message: 'Số skip phải là số nguyên.' })
-  @Min(0, { message: 'Số skip tối thiểu phải là 0.' })
-  skip = 0;
+  @IsInt({ message: 'Số trang (page) phải là một số nguyên.' })
+  @Min(1, { message: 'Số trang (page) tối thiểu phải là 1.' })
+  page = 1;
 
   @IsOptional()
   @Type(() => Number)

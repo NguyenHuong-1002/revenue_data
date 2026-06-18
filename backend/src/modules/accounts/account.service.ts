@@ -12,11 +12,11 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { AccountEntity } from 'src/entities/account.entity';
 import { Repository } from 'typeorm';
 import { NotificationService } from '../notifications/notification.service';
-import { CreateAccountDto } from './DTO/create-account.dto';
-import { GetAccountsAllDto } from './DTO/getAccountsAll.dto';
-import { LoginAccountDto } from './DTO/login-account.dto';
-import { SearchAccountsDto } from './DTO/search-accounts.dto';
-import { UpdateAccountDto } from './DTO/update-account.dto';
+import { CreateAccountDto } from './dto/create-account.dto';
+import { GetAccountsAllDto } from './dto/get-accounts-all.dto';
+import { LoginAccountDto } from './dto/login-account.dto';
+import { SearchAccountsDto } from './dto/search-accounts.dto';
+import { UpdateAccountDto } from './dto/update-account.dto';
 import {
   AccountResponse,
   IAccount,
@@ -28,6 +28,7 @@ import { extname, join } from 'path';
 import sharp from 'sharp';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import type { Request } from 'express';
+import { RegisterUserDto } from './dto/register-user.dto';
 
 export const avatarMulterOptions = {
   storage: diskStorage({
@@ -125,11 +126,11 @@ export class AccountService {
     });
 
     if (existing?.username === dto.username) {
-      throw new ConflictException('Username da ton tai');
+      throw new ConflictException('Username đã tồn tại');
     }
 
     if (existing?.mail === dto.mail) {
-      throw new ConflictException('Email da ton tai');
+      throw new ConflictException('Email đã tồn tại');
     }
 
     const id = uuidv4();
@@ -162,17 +163,17 @@ export class AccountService {
    * @returns Trạng thái đăng ký thành công kèm thông điệp
    * @throws ConflictException Nếu Username hoặc Email đã được đăng ký trước đó
    */
-  async register(dto: CreateAccountDto): Promise<void> {
+  async register(dto: RegisterUserDto): Promise<void> {
     const existing = await this.accountRepository.findOne({
       where: [{ username: dto.username }, { mail: dto.mail }],
     });
 
     if (existing?.username === dto.username) {
-      throw new ConflictException('Username da ton tai');
+      throw new ConflictException('Username đã tồn tại');
     }
 
     if (existing?.mail === dto.mail) {
-      throw new ConflictException('Email da ton tai');
+      throw new ConflictException('Email đã tồn tại');
     }
 
     const id = uuidv4();
@@ -182,7 +183,7 @@ export class AccountService {
       username: dto.username,
       passwordHash: this.hashPassword(dto.password),
       mail: dto.mail,
-      avatarURL: dto.avatarURL ?? '',
+      avatarURL: '',
       role: 'STAFF',
     });
 
@@ -207,7 +208,7 @@ export class AccountService {
       !account.passwordHash ||
       !this.verifyPassword(dto.password, account.passwordHash)
     ) {
-      throw new UnauthorizedException('Username hoac password khong dung');
+      throw new UnauthorizedException('Username hoặc password không đúng');
     }
 
     if (account.status_account === 'INACTIVE') {
@@ -432,7 +433,7 @@ export class AccountService {
     const [algorithm, salt, storedHash] = passwordHash.split('$');
 
     if (algorithm !== 'scrypt' || !salt || !storedHash) {
-      return password === passwordHash;
+      throw new Error('Định dạng hash mật khẩu không hợp lệ!');
     }
 
     const suppliedHash = scryptSync(password, salt, 64);

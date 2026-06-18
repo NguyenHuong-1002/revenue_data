@@ -18,11 +18,11 @@ import {
 } from '@nestjs/common';
 import * as authGuard from 'src/middlewares/auth.guard';
 import { AccountService, avatarMulterOptions } from './account.service';
-import { CreateAccountDto } from './DTO/create-account.dto';
-import { GetAccountsAllDto } from './DTO/getAccountsAll.dto';
-import { LoginAccountDto } from './DTO/login-account.dto';
-import { SearchAccountsDto } from './DTO/search-accounts.dto';
-import { UpdateAccountDto } from './DTO/update-account.dto';
+import { CreateAccountDto } from './dto/create-account.dto';
+import { GetAccountsAllDto } from './dto/get-accounts-all.dto';
+import { LoginAccountDto } from './dto/login-account.dto';
+import { SearchAccountsDto } from './dto/search-accounts.dto';
+import { UpdateAccountDto } from './dto/update-account.dto';
 import {
   AccountResponse,
   IAccount,
@@ -30,6 +30,7 @@ import {
   IPaginatedAccounts,
 } from './interfaces/account.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { RegisterUserDto } from './dto/register-user.dto';
 
 @UseGuards(authGuard.AuthGuard)
 @Controller('accounts')
@@ -39,7 +40,7 @@ export class AccountController {
   @authGuard.Roles('ADMIN')
   @Get()
   @HttpCode(HttpStatus.OK)
-  getUsersAll(
+  getAccounts(
     @Query(new ValidationPipe({ transform: true })) filters: GetAccountsAllDto,
   ): Promise<IPaginatedAccounts> {
     return this.accountService.getUsersAll(filters);
@@ -56,7 +57,7 @@ export class AccountController {
 
   @Get('/me')
   @HttpCode(HttpStatus.OK)
-  getMe(@authGuard.CurrentUser() AdminUser: authGuard.JwtPayload): Promise<IAccount> {
+  getCurrentAccount(@authGuard.CurrentUser() AdminUser: authGuard.JwtPayload): Promise<IAccount> {
     return this.accountService.getAccountById(AdminUser.sub);
   }
 
@@ -80,8 +81,8 @@ export class AccountController {
   @authGuard.Public()
   @Post('/register')
   @HttpCode(HttpStatus.CREATED)
-  async register(
-    @Body(new ValidationPipe({ transform: true })) dto: CreateAccountDto,
+  async registerAccount(
+    @Body(new ValidationPipe({ transform: true })) dto: RegisterUserDto,
   ): Promise<void> {
     await this.accountService.register(dto);
   }
@@ -89,7 +90,7 @@ export class AccountController {
   @authGuard.Public()
   @Post('/login')
   @HttpCode(HttpStatus.OK)
-  login(
+  loginAccount(
     @Body(new ValidationPipe({ transform: true })) dto: LoginAccountDto,
   ): Promise<ILoginResponse> {
     return this.accountService.login(dto);
@@ -134,7 +135,7 @@ export class AccountController {
   @Post('/avatar')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file', avatarMulterOptions))
-  async updateAvatar(
+  async updateAccountAvatar(
     @authGuard.CurrentUser() admin: authGuard.JwtPayload,
     @UploadedFile() file: Express.Multer.File,
   ) {
