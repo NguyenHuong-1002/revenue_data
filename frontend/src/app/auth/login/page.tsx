@@ -1,5 +1,11 @@
+import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { LoginForm } from '@/components/login-form';
+
+export const metadata: Metadata = {
+  title: 'Đăng Nhập',
+  description: 'Đăng Nhập Nền tảng quản lý doanh thu thông minh với AI',
+};
 
 export default function LoginPage() {
   return (

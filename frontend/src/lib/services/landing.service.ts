@@ -21,16 +21,6 @@ export interface TestimonialItem {
   content: string;
 }
 
-export interface PricingItem {
-  id?: number;
-  name: string;
-  price: string;
-  period: string;
-  description: string;
-  features: string; // JSON string format of array in db
-  popular: number;
-}
-
 export const landingService = {
   // Features API
   getFeatures: async () => {
@@ -83,24 +73,6 @@ export const landingService = {
   },
   deleteTestimonial: async (id: number) => {
     const res = await api.delete<TestimonialItem>(`/landing/testimonials/${id}`);
-    return res.data;
-  },
-
-  // Pricing API
-  getPricing: async () => {
-    const res = await api.get<PricingItem[]>('/landing/pricing');
-    return res.data;
-  },
-  createPricing: async (data: Partial<PricingItem>) => {
-    const res = await api.post<PricingItem>('/landing/pricing', data);
-    return res.data;
-  },
-  updatePricing: async (id: number, data: Partial<PricingItem>) => {
-    const res = await api.put<PricingItem>(`/landing/pricing/${id}`, data);
-    return res.data;
-  },
-  deletePricing: async (id: number) => {
-    const res = await api.delete<PricingItem>(`/landing/pricing/${id}`);
     return res.data;
   },
 };

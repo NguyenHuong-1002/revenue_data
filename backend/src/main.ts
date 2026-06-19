@@ -37,8 +37,6 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
-  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
-  logger.log(`🚀 Application is running on: http://localhost:${port}`);
 
   // 3. Webpack Hot Module Replacement (HMR)
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

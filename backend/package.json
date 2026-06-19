@@ -30,14 +30,20 @@
     "format": "Định dạng code bằng Prettier",
     "start": "Chạy server",
     "dev": "Chạy ở chế độ phát triển (HMR)",
+    "start:debug": "Chạy server ở chế debug (watch)",
     "start:prod": "Chạy server ở chế độ production",
-    "n": "Kiểm tra lỗi ESLint",
+    "lint": "Kiểm tra & tự động sửa lỗi ESLint",
     "db:init": "Khởi tạo database & tables từ database/init.sql",
     "db:setup": "Khởi tạo DB + import toàn bộ dữ liệu (1 lệnh duy nhất)",
     "data:products": "Import dữ liệu sản phẩm từ Excel",
     "data:sales": "Import dữ liệu bán hàng từ Excel",
     "data:inventory": "Import dữ liệu tồn kho từ Excel",
-    "data:all": "Import toàn bộ dữ liệu (products + sales + inventory)"
+    "data:all": "Import toàn bộ dữ liệu (products + sales + inventory)",
+    "check-data": "Kiểm tra dữ liệu trong database",
+    "migration:generate": "Tạo migration mới từ entity",
+    "migration:run": "Chạy migration",
+    "migration:revert": "Rollback migration",
+    "migration:create": "Tạo file migration trống"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

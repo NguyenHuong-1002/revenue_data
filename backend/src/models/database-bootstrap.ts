@@ -5,28 +5,6 @@ import * as path from 'node:path';
 
 const logger = new Logger('DatabaseBootstrap');
 
-/**
- * Tìm đường dẫn chính xác của tệp init.sql bằng cách kiểm tra nhiều đường dẫn khả thi
- * (Hỗ trợ chạy trực tiếp ts-node, chạy bundle webpack, hoặc start từ các thư mục khác nhau)
- */
-function findSqlPath(): string {
-  const possiblePaths = [
-    path.resolve(process.cwd(), '../database/init.sql'),
-    path.resolve(__dirname, '../../database/init.sql'),
-    path.resolve(__dirname, '../../../../database/init.sql'),
-  ];
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      return p;
-    }
-  }
-  // Fallback mặc định
-  return path.resolve(process.cwd(), '../database/init.sql');
-}
-
-/**
- * Tìm đường dẫn chính xác của tệp account.init.json
- */
 function findJsonPath(): string {
   const possiblePaths = [
     path.resolve(process.cwd(), 'src/data/account.init.json'),
@@ -38,83 +16,9 @@ function findJsonPath(): string {
       return p;
     }
   }
-  // Fallback mặc định
   return path.resolve(process.cwd(), 'src/data/account.init.json');
 }
 
-/**
- * Tìm đường dẫn chính xác của tệp plant.init.json
- */
-function findPlantJsonPath(): string {
-  const possiblePaths = [
-    path.resolve(process.cwd(), 'src/data/plant.init.json'),
-    path.resolve(__dirname, '../data/plant.init.json'),
-    path.resolve(__dirname, '../../../src/data/plant.init.json'),
-  ];
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      return p;
-    }
-  }
-  // Fallback mặc định
-  return path.resolve(process.cwd(), 'src/data/plant.init.json');
-}
-
-/**
- * Tìm đường dẫn chính xác của tệp storebranch.init.json
- */
-function findStoreJsonPath(): string {
-  const possiblePaths = [
-    path.resolve(process.cwd(), 'src/data/storebranch.init.json'),
-    path.resolve(__dirname, '../data/storebranch.init.json'),
-    path.resolve(__dirname, '../../../src/data/storebranch.init.json'),
-  ];
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      return p;
-    }
-  }
-  // Fallback mặc định
-  return path.resolve(process.cwd(), 'src/data/storebranch.init.json');
-}
-
-/**
- * Tìm đường dẫn chính xác của tệp notification.init.json
- */
-function findNotificationJsonPath(): string {
-  const possiblePaths = [
-    path.resolve(process.cwd(), 'src/data/notification.init.json'),
-    path.resolve(__dirname, '../data/notification.init.json'),
-    path.resolve(__dirname, '../../../src/data/notification.init.json'),
-  ];
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      return p;
-    }
-  }
-  return path.resolve(process.cwd(), 'src/data/notification.init.json');
-}
-
-/**
- * Tìm đường dẫn chính xác của tệp account_notification.init.json
- */
-function findAccountNotificationJsonPath(): string {
-  const possiblePaths = [
-    path.resolve(process.cwd(), 'src/data/account_notification.init.json'),
-    path.resolve(__dirname, '../data/account_notification.init.json'),
-    path.resolve(__dirname, '../../../src/data/account_notification.init.json'),
-  ];
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      return p;
-    }
-  }
-  return path.resolve(process.cwd(), 'src/data/account_notification.init.json');
-}
-
-/**
- * 1. Kiểm tra kết nối cơ sở dữ liệu MySQL
- */
 export async function checkDatabaseConnection(
   host: string,
   port: number,
@@ -131,48 +35,22 @@ export async function checkDatabaseConnection(
   });
 }
 
-/**
- * 2. Khởi tạo cấu trúc Database & các bảng từ init.sql nếu chưa tồn tại
- */
 export async function initializeDatabaseSchema(
   connection: Connection,
   dbName: string,
 ): Promise<void> {
-  // Kiểm tra xem database có tồn tại hay không
   const [databases] = await connection.query<any[]>(`SHOW DATABASES LIKE ?`, [dbName]);
-  const dbExists = databases.length > 0;
-
-  let hasTables = false;
-  if (dbExists) {
-    // Kiểm tra xem database đã có bảng nào chưa
-    const [tables] = await connection.query<any[]>(
-      `SELECT table_name FROM information_schema.tables WHERE table_schema = ?`,
-      [dbName],
+  if (databases.length === 0) {
+    logger.log(`Database '${dbName}' chưa tồn tại. Đang tạo...`);
+    await connection.query(
+      `CREATE DATABASE \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
     );
-    hasTables = tables.length > 0;
-  }
-
-  // Nếu database chưa tồn tại hoặc chưa có bất kỳ bảng nào, khởi tạo cấu trúc dữ liệu
-  if (!dbExists || !hasTables) {
-    const sqlPath = findSqlPath();
-    logger.log(
-      `Database '${dbName}' chưa khởi tạo hoặc rỗng. Đang tạo cấu trúc bảng từ init.sql tại: ${sqlPath}`,
-    );
-    if (fs.existsSync(sqlPath)) {
-      const sql = fs.readFileSync(sqlPath, 'utf-8');
-      await connection.query(sql);
-      logger.log(`Khởi tạo cấu trúc bảng từ init.sql thành công!`);
-    } else {
-      logger.error(`Không tìm thấy tệp SQL cấu trúc dữ liệu tại ${sqlPath}`);
-    }
+    logger.log(`Đã tạo database '${dbName}' thành công!`);
   } else {
-    logger.log(`Cơ sở dữ liệu '${dbName}' đã tồn tại và có dữ liệu cấu trúc.`);
+    logger.log(`Database '${dbName}' đã tồn tại.`);
   }
 }
 
-/**
- * 3. Nạp (Seed) 10 tài khoản mẫu từ file JSON nếu bảng account đang trống
- */
 export async function seedMockAccounts(pool: Pool): Promise<void> {
   try {
     const [accountCountRows] = await pool.query<any[]>(`SELECT COUNT(*) AS cnt FROM account`);
@@ -180,9 +58,7 @@ export async function seedMockAccounts(pool: Pool): Promise<void> {
 
     if (accountCount === 0) {
       const jsonPath = findJsonPath();
-      logger.log(
-        `Bảng account trống. Bắt đầu nạp 10 tài khoản mẫu từ account.init.json tại: ${jsonPath}`,
-      );
+      logger.log(`Bảng account trống. Bắt đầu nạp 10 tài khoản mẫu từ account.init.json tại: ${jsonPath}`);
       if (fs.existsSync(jsonPath)) {
         const accountsJson = fs.readFileSync(jsonPath, 'utf-8');
         const accounts = JSON.parse(accountsJson);
@@ -218,215 +94,3 @@ export async function seedMockAccounts(pool: Pool): Promise<void> {
   }
 }
 
-/**
- * 4. Nạp (Seed) dữ liệu nhà máy mẫu từ file JSON nếu bảng plant đang trống
- */
-export async function seedMockPlants(pool: Pool): Promise<void> {
-  try {
-    const jsonPath = findPlantJsonPath();
-    if (fs.existsSync(jsonPath)) {
-      const plantsJson = fs.readFileSync(jsonPath, 'utf-8');
-      const plants = JSON.parse(plantsJson);
-
-      logger.log(`Bắt đầu đồng bộ ${plants.length} nhà máy từ plant.init.json tại: ${jsonPath}`);
-
-      let syncCount = 0;
-      for (const pl of plants) {
-        await pool.query(
-          `INSERT INTO Plant (plant_id, name_plant, address, manager_name, phone)
-           VALUES (?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE 
-             name_plant = VALUES(name_plant),
-             address = VALUES(address),
-             manager_name = VALUES(manager_name),
-             phone = VALUES(phone)`,
-          [
-            pl.plant_id,
-            pl.name_plant,
-            pl.address || 'Chưa xác định',
-            pl.manager_name || 'Người quản lý',
-            pl.phone || '0000000000',
-          ],
-        );
-        syncCount++;
-      }
-      logger.log(`Đã đồng bộ thành công ${syncCount} nhà máy vào bảng Plant!`);
-    } else {
-      logger.error(`Không tìm thấy tệp nhà máy JSON tại ${jsonPath}`);
-    }
-  } catch (err: any) {
-    logger.error(`Lỗi khi nạp dữ liệu nhà máy mẫu: ${err.message}`);
-  }
-}
-
-/**
- * 5. Nạp (Seed) dữ liệu chi nhánh mẫu từ file JSON
- */
-export async function seedMockStores(pool: Pool): Promise<void> {
-  try {
-    const jsonPath = findStoreJsonPath();
-    if (!fs.existsSync(jsonPath)) {
-      logger.error(`Không tìm thấy tệp chi nhánh JSON tại ${jsonPath}`);
-      return;
-    }
-
-    // Đảm bảo cột address, latitude, longitude tồn tại trước khi seed
-    try {
-      await pool.query(
-        `ALTER TABLE storeBranch ADD COLUMN IF NOT EXISTS address VARCHAR(255) DEFAULT NULL`,
-      );
-      await pool.query(
-        `ALTER TABLE storeBranch ADD COLUMN IF NOT EXISTS latitude DOUBLE DEFAULT NULL`,
-      );
-      await pool.query(
-        `ALTER TABLE storeBranch ADD COLUMN IF NOT EXISTS longitude DOUBLE DEFAULT NULL`,
-      );
-      logger.log('Đã kiểm tra / thêm cột address, latitude, longitude vào bảng storeBranch.');
-    } catch (alterErr: any) {
-      try {
-        // Fallback kiểm tra thông qua INFORMATION_SCHEMA
-        const checkAndAdd = async (col: string, ddl: string) => {
-          const [cols] = await pool.query<any[]>(
-            `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'storeBranch' AND COLUMN_NAME = ?`,
-            [col],
-          );
-          if (cols.length === 0) {
-            await pool.query(ddl);
-            logger.log(`Đã thêm cột ${col} vào bảng storeBranch.`);
-          }
-        };
-        await checkAndAdd(
-          'address',
-          `ALTER TABLE storeBranch ADD COLUMN address VARCHAR(255) DEFAULT NULL`,
-        );
-        await checkAndAdd(
-          'latitude',
-          `ALTER TABLE storeBranch ADD COLUMN latitude DOUBLE DEFAULT NULL`,
-        );
-        await checkAndAdd(
-          'longitude',
-          `ALTER TABLE storeBranch ADD COLUMN longitude DOUBLE DEFAULT NULL`,
-        );
-      } catch (innerErr: any) {
-        logger.warn(`Không thể thêm các cột tọa độ: ${innerErr.message}`);
-      }
-    }
-
-    const storesJson = fs.readFileSync(jsonPath, 'utf-8');
-    const stores = JSON.parse(storesJson);
-
-    logger.log(
-      `Bắt đầu đồng bộ ${stores.length} chi nhánh từ storebranch.init.json tại: ${jsonPath}`,
-    );
-
-    let syncCount = 0;
-    for (const st of stores) {
-      await pool.query(
-        `INSERT INTO storeBranch (store_id, name, city, address, latitude, longitude)
-         VALUES (?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE name = VALUES(name), city = VALUES(city), address = VALUES(address), latitude = VALUES(latitude), longitude = VALUES(longitude)`,
-        [
-          st.store_id,
-          st.name,
-          st.city || 'Chưa xác định',
-          st.address ?? null,
-          st.latitude ?? null,
-          st.longitude ?? null,
-        ],
-      );
-      syncCount++;
-    }
-    logger.log(`Đã đồng bộ thành công ${syncCount} chi nhánh vào bảng storeBranch!`);
-  } catch (err: any) {
-    logger.error(`Lỗi khi nạp dữ liệu chi nhánh mẫu: ${err.message}`);
-  }
-}
-
-/**
- * 6. Nạp (Seed) dữ liệu notification mẫu từ file JSON
- */
-export async function seedMockNotifications(pool: Pool): Promise<void> {
-  try {
-    const [rows] = await pool.query<any[]>(`SELECT COUNT(*) AS cnt FROM notification`);
-    const count = Number(rows[0].cnt);
-
-    if (count === 0) {
-      const jsonPath = findNotificationJsonPath();
-      logger.log(
-        `Bảng notification trống. Bắt đầu nạp dữ liệu mẫu từ notification.init.json tại: ${jsonPath}`,
-      );
-      if (fs.existsSync(jsonPath)) {
-        const notificationJson = fs.readFileSync(jsonPath, 'utf-8');
-        const notifications = JSON.parse(notificationJson);
-
-        for (const noti of notifications) {
-          await pool.query(
-            `INSERT INTO notification (notification_id, title, content, type, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [
-              noti.notification_id,
-              noti.title,
-              noti.content,
-              noti.type || 'SYSTEM',
-              noti.created_at ? new Date(noti.created_at) : new Date(),
-              noti.updated_at ? new Date(noti.updated_at) : new Date(),
-            ],
-          );
-        }
-        logger.log(
-          `Đã nạp thành công ${notifications.length} thông báo mẫu vào bảng notification!`,
-        );
-      } else {
-        logger.error(`Không tìm thấy tệp notification JSON tại ${jsonPath}`);
-      }
-    } else {
-      logger.log('Bảng notification đã có dữ liệu, bỏ qua bước seeding.');
-    }
-  } catch (err: any) {
-    logger.error(`Lỗi khi nạp dữ liệu notification mẫu: ${err.message}`);
-  }
-}
-
-/**
- * 7. Nạp (Seed) dữ liệu account_notification mẫu từ file JSON
- */
-export async function seedMockAccountNotifications(pool: Pool): Promise<void> {
-  try {
-    const [rows] = await pool.query<any[]>(`SELECT COUNT(*) AS cnt FROM account_notification`);
-    const count = Number(rows[0].cnt);
-
-    if (count === 0) {
-      const jsonPath = findAccountNotificationJsonPath();
-      logger.log(
-        `Bảng account_notification trống. Bắt đầu nạp dữ liệu mẫu từ account_notification.init.json tại: ${jsonPath}`,
-      );
-      if (fs.existsSync(jsonPath)) {
-        const mappingsJson = fs.readFileSync(jsonPath, 'utf-8');
-        const mappings = JSON.parse(mappingsJson);
-
-        for (const mapping of mappings) {
-          await pool.query(
-            `INSERT INTO account_notification (account_id, notification_id, is_read, read_at, is_deleted, deleted_at)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [
-              mapping.account_id,
-              mapping.notification_id,
-              mapping.is_read ?? 0,
-              mapping.read_at ? new Date(mapping.read_at) : null,
-              mapping.is_deleted ?? 0,
-              mapping.deleted_at ? new Date(mapping.deleted_at) : null,
-            ],
-          );
-        }
-        logger.log(`Đã nạp thành công ${mappings.length} mapping vào bảng account_notification!`);
-      } else {
-        logger.error(`Không tìm thấy tệp account_notification JSON tại ${jsonPath}`);
-      }
-    } else {
-      logger.log('Bảng account_notification đã có dữ liệu, bỏ qua bước seeding.');
-    }
-  } catch (err: any) {
-    logger.error(`Lỗi khi nạp dữ liệu account_notification mẫu: ${err.message}`);
-  }
-}

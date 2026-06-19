@@ -10,14 +10,12 @@ import { GeneralTab } from './components/general-tab';
 import { FeaturesTab } from './components/features-tab';
 import { AiInsightsTab } from './components/ai-insights-tab';
 import { TestimonialsTab } from './components/testimonials-tab';
-import { PricingTab } from './components/pricing-tab';
 
 export default function LandingManagerPage() {
   const [activeTab, setActiveTab] = useState<
-    'general' | 'features' | 'ai' | 'testimonials' | 'pricing'
+    'general' | 'features' | 'ai' | 'testimonials'
   >('general');
 
-  // Local config (Hero, Stats, FAQs)
   const [config, setConfig] = useState<LandingConfig | null>(null);
 
   useEffect(() => {
@@ -36,11 +34,10 @@ export default function LandingManagerPage() {
     <div className="flex flex-1 flex-col p-6 gap-6 max-w-7xl mx-auto w-full">
       <DashboardHeader
         title="Quản trị Landing Page"
-        description="Quản lý toàn bộ thông tin chung, chức năng AI, các tính năng nổi bật, phản hồi của khách hàng và bảng giá."
+        description="Quản lý toàn bộ thông tin chung, chức năng AI, các tính năng nổi bật và phản hồi của khách hàng."
         icon={Globe}
       />
 
-      {/* Tab Navigation */}
       <div className="flex border-b border-border/60 pb-px gap-2 overflow-x-auto scrollbar-none">
         {(
           [
@@ -48,7 +45,6 @@ export default function LandingManagerPage() {
             { key: 'features', label: 'Tính năng nổi bật' },
             { key: 'ai', label: 'Chức năng AI' },
             { key: 'testimonials', label: 'Ý kiến khách hàng' },
-            { key: 'pricing', label: 'Gói Bảng giá' },
           ] as const
         ).map((tab) => (
           <button
@@ -66,13 +62,11 @@ export default function LandingManagerPage() {
         ))}
       </div>
 
-      {/* Tab Content */}
       <div className="flex flex-col gap-6">
         {activeTab === 'general' && <GeneralTab config={config} setConfig={setConfig} />}
         {activeTab === 'features' && <FeaturesTab />}
         {activeTab === 'ai' && <AiInsightsTab />}
         {activeTab === 'testimonials' && <TestimonialsTab />}
-        {activeTab === 'pricing' && <PricingTab />}
       </div>
     </div>
   );
