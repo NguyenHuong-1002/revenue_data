@@ -19,11 +19,20 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { GetProductAllDto } from './dto/get-product-all.dto';
 
+/**
+ * Controller quản lý sản phẩm
+ * Routes: /products
+ */
 @UseGuards(authGuard.AuthGuard)
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
+  /**
+   * [PUBLIC] Lấy danh sách sản phẩm (phân trang, lọc, tìm kiếm)
+   * GET /products?page=1&limit=10&color=xxx
+   */
+  @authGuard.Roles('PUBLIC')
   @Get()
   @HttpCode(HttpStatus.OK)
   getProducts(
@@ -32,6 +41,10 @@ export class ProductController {
     return this.productService.getProductsAll(query);
   }
 
+  /**
+   * [ADMIN] Tạo sản phẩm mới
+   * POST /products
+   */
   @authGuard.Roles('ADMIN')
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -42,6 +55,10 @@ export class ProductController {
     return this.productService.createProduct(productDTO, admin.username);
   }
 
+  /**
+   * [PUBLIC] Lấy thống kê sản phẩm theo nhóm
+   * GET /products/stats
+   */
   @Get('/stats')
   @HttpCode(HttpStatus.OK)
   getProductStats(): Promise<{
@@ -53,11 +70,19 @@ export class ProductController {
     return this.productService.getProductStats();
   }
 
+  /**
+   * [PUBLIC] Lấy chi tiết sản phẩm theo ID
+   * GET /products/:id
+   */
   @Get('/:id')
   getProductById(@Param('id') id: string): Promise<IProduct> {
     return this.productService.getDetailProduct(id);
   }
 
+  /**
+   * [ADMIN] Cập nhật sản phẩm
+   * PUT /products/:id
+   */
   @authGuard.Roles('ADMIN')
   @Put('/:id')
   @HttpCode(HttpStatus.OK)
@@ -69,6 +94,10 @@ export class ProductController {
     return this.productService.updateProduct(productDTO, id, admin.username);
   }
 
+  /**
+   * [ADMIN] Xóa sản phẩm
+   * DELETE /products/:id
+   */
   @authGuard.Roles('ADMIN')
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)

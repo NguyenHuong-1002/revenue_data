@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ChatSession } from '../../entities/chat-session.entity';
 import { ChatMessage } from '../../entities/chat-message.entity';
 import { DatabaseService } from 'src/models/database.service';
@@ -16,9 +16,14 @@ export type ChatMessagePayload = {
   content: string;
 };
 
+const AI_REQUEST_TIMEOUT_MS = 30_000; // 30 seconds
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // max 10 requests per window
+
 @Injectable()
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
+  private readonly rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
   constructor(
     @InjectRepository(ChatSession)
@@ -161,9 +166,15 @@ export class ChatService {
     messages: ChatMessagePayload[],
     sessionId?: number,
   ): Promise<{ role: string; content: string }> {
-    const apiKey =
-      process.env.OPENROUTER_API_KEY || process.env.API_OPEN_ROUTR || process.env.DEEPSEEK_API_KEY;
-    const isOpenRouter = !!(process.env.OPENROUTER_API_KEY || process.env.API_OPEN_ROUTR);
+    // Rate limit check
+    const rateLimitKey = `chat:${sessionId || 'anonymous'}`;
+    if (!this.checkRateLimit(rateLimitKey)) {
+      throw new InternalServerErrorException(
+        'Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau giây lát!',
+      );
+    }
+
+    const apiKey = process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
       throw new InternalServerErrorException(
@@ -171,10 +182,10 @@ export class ChatService {
       );
     }
 
+    const isOpenRouter = !!(process.env.OPENROUTER_API_KEY || process.env.API_OPEN_ROUTR);
     const baseUrl = isOpenRouter
       ? 'https://openrouter.ai/api/v1'
       : process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
-
     const model = isOpenRouter
       ? process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat'
       : process.env.DEEPSEEK_MODEL || 'deepseek-chat';
@@ -229,24 +240,17 @@ export class ChatService {
     }
 
     try {
-      const response = await fetch(`${baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
+      const data = await this.fetchWithTimeout(
+        `${baseUrl}/chat/completions`,
+        {
           model,
           messages: finalMessages,
           stream: false,
           temperature: 0.7,
-        }),
-      });
+        },
+        headers,
+      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        this.logger.error(`AI API error: ${response.status} - ${errorText}`);
-        throw new InternalServerErrorException('AI API request failed');
-      }
-
-      const data = await response.json();
       const content = data.choices?.[0]?.message?.content ?? '';
 
       // Save assistant reply to DB if sessionId provided
@@ -290,6 +294,69 @@ export class ChatService {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Kiểm tra rate limit cho một key (IP hoặc user ID)
+   * @param key Identifier để check rate limit
+   * @returns true nếu request được phép, false nếu bị chặn
+   */
+  private checkRateLimit(key: string): boolean {
+    const now = Date.now();
+    const entry = this.rateLimitMap.get(key);
+
+    if (!entry || now > entry.resetAt) {
+      this.rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+      return true;
+    }
+
+    if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+      return false;
+    }
+
+    entry.count++;
+    return true;
+  }
+
+  /**
+   * Gọi AI API với timeout và error handling
+   * @param url URL endpoint
+   * @param body Request body
+   * @param headers Request headers
+   * @returns Response data
+   */
+  private async fetchWithTimeout(
+    url: string,
+    body: Record<string, unknown>,
+    headers: Record<string, string>,
+  ): Promise<any> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error(`AI API error: ${response.status} - ${errorText}`);
+        throw new InternalServerErrorException('Yêu cầu AI API thất bại');
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        this.logger.error(`AI API request timeout after ${AI_REQUEST_TIMEOUT_MS}ms`);
+        throw new InternalServerErrorException('Yêu cầu AI API quá thời gian chờ');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
 
   /**
    * Tìm kiếm cuộc hội thoại bằng ID, ném lỗi nếu không tồn tại
@@ -340,24 +407,21 @@ export class ChatService {
     }
 
     try {
-      const response = await fetch(`${baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
+      const data = await this.fetchWithTimeout(
+        `${baseUrl}/chat/completions`,
+        {
           model,
           messages: [{ role: 'user', content: prompt }],
           stream: false,
           temperature: 0.6,
-        }),
-      });
+        },
+        headers,
+      );
 
-      if (response.ok) {
-        const data = await response.json();
-        const description = data.choices?.[0]?.message?.content ?? '';
-        if (description) {
-          const cleaned = description.trim().replace(/^["']|["']$/g, '');
-          await this.sessionRepo.update(sessionId, { description: cleaned });
-        }
+      const description = data.choices?.[0]?.message?.content ?? '';
+      if (description) {
+        const cleaned = description.trim().replace(/^["']|["']$/g, '');
+        await this.sessionRepo.update(sessionId, { description: cleaned });
       }
     } catch (error) {
       this.logger.error('Background description generation failed', error);

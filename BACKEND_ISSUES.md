@@ -2,7 +2,7 @@
 
 > Cập nhật: 2026-06-19
 > Tổng số lỗi: 11
-> Đã fix: 5
+> Đã fix: 11
 
 ---
 
@@ -58,61 +58,66 @@
 
 ---
 
-### 5. Landing POST/PUT/DELETE không có role restriction
+### 5. ✅ FIXED - Landing POST/PUT/DELETE không có role restriction
 
 | Thuộc tính | Chi tiết |
 |-----------|----------|
 | **File** | `src/modules/landing/features/feature.controller.ts`, `pricing.controller.ts`, `testimonial.controller.ts`, `ai-insight.controller.ts` |
 | **Mô tả** | GET có `@Public()` nhưng POST/PUT/DELETE không có `@Roles` |
 | **Impact** | Bất kỳ user authenticated đều có thể tạo/sửa/xóa landing content |
-| **Fix** | Thêm `@authGuard.Roles('ADMIN')` cho POST/PUT/DELETE |
+| **Fix** | Đã thêm `@authGuard.Roles('ADMIN')` cho POST/PUT/DELETE |
+| **Ngày fix** | 2026-06-19 |
 
 ---
 
-### 6. RegisterUserDto confirmPassword không validate khớp password
+### 6. ✅ FIXED - RegisterUserDto confirmPassword không validate khớp password
 
 | Thuộc tính | Chi tiết |
 |-----------|----------|
 | **File** | `src/modules/accounts/dto/register-user.dto.ts` |
 | **Mô tả** | `@Matches` chỉ validate format, không validate khớp với `password` |
 | **Impact** | User có thể nhập confirmPassword khác password |
-| **Fix** | Tạo custom validator `@Match('password')` hoặc validate trong service |
+| **Fix** | Đã tạo custom validator `MatchPasswordValidator` và áp dụng cho DTO |
+| **Ngày fix** | 2026-06-19 |
 
 ---
 
 ## 🟡 MEDIUM (Không nhất quán/duplicated code)
 
-### 7. CreateBranchDto có `latitude`/`longitude` nhưng entity không có
+### 7. ✅ FIXED - CreateBranchDto có `latitude`/`longitude` nhưng entity không có
 
 | Thuộc tính | Chi tiết |
 |-----------|----------|
 | **File** | `src/modules/branches/dto/create-branch.dto.ts` |
 | **Mô tả** | DTO khai báo `latitude?: number` và `longitude?: number` nhưng entity không có |
 | **Impact** | Data sẽ bị bỏ qua, không lưu vào DB |
-| **Fix** | Xóa 2 field này hoặc thêm vào entity |
+| **Fix** | Đã xóa `latitude`, `longitude` và `address` khỏi DTO (khi fix lỗi #1) |
+| **Ngày fix** | 2026-06-19 |
 
 ---
 
-### 8. ProductEntity dùng `string` cho created_at/updated_at
+### 8. ✅ FIXED - ProductEntity dùng `string` cho created_at/updated_at
 
 | Thuộc tính | Chi tiết |
 |-----------|----------|
 | **File** | `src/modules/products/entities/product.entity.ts` |
 | **Mô tả** | `created_at!: string` và `updated_at!: string` thay vì `Date` |
 | **Impact** | Không gây lỗi nhưng không nhất quán kiểu dữ liệu |
-| **Fix** | Đổi sang `Date` type như các entity khác |
+| **Fix** | Đã đổi sang `Date` type như các entity khác |
+| **Ngày fix** | 2026-06-19 |
 
 ---
 
-### 9. Unused imports
+### 9. ✅ FIXED - Unused imports
 
-| File | Import thừa |
-|------|-------------|
-| `src/modules/plants/plant.service.ts` | `FindOptionsWhere` từ `typeorm` |
-| `src/modules/chat/chat.service.ts` | `Not` từ `typeorm` |
-| `src/modules/accounts/dto/register-user.dto.ts` | `IsIn` từ `class-validator` |
+| File | Import thừa | Trạng thái |
+|------|-------------|------------|
+| `src/modules/plants/plant.service.ts` | `FindOptionsWhere` từ `typeorm` | ✅ Đang dùng (line 24) |
+| `src/modules/chat/chat.service.ts` | `Not` từ `typeorm` | ✅ Đã xóa |
+| `src/modules/accounts/dto/register-user.dto.ts` | `IsIn` từ `class-validator` | ✅ Đang dùng (line 28-31) |
 
-**Fix:** Xóa các import không sử dụng
+**Fix:** Đã xóa `Not` không sử dụng khỏi `chat.service.ts`
+**Ngày fix:** 2026-06-19
 
 ---
 
@@ -126,17 +131,18 @@
 | **Mô tả** | GET all products yêu cầu auth nhưng là public data |
 | **Impact** | User phải login mới xem được products |
 | **Fix** | Thêm `@authGuard.Public()` cho GET endpoints |
-
+| **Ngày fix** | 2026-06-19 |
 ---
 
-### 11. AI API calls không có timeout/rate limiting
+### 11. ✅ FIXED - AI API calls không có timeout/rate limiting
 
 | Thuộc tính | Chi tiết |
 |-----------|----------|
 | **File** | `src/modules/chat/chat.service.ts` |
 | **Mô tả** | Fetch AI API không có timeout config |
 | **Impact** | Có thể bị treo nếu API chậm |
-| **Fix** | Thêm timeout và abort controller |
+| **Fix** | Đã thêm timeout 30s bằng AbortController và rate limiting (10 req/min) |
+| **Ngày fix** | 2026-06-19 |
 
 ---
 
@@ -156,6 +162,8 @@
 ## Fix Priority
 
 1. **CRITICAL** - Fix ngay: ~~#1 (branch entity)~~ ✅, ~~#2 (chat module)~~ ✅
-2. **HIGH** - Fix sớm: ~~#3 (password)~~ ✅, ~~#4 (roles)~~ ✅, #5 (landing roles), #6 (validation)
-3. **MEDIUM** - Fix khi có thời gian: #7-#9
-4. **LOW** - Cải thiện dần: #10-#11
+2. **HIGH** - Fix sớm: ~~#3 (password)~~ ✅, ~~#4 (roles)~~ ✅, ~~#5 (landing roles)~~ ✅, ~~#6 (validation)~~ ✅
+3. **MEDIUM** - Fix khi có thời gian: ~~#7 (branch dto)~~ ✅, ~~#8 (product date)~~ ✅, ~~#9 (unused imports)~~ ✅
+4. **LOW** - Cải thiện dần: ~~#10 (GET auth)~~ ✅, ~~#11 (AI timeout)~~ ✅
+
+🎉 **TẤT CẢ VẤN ĐỀ ĐÃ ĐƯỢC FIX!**

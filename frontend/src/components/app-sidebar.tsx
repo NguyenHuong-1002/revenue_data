@@ -66,11 +66,6 @@ const data = {
       url: '/dashboard/inventory-stats',
       icon: <BoxesIcon />,
     },
-    {
-      title: 'Dự báo xu hướng doanh thu và tồn kho',
-      url: '/dashboard/trend-forecast',
-      icon: <TrendingUpIcon />,
-    },
   ],
   management: [
     {

@@ -63,23 +63,6 @@ export function QuickActions() {
             <p className="text-xs text-muted-foreground mt-1">Chi tiết tồn kho tại các nhà máy</p>
           </div>
         </Link>
-
-        {/* 4. Dự báo xu hướng AI */}
-        <Link
-          href="/dashboard/trend-forecast"
-          className="group relative overflow-hidden rounded-xl border border-border/80 bg-card p-5 shadow-xs transition-all duration-200 hover:border-purple-500/50 hover:shadow-md cursor-pointer flex flex-col justify-between min-h-[120px]"
-        >
-          <div className="flex justify-between items-start">
-            <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground/45 group-hover:text-purple-500 transition-colors" />
-          </div>
-          <div className="mt-4">
-            <h3 className="font-bold text-sm text-foreground">Phân Tích Xu Hướng</h3>
-            <p className="text-xs text-muted-foreground mt-1">Dự đoán doanh số bằng mô hình AI</p>
-          </div>
-        </Link>
       </div>
     </div>
   );

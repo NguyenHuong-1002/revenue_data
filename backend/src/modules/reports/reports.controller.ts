@@ -15,12 +15,20 @@ import * as authGuard from 'src/middlewares/auth.guard';
 import { ReportQueryDto } from './dto/report-query.dto';
 import { ReportsService } from './reports.service';
 
+/**
+ * Controller xuất báo cáo (PDF, Excel)
+ * Routes: /reports
+ */
 @UseGuards(authGuard.AuthGuard)
 @authGuard.Roles('ADMIN')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
+  /**
+   * [ADMIN] Xuất báo cáo tăng trưởng PDF
+   * GET /reports/growth/pdf?startDate=xxx&endDate=xxx
+   */
   @Get('growth/pdf')
   @HttpCode(HttpStatus.OK)
   async exportGrowthPdf(
@@ -35,6 +43,10 @@ export class ReportsController {
     return new StreamableFile(buffer);
   }
 
+  /**
+   * [ADMIN] Xuất báo cáo tăng trưởng Excel
+   * GET /reports/growth/excel?startDate=xxx&endDate=xxx
+   */
   @Get('growth/excel')
   @HttpCode(HttpStatus.OK)
   async exportGrowthExcel(
@@ -49,6 +61,10 @@ export class ReportsController {
     return new StreamableFile(buffer);
   }
 
+  /**
+   * [ADMIN] Xuất báo cáo doanh thu PDF
+   * GET /reports/revenue/pdf?startDate=xxx&endDate=xxx
+   */
   @Get('revenue/pdf')
   @HttpCode(HttpStatus.OK)
   async exportRevenuePdf(
@@ -63,6 +79,10 @@ export class ReportsController {
     return new StreamableFile(buffer);
   }
 
+  /**
+   * [ADMIN] Xuất báo cáo doanh thu Excel
+   * GET /reports/revenue/excel?startDate=xxx&endDate=xxx
+   */
   @Get('revenue/excel')
   @HttpCode(HttpStatus.OK)
   async exportRevenueExcel(

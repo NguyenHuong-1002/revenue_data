@@ -19,11 +19,19 @@ import { CreatePlantDto } from './dto/create-plant.dto';
 import { GetPlantAllDto } from './dto/get-plant-all.dto';
 import { UpdatePlantDto } from './dto/update-plant.dto';
 
+/**
+ * Controller quản lý nhà máy (Plant)
+ * Routes: /plants
+ */
 @UseGuards(authGuard.AuthGuard)
 @Controller('plants')
 export class PlantController {
   constructor(private readonly plantService: PlantService) {}
 
+  /**
+   * [PUBLIC] Lấy danh sách nhà máy (phân trang, lọc theo tên/thành phố)
+   * GET /plants?page=1&limit=10&name=xxx
+   */
   @authGuard.Public()
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -33,6 +41,10 @@ export class PlantController {
     return this.plantService.getAll(query);
   }
 
+  /**
+   * [PUBLIC] Lấy chi tiết nhà máy theo ID
+   * GET /plants/:id
+   */
   @authGuard.Public()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
@@ -40,6 +52,10 @@ export class PlantController {
     return this.plantService.getById(id);
   }
 
+  /**
+   * [ADMIN] Tạo nhà máy mới
+   * POST /plants
+   */
   @authGuard.Roles('ADMIN')
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -50,6 +66,10 @@ export class PlantController {
     return this.plantService.create(dto, admin.username);
   }
 
+  /**
+   * [ADMIN] Cập nhật nhà máy
+   * PATCH /plants/:id
+   */
   @authGuard.Roles('ADMIN')
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
@@ -61,6 +81,10 @@ export class PlantController {
     return this.plantService.update(id, dto, admin.username);
   }
 
+  /**
+   * [ADMIN] Xóa nhà máy
+   * DELETE /plants/:id
+   */
   @authGuard.Roles('ADMIN')
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)

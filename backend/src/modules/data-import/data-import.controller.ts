@@ -12,11 +12,19 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as authGuard from 'src/middlewares/auth.guard';
 import { DataImportService } from './data-import.service';
 
+/**
+ * Controller nhập dữ liệu từ file Excel
+ * Routes: /import
+ */
 @UseGuards(authGuard.AuthGuard)
 @Controller('import')
 export class DataImportController {
   constructor(private readonly dataImportService: DataImportService) {}
 
+  /**
+   * [ADMIN] Nhập dữ liệu sản phẩm từ file Excel
+   * POST /import/products
+   */
   @authGuard.Roles('ADMIN')
   @Post('products')
   @HttpCode(HttpStatus.OK)
@@ -28,6 +36,10 @@ export class DataImportController {
     return this.dataImportService.importProducts(file.buffer);
   }
 
+  /**
+   * [ADMIN] Nhập dữ liệu bán hàng từ file Excel
+   * POST /import/sales
+   */
   @authGuard.Roles('ADMIN')
   @Post('sales')
   @HttpCode(HttpStatus.OK)
@@ -39,6 +51,10 @@ export class DataImportController {
     return this.dataImportService.importSaleReports(file.buffer);
   }
 
+  /**
+   * [ADMIN] Nhập dữ liệu tồn kho từ file Excel
+   * POST /import/inventory
+   */
   @authGuard.Roles('ADMIN')
   @Post('inventory')
   @HttpCode(HttpStatus.OK)

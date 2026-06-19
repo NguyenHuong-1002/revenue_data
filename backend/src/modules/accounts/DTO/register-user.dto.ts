@@ -1,4 +1,5 @@
-import { IsEmail, IsIn, IsNotEmpty, IsString, Matches, MinLength } from 'class-validator';
+import { IsEmail, IsIn, IsNotEmpty, IsString, MinLength, Validate } from 'class-validator';
+import { MatchPasswordValidator } from 'src/validators/match-password.validator';
 
 export class RegisterUserDto {
   @IsNotEmpty({ message: 'Họ tên không được để trống!' })
@@ -16,12 +17,18 @@ export class RegisterUserDto {
 
   @IsNotEmpty({ message: 'Xác nhận password không được để trống!' })
   @IsString({ message: 'Xác nhận password phải là chuỗi ký tự!' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
-    message: 'Xác nhận password phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số!',
+  @Validate(MatchPasswordValidator, ['password'], {
+    message: 'Xác nhận password không khớp với password!',
   })
   confirmPassword!: string;
 
   @IsNotEmpty({ message: 'Email không được để trống!' })
   @IsEmail({}, { message: 'Email không đúng định dạng!' })
   mail!: string;
+
+  @IsIn(['STAFF'], { message: 'Role chỉ chấp nhận: STAFF!' })
+  role: 'STAFF' = 'STAFF';
+
+  @IsIn(['ACTIVE'], { message: 'Trạng thái chỉ chấp nhận: ACTIVE!' })
+  status_account: 'ACTIVE' = 'ACTIVE';
 }

@@ -32,11 +32,19 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RegisterUserDto } from './dto/register-user.dto';
 
+/**
+ * Controller quản lý tài khoản người dùng
+ * Routes: /accounts
+ */
 @UseGuards(authGuard.AuthGuard)
 @Controller('accounts')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
+  /**
+   * [ADMIN] Lấy danh sách tất cả tài khoản (phân trang)
+   * GET /accounts?page=1&limit=10
+   */
   @authGuard.Roles('ADMIN')
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -46,6 +54,10 @@ export class AccountController {
     return this.accountService.getUsersAll(filters);
   }
 
+  /**
+   * [ADMIN] Tìm kiếm tài khoản theo từ khóa
+   * GET /accounts/search?keyword=xxx
+   */
   @authGuard.Roles('ADMIN')
   @Get('/search')
   @HttpCode(HttpStatus.OK)
@@ -55,12 +67,20 @@ export class AccountController {
     return this.accountService.searchAccounts(dto);
   }
 
+  /**
+   * [PUBLIC] Lấy thông tin tài khoản đang đăng nhập
+   * GET /accounts/me
+   */
   @Get('/me')
   @HttpCode(HttpStatus.OK)
   getCurrentAccount(@authGuard.CurrentUser() AdminUser: authGuard.JwtPayload): Promise<IAccount> {
     return this.accountService.getAccountById(AdminUser.sub);
   }
 
+  /**
+   * [ADMIN] Lấy thông tin tài khoản theo ID
+   * GET /accounts/:id
+   */
   @authGuard.Roles('ADMIN')
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
@@ -68,6 +88,10 @@ export class AccountController {
     return this.accountService.getAccountById(id);
   }
 
+  /**
+   * [ADMIN] Tạo tài khoản mới
+   * POST /accounts
+   */
   @authGuard.Roles('ADMIN')
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -78,6 +102,10 @@ export class AccountController {
     return this.accountService.createAccount(dto, admin.username);
   }
 
+  /**
+   * [PUBLIC] Đăng ký tài khoản mới (Staff)
+   * POST /accounts/register
+   */
   @authGuard.Public()
   @Post('/register')
   @HttpCode(HttpStatus.CREATED)
@@ -87,6 +115,10 @@ export class AccountController {
     await this.accountService.register(dto);
   }
 
+  /**
+   * [PUBLIC] Đăng nhập
+   * POST /accounts/login
+   */
   @authGuard.Public()
   @Post('/login')
   @HttpCode(HttpStatus.OK)
@@ -96,6 +128,10 @@ export class AccountController {
     return this.accountService.login(dto);
   }
 
+  /**
+   * Cập nhật tài khoản (ADMIN sửa bất kỳ, Staff chỉ sửa chính mình)
+   * PATCH /accounts/:id
+   */
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
   updateAccount(
@@ -112,6 +148,10 @@ export class AccountController {
     return this.accountService.updateAccount(id, dto, currentUser.username);
   }
 
+  /**
+   * [ADMIN] Xóa vĩnh viễn tài khoản
+   * DELETE /accounts/:id
+   */
   @authGuard.Roles('ADMIN')
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -122,6 +162,10 @@ export class AccountController {
     return this.accountService.deleteAccount(id, admin.username);
   }
 
+  /**
+   * [ADMIN] Xóa mềm tài khoản (ẩn khỏi danh sách)
+   * DELETE /accounts/:id/soft
+   */
   @authGuard.Roles('ADMIN')
   @Delete('/:id/soft')
   @HttpCode(HttpStatus.OK)
@@ -132,6 +176,10 @@ export class AccountController {
     return this.accountService.softDeleteAccount(id, admin.username);
   }
 
+  /**
+   * Cập nhật ảnh đại diện (Avatar)
+   * POST /accounts/avatar
+   */
   @Post('/avatar')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file', avatarMulterOptions))

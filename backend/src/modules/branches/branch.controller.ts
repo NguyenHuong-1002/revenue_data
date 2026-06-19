@@ -19,11 +19,19 @@ import { CreateBranchDto } from './dto/create-branch.dto';
 import { GetBranchAllDto } from './dto/get-branch-all.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 
+/**
+ * Controller quản lý chi nhánh
+ * Routes: /branches
+ */
 @UseGuards(authGuard.AuthGuard)
 @Controller('branches')
 export class BranchController {
   constructor(private readonly branchService: BranchService) {}
 
+  /**
+   * [PUBLIC] Lấy danh sách chi nhánh (phân trang, lọc theo thành phố)
+   * GET /branches?page=1&limit=10&city=xxx
+   */
   @authGuard.Public()
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -33,6 +41,10 @@ export class BranchController {
     return this.branchService.getAll(query);
   }
 
+  /**
+   * [PUBLIC] Lấy chi tiết chi nhánh theo ID
+   * GET /branches/:id
+   */
   @authGuard.Public()
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
@@ -40,6 +52,10 @@ export class BranchController {
     return this.branchService.getById(id);
   }
 
+  /**
+   * [ADMIN] Tạo chi nhánh mới
+   * POST /branches
+   */
   @authGuard.Roles('ADMIN')
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -50,6 +66,10 @@ export class BranchController {
     return this.branchService.create(dto, admin.username);
   }
 
+  /**
+   * [ADMIN] Cập nhật chi nhánh
+   * PATCH /branches/:id
+   */
   @authGuard.Roles('ADMIN')
   @Patch('/:id')
   @HttpCode(HttpStatus.OK)
@@ -61,6 +81,10 @@ export class BranchController {
     return this.branchService.update(id, dto, admin.username);
   }
 
+  /**
+   * [ADMIN] Xóa chi nhánh
+   * DELETE /branches/:id
+   */
   @authGuard.Roles('ADMIN')
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)

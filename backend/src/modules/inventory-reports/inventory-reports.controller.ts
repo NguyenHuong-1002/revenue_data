@@ -21,11 +21,19 @@ import {
   IPaginatedInventoryReports,
 } from './interfaces/inventory-report.interface';
 
+/**
+ * Controller quản lý báo cáo tồn kho
+ * Routes: /inventory-reports
+ */
 @UseGuards(authGuard.AuthGuard)
 @Controller('inventory-reports')
 export class InventoryReportsController {
   constructor(private readonly inventoryReportsService: InventoryReportsService) {}
 
+  /**
+   * Lấy danh sách báo cáo tồn kho (phân trang, lọc)
+   * GET /inventory-reports?page=1&limit=10&plant_id=xxx
+   */
   @Get()
   @HttpCode(HttpStatus.OK)
   getInventoryReports(
@@ -34,6 +42,10 @@ export class InventoryReportsController {
     return this.inventoryReportsService.getInventoryReportsAll(query);
   }
 
+  /**
+   * Lấy thống kê báo cáo tồn kho
+   * GET /inventory-reports/stats
+   */
   @Get('/stats')
   @HttpCode(HttpStatus.OK)
   getInventoryReportStats(): Promise<{
@@ -43,6 +55,10 @@ export class InventoryReportsController {
     return this.inventoryReportsService.getInventoryReportStats();
   }
 
+  /**
+   * Lấy KPIs tồn kho (tổng tồn, tăng trưởng, top nhà máy/sản phẩm)
+   * GET /inventory-reports/kpis
+   */
   @Get('/kpis')
   @HttpCode(HttpStatus.OK)
   getInventoryKpis(): Promise<{
@@ -60,6 +76,10 @@ export class InventoryReportsController {
     return this.inventoryReportsService.getInventoryKpis();
   }
 
+  /**
+   * Lấy bảng xếp hạng tồn kho (top/bottom sản phẩm, nhà máy, xu hướng)
+   * GET /inventory-reports/rankings?topN=10
+   */
   @Get('/rankings')
   @HttpCode(HttpStatus.OK)
   getInventoryRankings(@Query('topN') topN?: string): Promise<{
@@ -71,6 +91,10 @@ export class InventoryReportsController {
     return this.inventoryReportsService.getInventoryRankings(topN ? Number(topN) : 10);
   }
 
+  /**
+   * Lấy cảnh báo tồn kho (thấp/cao bất thường)
+   * GET /inventory-reports/alerts?lowThreshold=50&highThreshold=10000
+   */
   @Get('/alerts')
   @HttpCode(HttpStatus.OK)
   getInventoryAlerts(
@@ -87,11 +111,19 @@ export class InventoryReportsController {
     );
   }
 
+  /**
+   * Lấy chi tiết báo cáo tồn kho theo ID
+   * GET /inventory-reports/:id
+   */
   @Get('/:id')
   getInventoryReportById(@Param('id') id: string): Promise<IInventoryReport> {
     return this.inventoryReportsService.getDetailInventoryReport(id);
   }
 
+  /**
+   * [ADMIN] Tạo báo cáo tồn kho mới
+   * POST /inventory-reports
+   */
   @authGuard.Roles('ADMIN')
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -102,6 +134,10 @@ export class InventoryReportsController {
     return this.inventoryReportsService.createInventoryReport(dto, admin.username);
   }
 
+  /**
+   * [ADMIN] Cập nhật báo cáo tồn kho
+   * PUT /inventory-reports/:id
+   */
   @authGuard.Roles('ADMIN')
   @Put('/:id')
   @HttpCode(HttpStatus.OK)
@@ -113,6 +149,10 @@ export class InventoryReportsController {
     return this.inventoryReportsService.updateInventoryReport(dto, id, admin.username);
   }
 
+  /**
+   * [ADMIN] Xóa báo cáo tồn kho
+   * DELETE /inventory-reports/:id
+   */
   @authGuard.Roles('ADMIN')
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)

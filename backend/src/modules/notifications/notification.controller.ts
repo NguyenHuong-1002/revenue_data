@@ -25,6 +25,10 @@ import {
   IPaginatedNotifications,
 } from './interfaces/notification.interface';
 
+/**
+ * Controller quản lý thông báo
+ * Routes: /notifications
+ */
 @UseGuards(AuthGuard)
 @Controller('notifications')
 export class NotificationController {
@@ -33,6 +37,10 @@ export class NotificationController {
     private readonly accountNotificationService: AccountNotificationService,
   ) {}
 
+  /**
+   * Lấy danh sách thông báo của người dùng hiện tại
+   * GET /notifications?page=1&limit=10
+   */
   @Get()
   getNotifications(
     @CurrentUser() user: JwtPayload,
@@ -41,6 +49,10 @@ export class NotificationController {
     return this.notificationService.getNotificationsForUser(user.sub, query);
   }
 
+  /**
+   * [ADMIN] Lấy danh sách liên kết thông báo-tài khoản
+   * GET /notifications/accounts/:accountId/mappings
+   */
   @Roles('ADMIN')
   @Get('/accounts/:accountId/mappings')
   getAccountNotificationMappings(
@@ -50,6 +62,10 @@ export class NotificationController {
     return this.accountNotificationService.getAccountNotificationMappings(accountId, query);
   }
 
+  /**
+   * [ADMIN] Hủy liên kết thông báo với tài khoản
+   * DELETE /notifications/accounts/:accountId/notifications/:notificationId/unlink
+   */
   @Roles('ADMIN')
   @Delete('/accounts/:accountId/notifications/:notificationId/unlink')
   @HttpCode(HttpStatus.OK)
@@ -60,6 +76,10 @@ export class NotificationController {
     return this.accountNotificationService.unlinkNotificationForAccount(accountId, notificationId);
   }
 
+  /**
+   * [ADMIN] Lấy thống kê thông báo của tài khoản
+   * GET /notifications/accounts/:accountId/stats
+   */
   @Roles('ADMIN')
   @Get('/accounts/:accountId/stats')
   getAccountNotificationStats(
@@ -68,6 +88,10 @@ export class NotificationController {
     return this.accountNotificationService.getAccountNotificationStats(accountId);
   }
 
+  /**
+   * Đánh dấu thông báo đã đọc
+   * PATCH /notifications/:id/read
+   */
   @Patch('/:id/read')
   markNotificationAsRead(
     @CurrentUser() user: JwtPayload,
@@ -76,12 +100,20 @@ export class NotificationController {
     return this.notificationService.markAsRead(id, user.sub);
   }
 
+  /**
+   * Đánh dấu tất cả thông báo đã đọc
+   * POST /notifications/read-all
+   */
   @Post('/read-all')
   async markAllNotificationsAsRead(@CurrentUser() user: JwtPayload): Promise<{ success: boolean }> {
     await this.notificationService.markAllAsRead(user.sub);
     return { success: true };
   }
 
+  /**
+   * [ADMIN] Tạo thông báo mới
+   * POST /notifications
+   */
   @Roles('ADMIN')
   @Post()
   createNotification(

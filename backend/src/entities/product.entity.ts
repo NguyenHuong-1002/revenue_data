@@ -73,12 +73,12 @@ export class ProductEntity {
   lifestyle_group!: 'Sport' | 'Casual' | 'Fashion' | 'Formal' | 'Khác';
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  created_at!: string;
+  created_at!: Date;
 
   @Column({
     type: 'datetime',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updated_at!: string;
+  updated_at!: Date;
 }

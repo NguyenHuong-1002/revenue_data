@@ -170,25 +170,6 @@ export default function RevenueStatsPage() {
             />
             <TopProducts products={topBestSellingProducts} />
           </div>
-
-          {/* Forecast Navigation Card */}
-          <Link
-            href="/dashboard/trend-forecast?scope=sales"
-            className="group flex items-center justify-between gap-4 rounded-xl border border-violet-500/20 bg-gradient-to-r from-violet-500/5 to-indigo-500/5 p-5 hover:border-violet-500/40 hover:from-violet-500/10 hover:to-indigo-500/10 transition-all duration-300"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600/10 border border-violet-500/20 group-hover:bg-violet-600/20 transition-colors duration-300">
-                <Brain className="h-5 w-5 text-violet-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Dự báo xu hướng doanh số</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Xem dự báo EMA &amp; Hồi quy tuyến tính chi tiết tại trang Dự báo xu hướng →
-                </p>
-              </div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-violet-500 shrink-0 group-hover:translate-x-1 transition-transform duration-200" />
-          </Link>
         </>
       )}
 

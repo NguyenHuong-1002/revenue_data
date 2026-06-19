@@ -139,25 +139,6 @@ export default function InventoryStatsPage() {
       {activeTab === 'alerts' && (
         <AlertsTab alerts={alerts} productMap={productMap} plantMap={plantMap} />
       )}
-
-      {/* ── Forecast link ── */}
-      <Link
-        href="/dashboard/trend-forecast?scope=inventory"
-        className="group flex items-center justify-between gap-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 to-chart-5/5 p-5 hover:border-primary/40 hover:from-primary/10 hover:to-chart-5/10 transition-all duration-300"
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors duration-300">
-            <Brain className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Dự báo xu hướng tồn kho</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Xem dự báo EMA &amp; Hồi quy tuyến tính chi tiết tại trang Dự báo xu hướng →
-            </p>
-          </div>
-        </div>
-        <ChevronRight className="h-5 w-5 text-primary shrink-0 group-hover:translate-x-1 transition-transform duration-200" />
-      </Link>
     </div>
   );
 }

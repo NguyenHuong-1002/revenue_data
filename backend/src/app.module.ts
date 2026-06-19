@@ -15,7 +15,6 @@ import { createWinstonLoggerOptions } from './global/logger.config';
 import { DataImportModule } from './modules/data-import/data-import.module';
 import { BranchModule } from './modules/branches/branch.module';
 import { PlantModule } from './modules/plants/plant.module';
-import { ForecastingModule } from './modules/forecasting/forecasting.module';
 import { AiInterpretationModule } from './modules/ai-interpretation/ai-interpretation.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { LandingModule } from './modules/landing/landing.module';
@@ -42,7 +41,6 @@ dotenv.config();
     DataImportModule,
     BranchModule,
     PlantModule,
-    ForecastingModule,
     AiInterpretationModule,
     ReportsModule,
     LandingModule,
