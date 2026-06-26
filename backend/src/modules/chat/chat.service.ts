@@ -8,15 +8,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatSession } from './entities/chat-session.entity';
 import { ChatMessage } from './entities/chat-message.entity';
-import { DatabaseService } from 'src/models/database.service';
-import { RowDataPacket } from 'mysql2';
+import { SaleReportEntity } from '../sale-reports/entities/sale-report.entity';
+import { ProductEntity } from '../products/entities/product.entity';
+import { StoreBranchEntity } from '../branches/entities/branch.entity';
+import { PlantEntity } from '../plants/entities/plant.entity';
+import { InventoryReportEntity } from '../inventory-reports/entities/inventory-report.entity';
+import { openaiClient, openaiConfig } from 'src/config/openai.config';
 
 export type ChatMessagePayload = {
   role: 'system' | 'user' | 'assistant';
   content: string;
 };
 
-const AI_REQUEST_TIMEOUT_MS = 30_000; // 30 seconds
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 10; // max 10 requests per window
 
@@ -30,7 +33,16 @@ export class ChatService {
     private sessionRepo: Repository<ChatSession>,
     @InjectRepository(ChatMessage)
     private messageRepo: Repository<ChatMessage>,
-    private readonly db: DatabaseService,
+    @InjectRepository(SaleReportEntity)
+    private saleRepo: Repository<SaleReportEntity>,
+    @InjectRepository(ProductEntity)
+    private productRepo: Repository<ProductEntity>,
+    @InjectRepository(StoreBranchEntity)
+    private branchRepo: Repository<StoreBranchEntity>,
+    @InjectRepository(PlantEntity)
+    private plantRepo: Repository<PlantEntity>,
+    @InjectRepository(InventoryReportEntity)
+    private inventoryRepo: Repository<InventoryReportEntity>,
   ) {}
 
   // ─── Sessions ────────────────────────────────────────────────────────────────
@@ -214,16 +226,6 @@ export class ChatService {
     const cleanMessages = messages.filter((m) => m.role !== 'system');
     const finalMessages = [systemInstruction, ...cleanMessages];
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    };
-
-    if (isOpenRouter) {
-      headers['HTTP-Referer'] = 'https://revenue-ai.vn';
-      headers['X-Title'] = 'Revenue AI Dashboard';
-    }
-
     // Save user message to DB if sessionId provided
     if (sessionId) {
       const lastUserMsg = messages[messages.length - 1];
@@ -240,18 +242,15 @@ export class ChatService {
     }
 
     try {
-      const data = await this.fetchWithTimeout(
-        `${baseUrl}/chat/completions`,
-        {
-          model,
-          messages: finalMessages,
-          stream: false,
-          temperature: 0.7,
-        },
-        headers,
-      );
+      const response = await openaiClient.chat.completions.create({
+        model: openaiConfig.model,
+        messages: finalMessages,
+        stream: false,
+        temperature: openaiConfig.temperature,
+        max_tokens: openaiConfig.maxTokens,
+      });
 
-      const content = data.choices?.[0]?.message?.content ?? '';
+      const content = response.choices?.[0]?.message?.content ?? '';
 
       // Save assistant reply to DB if sessionId provided
       if (sessionId) {
@@ -318,47 +317,6 @@ export class ChatService {
   }
 
   /**
-   * Gọi AI API với timeout và error handling
-   * @param url URL endpoint
-   * @param body Request body
-   * @param headers Request headers
-   * @returns Response data
-   */
-  private async fetchWithTimeout(
-    url: string,
-    body: Record<string, unknown>,
-    headers: Record<string, string>,
-  ): Promise<any> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        this.logger.error(`AI API error: ${response.status} - ${errorText}`);
-        throw new InternalServerErrorException('Yêu cầu AI API thất bại');
-      }
-
-      return await response.json();
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        this.logger.error(`AI API request timeout after ${AI_REQUEST_TIMEOUT_MS}ms`);
-        throw new InternalServerErrorException('Yêu cầu AI API quá thời gian chờ');
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  /**
    * Tìm kiếm cuộc hội thoại bằng ID, ném lỗi nếu không tồn tại
    * @param id ID của cuộc hội thoại
    * @returns Thông tin cuộc hội thoại
@@ -381,44 +339,18 @@ export class ChatService {
     userContent: string,
     assistantContent: string,
   ): Promise<void> {
-    const apiKey =
-      process.env.OPENROUTER_API_KEY || process.env.API_OPEN_ROUTR || process.env.DEEPSEEK_API_KEY;
-    const isOpenRouter = !!(process.env.OPENROUTER_API_KEY || process.env.API_OPEN_ROUTR);
-    if (!apiKey) return;
-
-    const baseUrl = isOpenRouter
-      ? 'https://openrouter.ai/api/v1'
-      : process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
-
-    const model = isOpenRouter
-      ? process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat'
-      : process.env.DEEPSEEK_MODEL || 'deepseek-chat';
-
     const prompt = `Hãy tóm tắt cuộc hội thoại sau thành một mô tả ngắn gọn (tối đa 15 từ, bằng tiếng Việt, viết tự nhiên dạng ghi chú như "Phân tích doanh thu..." hoặc "Tìm hiểu sản phẩm..."). Trả về TRỰC TIẾP câu tóm tắt, không thêm bất kỳ nhãn hay lời mở đầu nào khác.\n\nNgười dùng: ${userContent}\nAI: ${assistantContent}`;
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    };
-
-    if (isOpenRouter) {
-      headers['HTTP-Referer'] = 'https://revenue-ai.vn';
-      headers['X-Title'] = 'Revenue AI Dashboard';
-    }
-
     try {
-      const data = await this.fetchWithTimeout(
-        `${baseUrl}/chat/completions`,
-        {
-          model,
-          messages: [{ role: 'user', content: prompt }],
-          stream: false,
-          temperature: 0.6,
-        },
-        headers,
-      );
+      const response = await openaiClient.chat.completions.create({
+        model: openaiConfig.model,
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        temperature: 0.6,
+        max_tokens: openaiConfig.maxTokens,
+      });
 
-      const description = data.choices?.[0]?.message?.content ?? '';
+      const description = response.choices?.[0]?.message?.content ?? '';
       if (description) {
         const cleaned = description.trim().replace(/^["']|["']$/g, '');
         await this.sessionRepo.update(sessionId, { description: cleaned });
@@ -444,33 +376,40 @@ export class ChatService {
       (queryLower.includes('chi nhánh') && queryLower.includes('doanh thu'))
     ) {
       try {
-        const [branchesRevenue] = await this.db.client.query<RowDataPacket[]>(
-          `SELECT 
-             sb.store_id, 
-             sb.name as branch_name, 
-             sb.city,
-             COALESCE(SUM(sr.sold_quantity * p.listing_price), 0) as total_revenue,
-             COALESCE(SUM(sr.sold_quantity), 0) as total_sold_quantity
-           FROM storeBranch sb
-           LEFT JOIN saleReport sr ON sb.store_id = sr.branch_id
-           LEFT JOIN product p ON sr.product_id = p.product_id
-           GROUP BY sb.store_id, sb.name, sb.city
-           ORDER BY total_revenue DESC`,
-        );
+        const branchesRevenue = await this.branchRepo
+          .createQueryBuilder('sb')
+          .leftJoin(SaleReportEntity, 'sr', 'sb.store_id = sr.branch_id')
+          .leftJoin(ProductEntity, 'p', 'sr.product_id = p.product_id')
+          .select([
+            'sb.store_id',
+            'sb.name as branch_name',
+            'sb.city',
+            'COALESCE(SUM(sr.sold_quantity * p.listing_price), 0) as total_revenue',
+            'COALESCE(SUM(sr.sold_quantity), 0) as total_sold_quantity',
+          ])
+          .groupBy('sb.store_id')
+          .addGroupBy('sb.name')
+          .addGroupBy('sb.city')
+          .orderBy('total_revenue', 'DESC')
+          .getRawMany();
 
-        const [monthlyBranchRevenue] = await this.db.client.query<RowDataPacket[]>(
-          `SELECT 
-             sb.name as branch_name, 
-             DATE_FORMAT(sr.time_report, '%Y-%m') as month,
-             COALESCE(SUM(sr.sold_quantity * p.listing_price), 0) as monthly_revenue,
-             COALESCE(SUM(sr.sold_quantity), 0) as monthly_sold_quantity
-           FROM storeBranch sb
-           INNER JOIN saleReport sr ON sb.store_id = sr.branch_id
-           INNER JOIN product p ON sr.product_id = p.product_id
-           GROUP BY sb.store_id, sb.name, month
-           ORDER BY month DESC, monthly_revenue DESC
-           LIMIT 15`,
-        );
+        const monthlyBranchRevenue = await this.branchRepo
+          .createQueryBuilder('sb')
+          .innerJoin(SaleReportEntity, 'sr', 'sb.store_id = sr.branch_id')
+          .innerJoin(ProductEntity, 'p', 'sr.product_id = p.product_id')
+          .select([
+            'sb.name as branch_name',
+            "DATE_FORMAT(sr.time_report, '%Y-%m') as month",
+            'COALESCE(SUM(sr.sold_quantity * p.listing_price), 0) as monthly_revenue',
+            'COALESCE(SUM(sr.sold_quantity), 0) as monthly_sold_quantity',
+          ])
+          .groupBy('sb.store_id')
+          .addGroupBy('sb.name')
+          .addGroupBy('month')
+          .orderBy('month', 'DESC')
+          .addOrderBy('monthly_revenue', 'DESC')
+          .limit(15)
+          .getRawMany();
 
         let context = `[DỮ LIỆU DOANH THU CHI NHÁNH TỪ HỆ THỐNG]\n`;
         context += `1. Tổng doanh thu và số lượng bán tích lũy theo chi nhánh:\n`;
@@ -506,16 +445,17 @@ export class ChatService {
       queryLower.includes('dự đoán doanh thu')
     ) {
       try {
-        const [historicalRevenue] = await this.db.client.query<RowDataPacket[]>(
-          `SELECT 
-             DATE_FORMAT(sr.time_report, '%Y-%m') as month,
-             COALESCE(SUM(sr.sold_quantity * p.listing_price), 0) as total_revenue,
-             COALESCE(SUM(sr.sold_quantity), 0) as total_sold_quantity
-           FROM saleReport sr
-           INNER JOIN product p ON sr.product_id = p.product_id
-           GROUP BY month
-           ORDER BY month ASC`,
-        );
+        const historicalRevenue = await this.saleRepo
+          .createQueryBuilder('sr')
+          .innerJoin(ProductEntity, 'p', 'sr.product_id = p.product_id')
+          .select([
+            "DATE_FORMAT(sr.time_report, '%Y-%m') as month",
+            'COALESCE(SUM(sr.sold_quantity * p.listing_price), 0) as total_revenue',
+            'COALESCE(SUM(sr.sold_quantity), 0) as total_sold_quantity',
+          ])
+          .groupBy('month')
+          .orderBy('month', 'ASC')
+          .getRawMany();
 
         let context = `[DỮ LIỆU DOANH THU LỊCH SỬ TỪ HỆ THỐNG ĐỂ DỰ BÁO]\n`;
         context += `Lịch sử doanh thu theo tháng:\n`;
@@ -566,22 +506,28 @@ export class ChatService {
       queryLower.includes('bán chạy nhất')
     ) {
       try {
-        const [topProducts] = await this.db.client.query<RowDataPacket[]>(
-          `SELECT 
-             p.product_id, 
-             p.color as product_name, 
-             p.detail_product_group, 
-             p.gender, 
-             p.size, 
-             p.listing_price,
-             COALESCE(SUM(sr.sold_quantity), 0) as total_sold_quantity,
-             COALESCE(SUM(sr.sold_quantity * p.listing_price), 0) as total_revenue
-           FROM product p
-           INNER JOIN saleReport sr ON p.product_id = sr.product_id
-           GROUP BY p.product_id, p.color, p.detail_product_group, p.gender, p.size, p.listing_price
-           ORDER BY total_revenue DESC
-           LIMIT 10`,
-        );
+        const topProducts = await this.productRepo
+          .createQueryBuilder('p')
+          .innerJoin(SaleReportEntity, 'sr', 'p.product_id = sr.product_id')
+          .select([
+            'p.product_id',
+            'p.color as product_name',
+            'p.detail_product_group',
+            'p.gender',
+            'p.size',
+            'p.listing_price',
+            'COALESCE(SUM(sr.sold_quantity), 0) as total_sold_quantity',
+            'COALESCE(SUM(sr.sold_quantity * p.listing_price), 0) as total_revenue',
+          ])
+          .groupBy('p.product_id')
+          .addGroupBy('p.color')
+          .addGroupBy('p.detail_product_group')
+          .addGroupBy('p.gender')
+          .addGroupBy('p.size')
+          .addGroupBy('p.listing_price')
+          .orderBy('total_revenue', 'DESC')
+          .limit(10)
+          .getRawMany();
 
         let context = `[DỮ LIỆU TOP 10 SẢN PHẨM BÁN CHẠY NHẤT TỪ HỆ THỐNG]\n`;
         if (topProducts.length === 0) {
@@ -610,32 +556,41 @@ export class ChatService {
       queryLower.includes('tồn kho')
     ) {
       try {
-        const [plantsInventory] = await this.db.client.query<RowDataPacket[]>(
-          `SELECT 
-             pl.plant_id,
-             pl.name_plant,
-             pl.address,
-             pl.manager_name,
-             pl.phone,
-             COALESCE(SUM(ir.quantity), 0) as total_stock,
-             COUNT(DISTINCT ir.product_id) as total_unique_products
-           FROM Plant pl
-           LEFT JOIN InventoryReport ir ON pl.plant_id = ir.plant_id
-           GROUP BY pl.plant_id, pl.name_plant, pl.address, pl.manager_name, pl.phone
-           ORDER BY total_stock DESC`,
-        );
+        const plantsInventory = await this.plantRepo
+          .createQueryBuilder('pl')
+          .leftJoin(InventoryReportEntity, 'ir', 'pl.plant_id = ir.plant_id')
+          .select([
+            'pl.plant_id',
+            'pl.name_plant',
+            'pl.address',
+            'pl.manager_name',
+            'pl.phone',
+            'COALESCE(SUM(ir.quantity), 0) as total_stock',
+            'COUNT(DISTINCT ir.product_id) as total_unique_products',
+          ])
+          .groupBy('pl.plant_id')
+          .addGroupBy('pl.name_plant')
+          .addGroupBy('pl.address')
+          .addGroupBy('pl.manager_name')
+          .addGroupBy('pl.phone')
+          .orderBy('total_stock', 'DESC')
+          .getRawMany();
 
-        const [monthlyPlantInventory] = await this.db.client.query<RowDataPacket[]>(
-          `SELECT 
-             pl.name_plant,
-             DATE_FORMAT(ir.calendar_year_week, '%Y-%m') as month,
-             COALESCE(SUM(ir.quantity), 0) as stock_quantity
-           FROM Plant pl
-           INNER JOIN InventoryReport ir ON pl.plant_id = ir.plant_id
-           GROUP BY pl.plant_id, pl.name_plant, month
-           ORDER BY month DESC, stock_quantity DESC
-           LIMIT 15`,
-        );
+        const monthlyPlantInventory = await this.plantRepo
+          .createQueryBuilder('pl')
+          .innerJoin(InventoryReportEntity, 'ir', 'pl.plant_id = ir.plant_id')
+          .select([
+            'pl.name_plant',
+            "DATE_FORMAT(ir.calendar_year_week, '%Y-%m') as month",
+            'COALESCE(SUM(ir.quantity), 0) as stock_quantity',
+          ])
+          .groupBy('pl.plant_id')
+          .addGroupBy('pl.name_plant')
+          .addGroupBy('month')
+          .orderBy('month', 'DESC')
+          .addOrderBy('stock_quantity', 'DESC')
+          .limit(15)
+          .getRawMany();
 
         let context = `[DỮ LIỆU TỒN KHO VÀ HIỆU SUẤT NHÀ KHO TỪ HỆ THỐNG]\n`;
         context += `1. Thông tin tồn kho hiện tại theo nhà kho:\n`;
@@ -665,15 +620,27 @@ export class ChatService {
 
     // Default: General query summary stats
     try {
-      const [generalStats] = await this.db.client.query<RowDataPacket[]>(
-        `SELECT 
-           (SELECT SUM(sr.sold_quantity * p.listing_price) FROM saleReport sr INNER JOIN product p ON sr.product_id = p.product_id) as total_revenue,
-           (SELECT COUNT(*) FROM storeBranch) as branch_count,
-           (SELECT COUNT(*) FROM product) as product_count,
-           (SELECT SUM(quantity) FROM InventoryReport) as total_stock`,
-      );
+      const totalRevenueResult = await this.saleRepo
+        .createQueryBuilder('sr')
+        .innerJoin(ProductEntity, 'p', 'sr.product_id = p.product_id')
+        .select('SUM(sr.sold_quantity * p.listing_price)', 'total_revenue')
+        .getRawOne();
 
-      const stats = generalStats[0];
+      const branchCount = await this.branchRepo.count();
+      const productCount = await this.productRepo.count();
+
+      const totalStockResult = await this.inventoryRepo
+        .createQueryBuilder('ir')
+        .select('SUM(ir.quantity)', 'total_stock')
+        .getRawOne();
+
+      const stats = {
+        total_revenue: totalRevenueResult?.total_revenue ?? 0,
+        branch_count: branchCount,
+        product_count: productCount,
+        total_stock: totalStockResult?.total_stock ?? 0,
+      };
+
       return `[THÔNG TIN TỔNG QUAN HỆ THỐNG TỪ DATABASE]\n- Tổng doanh thu hệ thống: ${Number(stats?.total_revenue ?? 0).toLocaleString('vi-VN')} VNĐ\n- Số lượng chi nhánh: ${stats?.branch_count ?? 0}\n- Số lượng mặt hàng sản phẩm: ${stats?.product_count ?? 0}\n- Tổng tồn kho hiện tại: ${Number(stats?.total_stock ?? 0).toLocaleString('vi-VN')} sản phẩm\n`;
     } catch {
       return '';

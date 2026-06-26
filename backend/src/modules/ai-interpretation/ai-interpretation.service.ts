@@ -10,21 +10,12 @@ import {
   IInterpretationResponse,
   IInterpretationSummary,
 } from './interfaces/interpretation.interface';
+import { openaiClient, openaiConfig } from 'src/config/openai.config';
 
 // ─── Type Aliases ─────────────────────────────────────────────────────────────
-// Kiểu dữ liệu cho một message trong chat completion API của DeepSeek
 type DeepSeekChatMessage = {
   role: 'system' | 'user' | 'assistant';
   content: string;
-};
-
-// Kiểu dữ liệu cho response từ DeepSeek Chat Completion API
-type DeepSeekChatCompletionResponse = {
-  choices?: Array<{
-    message?: {
-      content?: string | null;
-    };
-  }>;
 };
 
 @Injectable()
@@ -43,61 +34,20 @@ export class AiInterpretationService {
   async interpret(dto: InterpretationRequestDto): Promise<IInterpretationResponse> {
     this.validateInput(dto);
 
-    // Đọc key từ env — tự động chọn OpenRouter (hoặc biến cũ API_OPEN_ROUTR) hoặc DeepSeek
-    const apiKey =
-      process.env.OPENROUTER_API_KEY || process.env.API_OPEN_ROUTR || process.env.DEEPSEEK_API_KEY;
-    const isOpenRouter = !!(process.env.OPENROUTER_API_KEY || process.env.API_OPEN_ROUTR);
-
-    if (!apiKey) {
-      throw new InternalServerErrorException(
-        'Missing API Key in environment (OPENROUTER_API_KEY, API_OPEN_ROUTR or DEEPSEEK_API_KEY)',
-      );
-    }
-
-    const baseUrl = isOpenRouter
-      ? 'https://openrouter.ai/api/v1'
-      : process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
-
-    const model = isOpenRouter
-      ? process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat'
-      : process.env.DEEPSEEK_MODEL || 'deepseek-chat';
-
     // Xây dựng prompt (system + user messages)
     const messages = this.buildMessages(dto);
 
-    // Chuẩn bị headers
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    };
-
-    if (isOpenRouter) {
-      headers['HTTP-Referer'] = 'https://revenue-ai.vn';
-      headers['X-Title'] = 'Revenue AI Dashboard';
-    }
-
-    // Gọi API (REST, không stream)
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: false, // không dùng streaming
-        temperature: 0.2, // độ sáng tạo thấp → ưu tiên xác suất cao
-      }),
+    // Gọi API qua OpenAI SDK
+    const response = await openaiClient.chat.completions.create({
+      model: openaiConfig.model,
+      messages: messages,
+      stream: false,
+      temperature: 0.2, // độ sáng tạo thấp ưu tiên xác xuất cáo
+      max_tokens: openaiConfig.maxTokens,
     });
 
-    // Xử lý lỗi HTTP từ API
-    if (!response.ok) {
-      const errorText = await response.text();
-      this.logger.error(`AI API error ${response.status}: ${errorText}`);
-      throw new InternalServerErrorException('AI API request failed');
-    }
-
     // Parse JSON response và lấy nội dung text từ choice đầu tiên
-    const data = (await response.json()) as DeepSeekChatCompletionResponse;
-    const rawContent = data.choices?.[0]?.message?.content?.trim() ?? '';
+    const rawContent = response.choices?.[0]?.message?.content?.trim() ?? '';
 
     if (!rawContent) {
       throw new InternalServerErrorException('DeepSeek returned empty content');
@@ -108,7 +58,7 @@ export class AiInterpretationService {
 
     return {
       provider: 'deepseek',
-      model,
+      model: openaiConfig.model,
       content, // đã parse: { summaryBullets, recommendation }
       rawContent, // giữ lại bản gốc để debug
     };

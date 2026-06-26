@@ -1,9 +1,22 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from '../../models/database.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProductEntity } from '../products/entities/product.entity';
+import { SaleReportEntity } from '../sale-reports/entities/sale-report.entity';
+import { InventoryReportEntity } from '../inventory-reports/entities/inventory-report.entity';
+import { StoreBranchEntity } from '../branches/entities/branch.entity';
+import { PlantEntity } from '../plants/entities/plant.entity';
 import { DataProcessingService } from './data-processing.service';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      ProductEntity,
+      SaleReportEntity,
+      InventoryReportEntity,
+      StoreBranchEntity,
+      PlantEntity,
+    ]),
+  ],
   providers: [DataProcessingService],
   exports: [DataProcessingService],
 })

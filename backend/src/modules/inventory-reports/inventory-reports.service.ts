@@ -1,71 +1,64 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from 'src/models/database.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateInventoryReportDto } from './dto/create-inventory-report.dto';
 import { GetInventoryReportAllDto } from './dto/get-inventory-report-all.dto';
 import { IInventoryReport } from './interfaces/inventory-report.interface';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
 import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
+import { InventoryReportEntity } from './entities/inventory-report.entity';
 
 @Injectable()
 export class InventoryReportsService {
   constructor(
-    private readonly db: DatabaseService,
+    @InjectRepository(InventoryReportEntity)
+    private readonly repo: Repository<InventoryReportEntity>,
     private readonly notificationService: NotificationService,
   ) {}
 
   async getInventoryReportsAll(
     filters: GetInventoryReportAllDto,
   ): Promise<PaginatedResponseDto<IInventoryReport>> {
-    const whereClauses: string[] = [];
-    const values: unknown[] = [];
+    const qb = this.repo.createQueryBuilder('ir');
 
     if (filters.product_id) {
-      whereClauses.push('product_id = ?');
-      values.push(filters.product_id.trim());
+      qb.andWhere('ir.product_id = :product_id', { product_id: filters.product_id.trim() });
     }
     if (filters.plant_id) {
-      whereClauses.push('plant_id = ?');
-      values.push(filters.plant_id.trim());
+      qb.andWhere('ir.plant_id = :plant_id', { plant_id: filters.plant_id.trim() });
     }
     if (filters.fromMonth) {
-      whereClauses.push('calendar_year_week >= ?');
-      values.push(`${filters.fromMonth}-01 00:00:00`);
+      qb.andWhere('ir.calendar_year_week >= :fromMonth', {
+        fromMonth: `${filters.fromMonth}-01 00:00:00`,
+      });
     }
     if (filters.toMonth) {
       const [year, month] = filters.toMonth.split('-').map(Number);
       const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-      whereClauses.push('calendar_year_week <= ?');
-      values.push(`${filters.toMonth}-${String(lastDay).padStart(2, '0')} 23:59:59`);
+      qb.andWhere('ir.calendar_year_week <= :toMonth', {
+        toMonth: `${filters.toMonth}-${String(lastDay).padStart(2, '0')} 23:59:59`,
+      });
     }
 
-    const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
-
-    const countSQL = `SELECT COUNT(*) as total FROM InventoryReport ${whereSQL}`;
-    const [countRows] = await this.db.client.query<RowDataPacket[]>(countSQL, values);
-    const total = Number(countRows[0].total);
+    const total = await qb.getCount();
 
     const { page, limit } = filters;
-    const skip = (page - 1) * limit;
-    const dataSQL = `SELECT * FROM InventoryReport ${whereSQL} ORDER BY calendar_year_week DESC, inventory_id DESC LIMIT ? OFFSET ?`;
-    const [dataRows] = await this.db.client.query<RowDataPacket[]>(dataSQL, [
-      ...values,
-      limit,
-      skip,
-    ]);
+    const data = await qb
+      .orderBy('ir.calendar_year_week', 'DESC')
+      .addOrderBy('ir.inventory_id', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
 
-    return new PaginatedResponseDto(dataRows as IInventoryReport[], total, page, limit);
+    return new PaginatedResponseDto(data, total, page, limit);
   }
 
   async getDetailInventoryReport(id: string): Promise<IInventoryReport> {
-    const [rows] = await this.db.client.query<RowDataPacket[]>(
-      'SELECT * FROM InventoryReport WHERE inventory_id = ?',
-      [id],
-    );
-    if (rows.length === 0) {
+    const row = await this.repo.findOne({ where: { inventory_id: id } });
+    if (!row) {
       throw new NotFoundException(`Inventory report with ID '${id}' not found`);
     }
-    return rows[0] as IInventoryReport;
+    return row;
   }
 
   async createInventoryReport(
@@ -73,10 +66,14 @@ export class InventoryReportsService {
     adminUsername?: string,
   ): Promise<IInventoryReport> {
     const id = `INV${Date.now()}`;
-    await this.db.client.query<ResultSetHeader>(
-      `INSERT INTO InventoryReport (inventory_id, product_id, plant_id, calendar_year_week, quantity) VALUES (?, ?, ?, ?, ?)`,
-      [id, dto.product_id, dto.plant_id, dto.calendar_year_week, dto.quantity],
-    );
+    const entity = this.repo.create({
+      inventory_id: id,
+      product_id: dto.product_id,
+      plant_id: dto.plant_id,
+      calendar_year_week: dto.calendar_year_week,
+      quantity: dto.quantity,
+    });
+    await this.repo.save(entity);
 
     await this.notificationService.createNotification({
       title: 'Tạo báo cáo tồn kho mới',
@@ -92,11 +89,14 @@ export class InventoryReportsService {
     id: string,
     adminUsername?: string,
   ): Promise<IInventoryReport> {
-    await this.getDetailInventoryReport(id);
-    await this.db.client.query<ResultSetHeader>(
-      `UPDATE InventoryReport SET product_id = ?, plant_id = ?, calendar_year_week = ?, quantity = ? WHERE inventory_id = ?`,
-      [dto.product_id, dto.plant_id, dto.calendar_year_week, dto.quantity, id],
-    );
+    const existing = await this.getDetailInventoryReport(id);
+    this.repo.merge(existing, {
+      product_id: dto.product_id,
+      plant_id: dto.plant_id,
+      calendar_year_week: dto.calendar_year_week,
+      quantity: dto.quantity,
+    });
+    await this.repo.save(existing);
 
     await this.notificationService.createNotification({
       title: 'Cập nhật báo cáo tồn kho',
@@ -109,11 +109,8 @@ export class InventoryReportsService {
 
   async deleteInventoryReport(id: string, adminUsername?: string): Promise<boolean> {
     await this.getDetailInventoryReport(id);
-    const [result] = await this.db.client.query<ResultSetHeader>(
-      'DELETE FROM InventoryReport WHERE inventory_id = ?',
-      [id],
-    );
-    const success = result.affectedRows > 0;
+    const result = await this.repo.delete({ inventory_id: id });
+    const success = (result.affected ?? 0) > 0;
 
     if (success) {
       await this.notificationService.createNotification({
@@ -130,12 +127,23 @@ export class InventoryReportsService {
     plant_inventory: { name: string; count: number }[];
     monthly_inventory: { name: string; count: number }[];
   }> {
-    const [plantRows] = await this.db.client.query<RowDataPacket[]>(
-      'SELECT plant_id as name, SUM(quantity) as count FROM InventoryReport GROUP BY plant_id ORDER BY count DESC LIMIT 5',
-    );
-    const [monthlyRows] = await this.db.client.query<RowDataPacket[]>(
-      "SELECT DATE_FORMAT(calendar_year_week, '%Y-%m') as name, SUM(quantity) as count FROM InventoryReport GROUP BY DATE_FORMAT(calendar_year_week, '%Y-%m') ORDER BY name DESC LIMIT 6",
-    );
+    const plantRows = await this.repo
+      .createQueryBuilder('ir')
+      .select('ir.plant_id', 'name')
+      .addSelect('SUM(ir.quantity)', 'count')
+      .groupBy('ir.plant_id')
+      .orderBy('count', 'DESC')
+      .limit(5)
+      .getRawMany();
+
+    const monthlyRows = await this.repo
+      .createQueryBuilder('ir')
+      .select("DATE_FORMAT(ir.calendar_year_week, '%Y-%m')", 'name')
+      .addSelect('SUM(ir.quantity)', 'count')
+      .groupBy("DATE_FORMAT(ir.calendar_year_week, '%Y-%m')")
+      .orderBy('name', 'DESC')
+      .limit(6)
+      .getRawMany();
 
     return {
       plant_inventory: plantRows.map((r) => ({
@@ -163,34 +171,45 @@ export class InventoryReportsService {
     topProduct: { product_id: string; total: number } | null;
     avgStockPerPlant: number;
   }> {
-    const [[totalsRow]] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT
-         SUM(quantity) AS totalStock,
-         COUNT(*) AS totalRecords,
-         COUNT(DISTINCT plant_id) AS totalPlants,
-         COUNT(DISTINCT product_id) AS totalProducts
-       FROM InventoryReport`,
-    );
+    const totalsRow = await this.repo
+      .createQueryBuilder('ir')
+      .select('SUM(ir.quantity)', 'totalStock')
+      .addSelect('COUNT(*)', 'totalRecords')
+      .addSelect('COUNT(DISTINCT ir.plant_id)', 'totalPlants')
+      .addSelect('COUNT(DISTINCT ir.product_id)', 'totalProducts')
+      .getRawOne();
 
-    const [[curRow]] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT SUM(quantity) AS stock
-       FROM InventoryReport
-       WHERE DATE_FORMAT(calendar_year_week,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')`,
-    );
-    const [[prevRow]] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT SUM(quantity) AS stock
-       FROM InventoryReport
-       WHERE DATE_FORMAT(calendar_year_week,'%Y-%m') = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH),'%Y-%m')`,
-    );
+    const curRow = await this.repo
+      .createQueryBuilder('ir')
+      .select('SUM(ir.quantity)', 'stock')
+      .where("DATE_FORMAT(ir.calendar_year_week,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')")
+      .getRawOne();
 
-    const [[topPlantRow]] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT plant_id, SUM(quantity) AS total
-       FROM InventoryReport GROUP BY plant_id ORDER BY total DESC LIMIT 1`,
-    );
-    const [[topProductRow]] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT product_id, SUM(quantity) AS total
-       FROM InventoryReport GROUP BY product_id ORDER BY total DESC LIMIT 1`,
-    );
+    const prevRow = await this.repo
+      .createQueryBuilder('ir')
+      .select('SUM(ir.quantity)', 'stock')
+      .where(
+        "DATE_FORMAT(ir.calendar_year_week,'%Y-%m') = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH),'%Y-%m')",
+      )
+      .getRawOne();
+
+    const topPlantRow = await this.repo
+      .createQueryBuilder('ir')
+      .select('ir.plant_id', 'plant_id')
+      .addSelect('SUM(ir.quantity)', 'total')
+      .groupBy('ir.plant_id')
+      .orderBy('total', 'DESC')
+      .limit(1)
+      .getRawOne();
+
+    const topProductRow = await this.repo
+      .createQueryBuilder('ir')
+      .select('ir.product_id', 'product_id')
+      .addSelect('SUM(ir.quantity)', 'total')
+      .groupBy('ir.product_id')
+      .orderBy('total', 'DESC')
+      .limit(1)
+      .getRawOne();
 
     const totalStock = Number(totalsRow?.totalStock ?? 0);
     const totalPlants = Number(totalsRow?.totalPlants ?? 0);
@@ -226,27 +245,41 @@ export class InventoryReportsService {
     topPlants: { plant_id: string; total: number; record_count: number }[];
     monthlyTrend: { month: string; total: number; growthPct: number | null }[];
   }> {
-    const [topRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT product_id, SUM(quantity) AS total
-       FROM InventoryReport GROUP BY product_id ORDER BY total DESC LIMIT ?`,
-      [topN],
-    );
-    const [bottomRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT product_id, SUM(quantity) AS total
-       FROM InventoryReport GROUP BY product_id ORDER BY total ASC LIMIT ?`,
-      [topN],
-    );
-    const [plantRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT plant_id, SUM(quantity) AS total, COUNT(*) AS record_count
-       FROM InventoryReport GROUP BY plant_id ORDER BY total DESC LIMIT ?`,
-      [topN],
-    );
-    const [monthlyRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT DATE_FORMAT(calendar_year_week,'%Y-%m') AS month, SUM(quantity) AS total
-       FROM InventoryReport
-       GROUP BY DATE_FORMAT(calendar_year_week,'%Y-%m')
-       ORDER BY month ASC`,
-    );
+    const topRows = await this.repo
+      .createQueryBuilder('ir')
+      .select('ir.product_id', 'product_id')
+      .addSelect('SUM(ir.quantity)', 'total')
+      .groupBy('ir.product_id')
+      .orderBy('total', 'DESC')
+      .limit(topN)
+      .getRawMany();
+
+    const bottomRows = await this.repo
+      .createQueryBuilder('ir')
+      .select('ir.product_id', 'product_id')
+      .addSelect('SUM(ir.quantity)', 'total')
+      .groupBy('ir.product_id')
+      .orderBy('total', 'ASC')
+      .limit(topN)
+      .getRawMany();
+
+    const plantRows = await this.repo
+      .createQueryBuilder('ir')
+      .select('ir.plant_id', 'plant_id')
+      .addSelect('SUM(ir.quantity)', 'total')
+      .addSelect('COUNT(*)', 'record_count')
+      .groupBy('ir.plant_id')
+      .orderBy('total', 'DESC')
+      .limit(topN)
+      .getRawMany();
+
+    const monthlyRows = await this.repo
+      .createQueryBuilder('ir')
+      .select("DATE_FORMAT(ir.calendar_year_week,'%Y-%m')", 'month')
+      .addSelect('SUM(ir.quantity)', 'total')
+      .groupBy("DATE_FORMAT(ir.calendar_year_week,'%Y-%m')")
+      .orderBy('month', 'ASC')
+      .getRawMany();
 
     const monthlyWithGrowth = monthlyRows.map((row, i) => {
       const prev = i > 0 ? Number(monthlyRows[i - 1].total ?? 0) : 0;
@@ -284,20 +317,27 @@ export class InventoryReportsService {
     highStock: { product_id: string; plant_id: string; quantity: number; last_date: string }[];
     totalAlerts: number;
   }> {
-    const [lowRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT product_id, plant_id, quantity, DATE_FORMAT(calendar_year_week,'%Y-%m-%d') AS last_date
-       FROM InventoryReport
-       WHERE quantity <= ? AND quantity > 0
-       ORDER BY quantity ASC LIMIT 20`,
-      [lowThreshold],
-    );
-    const [highRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT product_id, plant_id, quantity, DATE_FORMAT(calendar_year_week,'%Y-%m-%d') AS last_date
-       FROM InventoryReport
-       WHERE quantity >= ?
-       ORDER BY quantity DESC LIMIT 20`,
-      [highThreshold],
-    );
+    const lowRows = await this.repo
+      .createQueryBuilder('ir')
+      .select('ir.product_id', 'product_id')
+      .addSelect('ir.plant_id', 'plant_id')
+      .addSelect('ir.quantity', 'quantity')
+      .addSelect("DATE_FORMAT(ir.calendar_year_week,'%Y-%m-%d')", 'last_date')
+      .where('ir.quantity <= :lowThreshold AND ir.quantity > 0', { lowThreshold })
+      .orderBy('ir.quantity', 'ASC')
+      .limit(20)
+      .getRawMany();
+
+    const highRows = await this.repo
+      .createQueryBuilder('ir')
+      .select('ir.product_id', 'product_id')
+      .addSelect('ir.plant_id', 'plant_id')
+      .addSelect('ir.quantity', 'quantity')
+      .addSelect("DATE_FORMAT(ir.calendar_year_week,'%Y-%m-%d')", 'last_date')
+      .where('ir.quantity >= :highThreshold', { highThreshold })
+      .orderBy('ir.quantity', 'DESC')
+      .limit(20)
+      .getRawMany();
 
     return {
       lowStock: lowRows.map((r) => ({

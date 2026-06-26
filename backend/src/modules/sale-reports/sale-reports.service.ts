@@ -1,88 +1,89 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from 'src/models/database.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateSaleReportDto } from './dto/create-sale-report.dto';
 import { GetSaleReportAllDto } from './dto/get-sale-report-all.dto';
 import { ISaleReport } from './interfaces/sale-report.interface';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
 import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
+import { SaleReportEntity } from './entities/sale-report.entity';
+import { ProductEntity } from '../products/entities/product.entity';
+import { StoreBranchEntity } from '../branches/entities/branch.entity';
 
 @Injectable()
 export class SaleReportsService {
   constructor(
-    private readonly db: DatabaseService,
+    @InjectRepository(SaleReportEntity)
+    private readonly repo: Repository<SaleReportEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly productRepo: Repository<ProductEntity>,
+    @InjectRepository(StoreBranchEntity)
+    private readonly branchRepo: Repository<StoreBranchEntity>,
     private readonly notificationService: NotificationService,
   ) {}
 
-  async getSaleReportsAll(filters: GetSaleReportAllDto): Promise<PaginatedResponseDto<ISaleReport>> {
-    const whereClauses: string[] = [];
-    const values: unknown[] = [];
+  async getSaleReportsAll(
+    filters: GetSaleReportAllDto,
+  ): Promise<PaginatedResponseDto<ISaleReport>> {
+    const qb = this.repo.createQueryBuilder('sr');
 
     if (filters.product_id) {
-      whereClauses.push('product_id = ?');
-      values.push(filters.product_id.trim());
+      qb.andWhere('sr.product_id = :product_id', { product_id: filters.product_id.trim() });
     }
     if (filters.branch_id) {
-      whereClauses.push('branch_id = ?');
-      values.push(filters.branch_id.trim());
+      qb.andWhere('sr.branch_id = :branch_id', { branch_id: filters.branch_id.trim() });
     }
     if (filters.distribution_channel) {
-      whereClauses.push('distribution_channel = ?');
-      values.push(filters.distribution_channel.trim());
+      qb.andWhere('sr.distribution_channel = :distribution_channel', {
+        distribution_channel: filters.distribution_channel.trim(),
+      });
     }
     if (filters.fromMonth) {
-      whereClauses.push('time_report >= ?');
-      values.push(`${filters.fromMonth}-01 00:00:00`);
+      qb.andWhere('sr.time_report >= :fromDate', {
+        fromDate: `${filters.fromMonth}-01 00:00:00`,
+      });
     }
     if (filters.toMonth) {
       const [year, month] = filters.toMonth.split('-').map(Number);
       const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-      whereClauses.push('time_report <= ?');
-      values.push(`${filters.toMonth}-${String(lastDay).padStart(2, '0')} 23:59:59`);
+      qb.andWhere('sr.time_report <= :toDate', {
+        toDate: `${filters.toMonth}-${String(lastDay).padStart(2, '0')} 23:59:59`,
+      });
     }
 
-    const whereSQL = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
-
-    const countSQL = `SELECT COUNT(*) as total FROM saleReport ${whereSQL}`;
-    const [countRows] = await this.db.client.query<RowDataPacket[]>(countSQL, values);
-    const total = Number(countRows[0].total);
+    const total = await qb.getCount();
 
     const { page, limit } = filters;
     const skip = (page - 1) * limit;
-    const dataSQL = `SELECT * FROM saleReport ${whereSQL} ORDER BY time_report DESC, sale_id DESC LIMIT ? OFFSET ?`;
-    const [dataRows] = await this.db.client.query<RowDataPacket[]>(dataSQL, [
-      ...values,
-      limit,
-      skip,
-    ]);
+    const data = await qb
+      .orderBy('sr.time_report', 'DESC')
+      .addOrderBy('sr.sale_id', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getMany();
 
-    return new PaginatedResponseDto(dataRows as ISaleReport[], total, page, limit);
+    return new PaginatedResponseDto(data, total, page, limit);
   }
 
   async getDetailSaleReport(id: string): Promise<ISaleReport> {
-    const [rows] = await this.db.client.query<RowDataPacket[]>(
-      'SELECT * FROM saleReport WHERE sale_id = ?',
-      [id],
-    );
-    if (rows.length === 0) {
+    const row = await this.repo.findOne({ where: { sale_id: id } });
+    if (!row) {
       throw new NotFoundException(`Sales report with ID '${id}' not found`);
     }
-    return rows[0] as ISaleReport;
+    return row;
   }
 
   async createSaleReport(dto: CreateSaleReportDto, adminUsername?: string): Promise<ISaleReport> {
     const id = `SR${Date.now()}`;
-    await this.db.client.query<ResultSetHeader>(
-      `INSERT INTO saleReport (sale_id, product_id, sold_quantity, distribution_channel, branch_id, time_report) VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        dto.product_id,
-        dto.sold_quantity,
-        dto.distribution_channel,
-        dto.branch_id,
-        dto.time_report,
-      ],
-    );
+    const entity = this.repo.create({
+      sale_id: id,
+      product_id: dto.product_id,
+      sold_quantity: dto.sold_quantity,
+      distribution_channel: dto.distribution_channel,
+      branch_id: dto.branch_id,
+      time_report: dto.time_report,
+    });
+    await this.repo.save(entity);
 
     await this.notificationService.createNotification({
       title: 'Tạo báo cáo bán hàng mới',
@@ -99,17 +100,13 @@ export class SaleReportsService {
     adminUsername?: string,
   ): Promise<ISaleReport> {
     await this.getDetailSaleReport(id);
-    await this.db.client.query<ResultSetHeader>(
-      `UPDATE saleReport SET product_id = ?, sold_quantity = ?, distribution_channel = ?, branch_id = ?, time_report = ? WHERE sale_id = ?`,
-      [
-        dto.product_id,
-        dto.sold_quantity,
-        dto.distribution_channel,
-        dto.branch_id,
-        dto.time_report,
-        id,
-      ],
-    );
+    await this.repo.update(id, {
+      product_id: dto.product_id,
+      sold_quantity: dto.sold_quantity,
+      distribution_channel: dto.distribution_channel,
+      branch_id: dto.branch_id,
+      time_report: dto.time_report,
+    });
 
     await this.notificationService.createNotification({
       title: 'Cập nhật báo cáo bán hàng',
@@ -122,11 +119,8 @@ export class SaleReportsService {
 
   async deleteSaleReport(id: string, adminUsername?: string): Promise<boolean> {
     await this.getDetailSaleReport(id);
-    const [result] = await this.db.client.query<ResultSetHeader>(
-      'DELETE FROM saleReport WHERE sale_id = ?',
-      [id],
-    );
-    const success = result.affectedRows > 0;
+    const result = await this.repo.delete(id);
+    const success = (result.affected ?? 0) > 0;
 
     if (success) {
       await this.notificationService.createNotification({
@@ -142,11 +136,11 @@ export class SaleReportsService {
   private async getDateFilter(range?: string): Promise<{ sql: string; params: any[] }> {
     if (!range) return { sql: '', params: [] };
 
-    // Lấy ngày lớn nhất trong DB để làm mốc thời gian gốc (do dữ liệu mẫu từ năm 2021-2023)
-    const [maxRows] = await this.db.client.query<RowDataPacket[]>(
-      'SELECT MAX(time_report) as max_date FROM saleReport',
-    );
-    const maxDateVal = maxRows[0]?.max_date;
+    const maxRow = await this.repo
+      .createQueryBuilder('sr')
+      .select('MAX(sr.time_report)', 'max_date')
+      .getRawOne();
+    const maxDateVal = maxRow?.max_date;
     const now = maxDateVal ? new Date(maxDateVal) : new Date();
 
     let diffDays = 7;
@@ -186,32 +180,57 @@ export class SaleReportsService {
   }> {
     const filter = await this.getDateFilter(range);
 
-    const [channelRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT distribution_channel as name, SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity >= 0 ${filter.sql} GROUP BY distribution_channel`,
-      filter.params,
-    );
-    const [monthlyRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT DATE_FORMAT(time_report, '%Y-%m') as name, SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity >= 0 ${filter.sql} GROUP BY DATE_FORMAT(time_report, '%Y-%m') ORDER BY name DESC LIMIT 6`,
-      filter.params,
-    );
-    const [branchRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT COALESCE(sb.name, sr.branch_id) as name, SUM(sr.sold_quantity) as count
-       FROM saleReport sr
-       LEFT JOIN storeBranch sb ON sb.store_id = sr.branch_id
-       WHERE sr.sold_quantity >= 0 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-       GROUP BY sr.branch_id, sb.name
-       ORDER BY count DESC`,
-      filter.params,
-    );
+    const channelQb = this.repo
+      .createQueryBuilder('sr')
+      .select('sr.distribution_channel', 'name')
+      .addSelect('SUM(sr.sold_quantity)', 'count')
+      .where('sr.sold_quantity >= 0');
+    if (filter.sql) {
+      channelQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const channelRows = await channelQb.groupBy('sr.distribution_channel').getRawMany();
 
-    const [refundRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT SUM(sold_quantity) as count FROM saleReport WHERE sold_quantity < 0 ${filter.sql}`,
-      filter.params,
-    );
-    let refundCount = Number(refundRows[0]?.count ?? 0);
+    const monthlyQb = this.repo
+      .createQueryBuilder('sr')
+      .select("DATE_FORMAT(sr.time_report, '%Y-%m')", 'name')
+      .addSelect('SUM(sr.sold_quantity)', 'count')
+      .where('sr.sold_quantity >= 0');
+    if (filter.sql) {
+      monthlyQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const monthlyRows = await monthlyQb
+      .groupBy("DATE_FORMAT(sr.time_report, '%Y-%m')")
+      .orderBy('name', 'DESC')
+      .limit(6)
+      .getRawMany();
+
+    const branchQb = this.repo
+      .createQueryBuilder('sr')
+      .leftJoin(StoreBranchEntity, 'sb', 'sb.store_id = sr.branch_id')
+      .select('COALESCE(sb.name, sr.branch_id)', 'name')
+      .addSelect('SUM(sr.sold_quantity)', 'count')
+      .where('sr.sold_quantity >= 0');
+    if (filter.sql) {
+      branchQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const branchRows = await branchQb
+      .groupBy('sr.branch_id')
+      .addGroupBy('sb.name')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+
+    const refundQb = this.repo
+      .createQueryBuilder('sr')
+      .select('SUM(sr.sold_quantity)', 'count')
+      .where('sr.sold_quantity < 0');
+    if (filter.sql) {
+      refundQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const refundRows = await refundQb.getRawOne();
+    let refundCount = Number(refundRows?.count ?? 0);
     if (refundCount === 0) {
       const totalSold = channelRows.reduce((sum, r) => sum + Number(r.count), 0);
-      refundCount = -Math.round(totalSold * 0.05); // 5% return rate
+      refundCount = -Math.round(totalSold * 0.05);
     }
 
     const distribution_channel = channelRows.map((r) => ({
@@ -254,27 +273,30 @@ export class SaleReportsService {
     const filter = await this.getDateFilter(range);
 
     // 1. Total revenue
-    const [revRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT SUM(sr.sold_quantity * p.listing_price) as total_revenue
-       FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id
-       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}`,
-      filter.params,
-    );
-    const totalRevenue = Number(revRows[0]?.total_revenue ?? 0);
+    const revQb = this.repo
+      .createQueryBuilder('sr')
+      .innerJoin('sr.product', 'p')
+      .select('SUM(sr.sold_quantity * p.listing_price)', 'total_revenue');
+    if (filter.sql) {
+      revQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const revRow = await revQb.getRawOne();
+    const totalRevenue = Number(revRow?.total_revenue ?? 0);
 
     // 2. Growth rate (compare last month vs month before)
-    const [monthlyRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT DATE_FORMAT(sr.time_report, '%Y-%m') as month,
-              SUM(sr.sold_quantity * p.listing_price) as revenue
-       FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id
-       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-       GROUP BY month
-       ORDER BY month DESC
-       LIMIT 2`,
-      filter.params,
-    );
+    const monthlyQb = this.repo
+      .createQueryBuilder('sr')
+      .innerJoin('sr.product', 'p')
+      .select("DATE_FORMAT(sr.time_report, '%Y-%m')", 'month')
+      .addSelect('SUM(sr.sold_quantity * p.listing_price)', 'revenue');
+    if (filter.sql) {
+      monthlyQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const monthlyRows = await monthlyQb
+      .groupBy('month')
+      .orderBy('month', 'DESC')
+      .limit(2)
+      .getRawMany();
 
     let growthRate = 0;
     if (monthlyRows.length >= 2) {
@@ -286,16 +308,27 @@ export class SaleReportsService {
     }
 
     // 3. Top product by revenue
-    const [topRevRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT sr.product_id as id, p.color, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue
-       FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id
-       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-       GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
-       ORDER BY revenue DESC
-       LIMIT 1`,
-      filter.params,
-    );
+    const topRevQb = this.repo
+      .createQueryBuilder('sr')
+      .innerJoin('sr.product', 'p')
+      .select('sr.product_id', 'id')
+      .addSelect('p.color', 'color')
+      .addSelect('p.detail_product_group', 'detail_product_group')
+      .addSelect('p.gender', 'gender')
+      .addSelect('p.size', 'size')
+      .addSelect('SUM(sr.sold_quantity * p.listing_price)', 'revenue');
+    if (filter.sql) {
+      topRevQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const topRevRows = await topRevQb
+      .groupBy('sr.product_id')
+      .addGroupBy('p.color')
+      .addGroupBy('p.detail_product_group')
+      .addGroupBy('p.gender')
+      .addGroupBy('p.size')
+      .orderBy('revenue', 'DESC')
+      .limit(1)
+      .getRawMany();
     const topProductByRevenue = {
       id: String(topRevRows[0]?.id ?? 'N/A'),
       name: String(topRevRows[0]?.color ?? 'Chưa có'),
@@ -307,16 +340,27 @@ export class SaleReportsService {
     };
 
     // 4. Top product by quantity
-    const [topQtyRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT sr.product_id as id, p.color, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity) as quantity
-       FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id
-       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-       GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
-       ORDER BY quantity DESC
-       LIMIT 1`,
-      filter.params,
-    );
+    const topQtyQb = this.repo
+      .createQueryBuilder('sr')
+      .innerJoin('sr.product', 'p')
+      .select('sr.product_id', 'id')
+      .addSelect('p.color', 'color')
+      .addSelect('p.detail_product_group', 'detail_product_group')
+      .addSelect('p.gender', 'gender')
+      .addSelect('p.size', 'size')
+      .addSelect('SUM(sr.sold_quantity)', 'quantity');
+    if (filter.sql) {
+      topQtyQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const topQtyRows = await topQtyQb
+      .groupBy('sr.product_id')
+      .addGroupBy('p.color')
+      .addGroupBy('p.detail_product_group')
+      .addGroupBy('p.gender')
+      .addGroupBy('p.size')
+      .orderBy('quantity', 'DESC')
+      .limit(1)
+      .getRawMany();
     const topProductByQuantity = {
       id: String(topQtyRows[0]?.id ?? 'N/A'),
       name: String(topQtyRows[0]?.color ?? 'Chưa có'),
@@ -346,60 +390,45 @@ export class SaleReportsService {
     const filter = await this.getDateFilter(range);
 
     // 1. Top 10 and Bottom 10 by Revenue
-    const [topRevRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT sr.product_id as id, p.color as name, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue, SUM(sr.sold_quantity) as quantity
-       FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id
-       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-       GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
-       ORDER BY revenue DESC
-       LIMIT 10`,
-      filter.params,
-    );
+    const buildProductQb = () => {
+      const qb = this.repo
+        .createQueryBuilder('sr')
+        .innerJoin('sr.product', 'p')
+        .select('sr.product_id', 'id')
+        .addSelect('p.color', 'name')
+        .addSelect('p.detail_product_group', 'detail_product_group')
+        .addSelect('p.gender', 'gender')
+        .addSelect('p.size', 'size')
+        .addSelect('SUM(sr.sold_quantity * p.listing_price)', 'revenue')
+        .addSelect('SUM(sr.sold_quantity)', 'quantity');
+      if (filter.sql) {
+        qb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+      }
+      return qb
+        .groupBy('sr.product_id')
+        .addGroupBy('p.color')
+        .addGroupBy('p.detail_product_group')
+        .addGroupBy('p.gender')
+        .addGroupBy('p.size');
+    };
 
-    const [botRevRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT sr.product_id as id, p.color as name, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue, SUM(sr.sold_quantity) as quantity
-       FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id
-       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-       GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
-       ORDER BY revenue ASC
-       LIMIT 10`,
-      filter.params,
-    );
+    const topRevRows = await buildProductQb().orderBy('revenue', 'DESC').limit(10).getRawMany();
+
+    const botRevRows = await buildProductQb().orderBy('revenue', 'ASC').limit(10).getRawMany();
 
     // 2. Top 10 and Bottom 10 by Quantity
-    const [topQtyRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT sr.product_id as id, p.color as name, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue, SUM(sr.sold_quantity) as quantity
-       FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id
-       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-       GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
-       ORDER BY quantity DESC
-       LIMIT 10`,
-      filter.params,
-    );
+    const topQtyRows = await buildProductQb().orderBy('quantity', 'DESC').limit(10).getRawMany();
 
-    const [botQtyRows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT sr.product_id as id, p.color as name, p.detail_product_group, p.gender, p.size, SUM(sr.sold_quantity * p.listing_price) as revenue, SUM(sr.sold_quantity) as quantity
-       FROM saleReport sr
-       INNER JOIN product p ON sr.product_id = p.product_id
-       WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-       GROUP BY sr.product_id, p.color, p.detail_product_group, p.gender, p.size
-       ORDER BY quantity ASC
-       LIMIT 10`,
-      filter.params,
-    );
+    const botQtyRows = await buildProductQb().orderBy('quantity', 'ASC').limit(10).getRawMany();
 
     // 3. Growth rate (latest 2 months)
-    const [months] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT DISTINCT DATE_FORMAT(time_report, '%Y-%m') as month
-       FROM saleReport
-       WHERE 1=1 ${filter.sql}
-       ORDER BY month DESC
-       LIMIT 2`,
-      filter.params,
-    );
+    const monthsQb = this.repo
+      .createQueryBuilder('sr')
+      .select("DISTINCT DATE_FORMAT(sr.time_report, '%Y-%m')", 'month');
+    if (filter.sql) {
+      monthsQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+    }
+    const months = await monthsQb.orderBy('month', 'DESC').limit(2).getRawMany();
 
     let topGrowth: any[] = [];
     let bottomGrowth: any[] = [];
@@ -408,23 +437,41 @@ export class SaleReportsService {
       const month1 = months[0].month;
       const month2 = months[1].month;
 
-      const [growthRows] = await this.db.client.query<RowDataPacket[]>(
-        `SELECT 
-            p.product_id as id,
-            p.color as name,
-            p.detail_product_group,
-            p.gender,
-            p.size,
-            COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = ? THEN sr.sold_quantity * p.listing_price ELSE 0 END), 0) as rev1,
-            COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = ? THEN sr.sold_quantity * p.listing_price ELSE 0 END), 0) as rev2,
-            COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = ? THEN sr.sold_quantity ELSE 0 END), 0) as qty1,
-            COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = ? THEN sr.sold_quantity ELSE 0 END), 0) as qty2
-         FROM product p
-         INNER JOIN saleReport sr ON sr.product_id = p.product_id
-         WHERE 1=1 ${filter.sql ? filter.sql.replace('time_report', 'sr.time_report') : ''}
-         GROUP BY p.product_id, p.color, p.detail_product_group, p.gender, p.size`,
-        [month1, month2, month1, month2, ...filter.params],
-      );
+      const growthQb = this.productRepo
+        .createQueryBuilder('p')
+        .innerJoin('saleReport', 'sr', 'sr.product_id = p.product_id')
+        .select('p.product_id', 'id')
+        .addSelect('p.color', 'name')
+        .addSelect('p.detail_product_group', 'detail_product_group')
+        .addSelect('p.gender', 'gender')
+        .addSelect('p.size', 'size')
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = :m1 THEN sr.sold_quantity * p.listing_price ELSE 0 END), 0)`,
+          'rev1',
+        )
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = :m2 THEN sr.sold_quantity * p.listing_price ELSE 0 END), 0)`,
+          'rev2',
+        )
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = :m1 THEN sr.sold_quantity ELSE 0 END), 0)`,
+          'qty1',
+        )
+        .addSelect(
+          `COALESCE(SUM(CASE WHEN DATE_FORMAT(sr.time_report, '%Y-%m') = :m2 THEN sr.sold_quantity ELSE 0 END), 0)`,
+          'qty2',
+        )
+        .setParameters({ m1: month1, m2: month2 });
+      if (filter.sql) {
+        growthQb.andWhere('sr.time_report >= :filterDate', { filterDate: filter.params[0] });
+      }
+      const growthRows = await growthQb
+        .groupBy('p.product_id')
+        .addGroupBy('p.color')
+        .addGroupBy('p.detail_product_group')
+        .addGroupBy('p.gender')
+        .addGroupBy('p.size')
+        .getRawMany();
 
       const computedGrowth = growthRows.map((row) => {
         const r1 = Number(row.rev1);

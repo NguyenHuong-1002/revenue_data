@@ -1,8 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DatabaseService } from '../../models/database.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as path from 'node:path';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { v4 as uuidv4 } from 'uuid';
+import { ProductEntity } from '../products/entities/product.entity';
+import { SaleReportEntity } from '../sale-reports/entities/sale-report.entity';
+import { InventoryReportEntity } from '../inventory-reports/entities/inventory-report.entity';
+import { StoreBranchEntity } from '../branches/entities/branch.entity';
+import { PlantEntity } from '../plants/entities/plant.entity';
 import {
   CleanedProduct,
   CleanedSaleReport,
@@ -33,26 +38,24 @@ export class DataProcessingService {
   private readonly dataDir = path.resolve(__dirname, '../../../../data');
   private readonly batchSize = 500;
 
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    @InjectRepository(ProductEntity)
+    private readonly productRepo: Repository<ProductEntity>,
+    @InjectRepository(SaleReportEntity)
+    private readonly saleRepo: Repository<SaleReportEntity>,
+    @InjectRepository(InventoryReportEntity)
+    private readonly inventoryRepo: Repository<InventoryReportEntity>,
+    @InjectRepository(StoreBranchEntity)
+    private readonly branchRepo: Repository<StoreBranchEntity>,
+    @InjectRepository(PlantEntity)
+    private readonly plantRepo: Repository<PlantEntity>,
+  ) {}
 
-  /**
-   * Kiểm tra bảng có dữ liệu hay chưa (dùng để quyết định có cần import hay bỏ qua)
-   * @param table Tên bảng cần kiểm tra trong database
-   * @returns `true` nếu bảng không có bản ghi nào, ngược lại `false`
-   */
-  private async isTableEmpty(table: string): Promise<boolean> {
-    const [rows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT COUNT(*) AS cnt FROM ${table}`,
-    );
-    return Number(rows[0].cnt) === 0;
+  private async isTableEmpty(repo: Repository<any>): Promise<boolean> {
+    const count = await repo.createQueryBuilder().getCount();
+    return count === 0;
   }
 
-  /**
-   * Chia mảng lớn thành các mảng nhỏ hơn (batch) để xử lý theo lô
-   * @param items Mảng dữ liệu gốc cần chia nhỏ
-   * @param size Kích thước tối đa mỗi batch
-   * @returns Mảng chứa các mảng con có độ dài tối đa bằng `size`
-   */
   private chunk<T>(items: T[], size: number): T[][] {
     const chunks: T[][] = [];
     for (let i = 0; i < items.length; i += size) {
@@ -61,42 +64,8 @@ export class DataProcessingService {
     return chunks;
   }
 
-  /**
-   * Chèn hàng loạt bản ghi vào bảng với cơ chế `INSERT IGNORE` (bỏ qua bản ghi trùng khoá chính)
-   * Tự động chia nhỏ theo batch để tránh quá tải query
-   * @param table Tên bảng đích trong database
-   * @param columns Danh sách tên cột cần chèn
-   * @param rows Mảng 2 chiều chứa dữ liệu các dòng cần chèn
-   */
-  private async bulkInsertIgnore(
-    table: string,
-    columns: string[],
-    rows: (string | number | null)[][],
-  ): Promise<void> {
-    if (rows.length === 0) {
-      return;
-    }
-
-    const columnList = columns.join(', ');
-    const rowPlaceholders = `(${columns.map(() => '?').join(', ')})`;
-
-    for (const batch of this.chunk(rows, this.batchSize)) {
-      const placeholders = batch.map(() => rowPlaceholders).join(', ');
-      const values = batch.flat();
-      await this.db.client.query(
-        `INSERT IGNORE INTO ${table} (${columnList}) VALUES ${placeholders}`,
-        values,
-      );
-    }
-  }
-
-  /**
-   * Nạp toàn bộ danh sách product_id hiện có từ database vào Set để tra cứu nhanh
-   * Dùng để kiểm tra khoá ngoại trước khi import báo cáo bán hàng / tồn kho
-   * @returns Set chứa tất cả product_id dạng string
-   */
   private async loadExistingProductIds(): Promise<Set<string>> {
-    const [rows] = await this.db.client.query<RowDataPacket[]>(`SELECT product_id FROM product`);
+    const rows = await this.productRepo.find({ select: ['product_id'] });
     return new Set(rows.map((row) => String(row.product_id)));
   }
 
@@ -104,11 +73,6 @@ export class DataProcessingService {
   //  Data Transform Functions (Dựa theo Entity)
   // ───────────────────────────
 
-  /**
-   * 1. Hàm xử lý dữ liệu đầu vào cho thực thể Sản phẩm (ProductEntity)
-   * Lấy ra và chuẩn hóa các trường thông tin dựa trên cấu hình Entity tương ứng.
-   * Đồng thời lọc rác các giá trị null, undefined, n/a qua isValidProduct
-   */
   transformProductData(row: Record<string, unknown>): TransformResult<CleanedProduct> {
     const product_id = s(row['product_id']);
     const color = s(row['color']);
@@ -220,11 +184,6 @@ export class DataProcessingService {
     };
   }
 
-  /**
-   * 2. Hàm xử lý dữ liệu đầu vào cho thực thể Báo cáo Bán hàng (SaleReportEntity)
-   * Lấy ra và chuẩn hóa các trường thông tin dựa trên cấu hình Entity tương ứng.
-   * Đồng thời lọc rác các giá trị null, undefined, n/a qua isValidProduct
-   */
   transformSaleReportData(row: Record<string, any>): CleanedSaleReport | null {
     const product_id = s(row['product_id']);
     const sold_quantity = n(row['sold_quantity']);
@@ -258,11 +217,6 @@ export class DataProcessingService {
     };
   }
 
-  /**
-   * 3. Hàm xử lý dữ liệu đầu vào cho thực thể Báo cáo Tồn kho (InventoryReportEntity)
-   * Lấy ra và chuẩn hóa các trường thông tin dựa trên cấu hình Entity tương ứng.
-   * Đồng thời lọc rác các giá trị null, undefined, n/a qua isValidProduct
-   */
   transformInventoryReportData(row: Record<string, any>): CleanedInventoryReport | null {
     const dateStr = s(row['calendar_yeer_week'] ?? row['calendar_year_week']);
     const product_id = s(row['product_id']);
@@ -294,18 +248,11 @@ export class DataProcessingService {
   // ───────────────────────────
   //  Product Import
   // ───────────────────────────
-  /**
-   * Import dữ liệu sản phẩm từ file Excel vào bảng `product`
-   * Tự động kiểm tra trùng lặp (ON DUPLICATE KEY UPDATE) và validate từng trường
-   * @param filePath Đường dẫn file Excel hoặc Buffer chứa dữ liệu (mặc định đọc từ `data/product/Productmaster.xlsx`)
-   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
-   * @returns ImportResult chứa tổng số dòng, số đã chèn, số bị bỏ qua và thống kê từng trường
-   */
   async importProducts(
     filePath?: string | Buffer,
     bypassEmptyCheck = false,
   ): Promise<ImportResult> {
-    if (!bypassEmptyCheck && !(await this.isTableEmpty('product'))) {
+    if (!bypassEmptyCheck && !(await this.isTableEmpty(this.productRepo))) {
       this.logger.log('Product table already has data, skipping import');
       return { total: 0, inserted: 0, skipped: 0, fieldStats: {} };
     }
@@ -361,32 +308,8 @@ export class DataProcessingService {
     let inserted = 0;
     for (const prod of validProducts) {
       try {
-        await this.db.client.query<ResultSetHeader>(
-          `INSERT INTO product (product_id, color, listing_price, price_cost, gender, detail_product_group, size, age_group, activity_group, lifestyle_group)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON DUPLICATE KEY UPDATE
-             color = VALUES(color),
-             listing_price = VALUES(listing_price),
-             price_cost = VALUES(price_cost),
-             gender = VALUES(gender),
-             detail_product_group = VALUES(detail_product_group),
-             size = VALUES(size),
-             age_group = VALUES(age_group),
-             activity_group = VALUES(activity_group),
-             lifestyle_group = VALUES(lifestyle_group)`,
-          [
-            prod.product_id,
-            prod.color,
-            prod.listing_price,
-            prod.price_cost,
-            prod.gender,
-            prod.detail_product_group,
-            prod.size,
-            prod.age_group,
-            prod.activity_group,
-            prod.lifestyle_group,
-          ],
-        );
+        const entity = this.productRepo.create(prod as unknown as ProductEntity);
+        await this.productRepo.save(entity);
         inserted++;
       } catch (err) {
         this.logger.warn(
@@ -412,18 +335,11 @@ export class DataProcessingService {
   // ───────────────────────────
   //  SaleReport Import
   // ───────────────────────────
-  /**
-   * Import dữ liệu báo cáo bán hàng từ các file Excel vào bảng `saleReport`
-   * Delegate xử lý thực tế sang `importSaleReportsFast`
-   * @param filePaths Danh sách đường dẫn file Excel hoặc Buffer (mặc định đọc từ `data/sales/`)
-   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
-   * @returns Object chứa tổng số dòng, số đã chèn và số bị bỏ qua
-   */
   async importSaleReports(
     filePaths?: string[] | Buffer,
     bypassEmptyCheck = false,
   ): Promise<{ total: number; inserted: number; skipped: number }> {
-    if (!bypassEmptyCheck && !(await this.isTableEmpty('saleReport'))) {
+    if (!bypassEmptyCheck && !(await this.isTableEmpty(this.saleRepo))) {
       this.logger.log('saleReport table already has data, skipping import');
       return { total: 0, inserted: 0, skipped: 0 };
     }
@@ -431,18 +347,11 @@ export class DataProcessingService {
     return this.importSaleReportsFast(filePaths, bypassEmptyCheck);
   }
 
-  /**
-   * Import dữ liệu báo cáo tồn kho từ các file Excel vào bảng `InventoryReport`
-   * Delegate xử lý thực tế sang `importInventoryReportsFast`
-   * @param filePaths Danh sách đường dẫn file Excel hoặc Buffer (mặc định đọc từ `data/inventorys/`)
-   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
-   * @returns Object chứa tổng số dòng, số đã chèn và số bị bỏ qua
-   */
   async importInventoryReports(
     filePaths?: string[] | Buffer,
     bypassEmptyCheck = false,
   ): Promise<{ total: number; inserted: number; skipped: number }> {
-    if (!bypassEmptyCheck && !(await this.isTableEmpty('InventoryReport'))) {
+    if (!bypassEmptyCheck && !(await this.isTableEmpty(this.inventoryRepo))) {
       this.logger.log('InventoryReport table already has data, skipping import');
       return { total: 0, inserted: 0, skipped: 0 };
     }
@@ -450,18 +359,11 @@ export class DataProcessingService {
     return this.importInventoryReportsFast(filePaths, bypassEmptyCheck);
   }
 
-  /**
-   * Xử lý import chi tiết cho báo cáo bán hàng: đọc file, validate dữ liệu, kiểm tra khoá ngoại,
-   * đồng thời tự động thêm storeBranch mới và chèn hàng loạt vào DB
-   * @param filePaths Danh sách đường dẫn file Excel hoặc Buffer (mặc định đọc từ `data/sales/`)
-   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
-   * @returns Object chứa tổng số dòng, số đã chèn và số bị bỏ qua
-   */
   private async importSaleReportsFast(
     filePaths?: string[] | Buffer,
     bypassEmptyCheck = false,
   ): Promise<{ total: number; inserted: number; skipped: number }> {
-    if (!bypassEmptyCheck && !(await this.isTableEmpty('saleReport'))) {
+    if (!bypassEmptyCheck && !(await this.isTableEmpty(this.saleRepo))) {
       this.logger.log('saleReport table already has data, skipping import');
       return { total: 0, inserted: 0, skipped: 0 };
     }
@@ -515,30 +417,17 @@ export class DataProcessingService {
       }
     }
 
-    await this.bulkInsertIgnore(
-      'storeBranch',
-      ['store_id', 'name'],
-      Array.from(branchIds).map((branchId) => [branchId, branchId]),
-    );
+    for (const branchId of branchIds) {
+      const existing = await this.branchRepo.findOne({ where: { store_id: branchId } });
+      if (!existing) {
+        const branch = this.branchRepo.create({ store_id: branchId, name: branchId });
+        await this.branchRepo.save(branch);
+      }
+    }
 
     for (const batch of this.chunk(validSaleRows, this.batchSize)) {
-      const values = batch.flatMap((cleaned) => [
-        cleaned.sale_id,
-        cleaned.product_id,
-        cleaned.sold_quantity,
-        cleaned.distribution_channel,
-        cleaned.branch_id,
-        cleaned.time_report,
-      ]);
-      const placeholders = batch.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
-      await this.db.client.query<ResultSetHeader>(
-        `INSERT INTO saleReport (sale_id, product_id, sold_quantity, distribution_channel, branch_id, time_report)
-         VALUES ${placeholders}
-         ON DUPLICATE KEY UPDATE
-           sold_quantity = VALUES(sold_quantity),
-           distribution_channel = VALUES(distribution_channel)`,
-        values,
-      );
+      const entities: SaleReportEntity[] = batch.map((cleaned) => this.saleRepo.create(cleaned as unknown as SaleReportEntity));
+      await this.saleRepo.save(entities);
       inserted += batch.length;
     }
 
@@ -548,18 +437,11 @@ export class DataProcessingService {
     return { total, inserted, skipped };
   }
 
-  /**
-   * Xử lý import chi tiết cho báo cáo tồn kho: đọc file, validate dữ liệu, kiểm tra khoá ngoại,
-   * đồng thời tự động thêm Plant mới và chèn hàng loạt vào DB
-   * @param filePaths Danh sách đường dẫn file Excel hoặc Buffer (mặc định đọc từ `data/inventorys/`)
-   * @param bypassEmptyCheck Bỏ qua kiểm tra bảng rỗng nếu `true`
-   * @returns Object chứa tổng số dòng, số đã chèn và số bị bỏ qua
-   */
   private async importInventoryReportsFast(
     filePaths?: string[] | Buffer,
     bypassEmptyCheck = false,
   ): Promise<{ total: number; inserted: number; skipped: number }> {
-    if (!bypassEmptyCheck && !(await this.isTableEmpty('InventoryReport'))) {
+    if (!bypassEmptyCheck && !(await this.isTableEmpty(this.inventoryRepo))) {
       this.logger.log('InventoryReport table already has data, skipping import');
       return { total: 0, inserted: 0, skipped: 0 };
     }
@@ -613,28 +495,17 @@ export class DataProcessingService {
       }
     }
 
-    await this.bulkInsertIgnore(
-      'Plant',
-      ['plant_id', 'name_plant'],
-      Array.from(plantIds).map((plantId) => [plantId, plantId]),
-    );
+    for (const plantId of plantIds) {
+      const existing = await this.plantRepo.findOne({ where: { plant_id: plantId } });
+      if (!existing) {
+        const plant = this.plantRepo.create({ plant_id: plantId, name_plant: plantId });
+        await this.plantRepo.save(plant);
+      }
+    }
 
     for (const batch of this.chunk(validInventoryRows, this.batchSize)) {
-      const values = batch.flatMap((cleaned) => [
-        cleaned.inventory_id,
-        cleaned.product_id,
-        cleaned.plant_id,
-        cleaned.calendar_year_week,
-        cleaned.quantity,
-      ]);
-      const placeholders = batch.map(() => '(?, ?, ?, ?, ?)').join(', ');
-      await this.db.client.query<ResultSetHeader>(
-        `INSERT INTO InventoryReport (inventory_id, product_id, plant_id, calendar_year_week, quantity)
-         VALUES ${placeholders}
-         ON DUPLICATE KEY UPDATE
-           quantity = VALUES(quantity)`,
-        values,
-      );
+      const entities: InventoryReportEntity[] = batch.map((cleaned) => this.inventoryRepo.create(cleaned as unknown as InventoryReportEntity));
+      await this.inventoryRepo.save(entities);
       inserted += batch.length;
     }
 
@@ -644,11 +515,6 @@ export class DataProcessingService {
     return { total, inserted, skipped };
   }
 
-  /**
-   * Import toàn bộ dữ liệu theo thứ tự: Sản phẩm → (Bán hàng + Tồn kho song song)
-   * Import sản phẩm trước để đảm bảo khoá ngoại (Foreign Key) tồn tại trước khi import báo cáo
-   * @returns Object tổng hợp kết quả import của cả 3 loại dữ liệu
-   */
   async importAll(): Promise<{
     product: { total: number; inserted: number; skipped: number };
     sale: { total: number; inserted: number; skipped: number };
@@ -667,38 +533,24 @@ export class DataProcessingService {
   //  Helpers
   // ───────────────────────────
 
-  /**
-   * Đảm bảo bản ghi storeBranch tồn tại trong DB, nếu chưa có thì tự động thêm mới
-   * @param branchId Mã định danh của cửa hàng / chi nhánh
-   */
   private async ensureStoreBranch(branchId: string): Promise<void> {
-    await this.db.client.query<ResultSetHeader>(
-      `INSERT IGNORE INTO storeBranch (store_id, name) VALUES (?, ?)`,
-      [branchId, branchId],
-    );
+    const existing = await this.branchRepo.findOne({ where: { store_id: branchId } });
+    if (!existing) {
+      const branch = this.branchRepo.create({ store_id: branchId, name: branchId });
+      await this.branchRepo.save(branch);
+    }
   }
 
-  /**
-   * Đảm bảo bản ghi Plant tồn tại trong DB, nếu chưa có thì tự động thêm mới
-   * @param plantId Mã định danh của nhà máy / kho
-   */
   private async ensurePlant(plantId: string): Promise<void> {
-    await this.db.client.query<ResultSetHeader>(
-      `INSERT IGNORE INTO Plant (plant_id, name_plant) VALUES (?, ?)`,
-      [plantId, plantId],
-    );
+    const existing = await this.plantRepo.findOne({ where: { plant_id: plantId } });
+    if (!existing) {
+      const plant = this.plantRepo.create({ plant_id: plantId, name_plant: plantId });
+      await this.plantRepo.save(plant);
+    }
   }
 
-  /**
-   * Kiểm tra một sản phẩm đã tồn tại trong bảng `product` hay chưa
-   * @param productId Mã sản phẩm cần kiểm tra
-   * @returns `true` nếu sản phẩm đã tồn tại, ngược lại `false`
-   */
   private async checkProductExists(productId: string): Promise<boolean> {
-    const [rows] = await this.db.client.query<RowDataPacket[]>(
-      `SELECT 1 FROM product WHERE product_id = ? LIMIT 1`,
-      [productId],
-    );
-    return rows.length > 0;
+    const found = await this.productRepo.findOne({ where: { product_id: productId } });
+    return found !== null;
   }
 }
