@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { NotificationEntity } from 'src/entities/notification.entity';
-import { AccountNotificationEntity } from 'src/entities/account-notification.entity';
-import { AccountEntity } from 'src/entities/account.entity';
+import { NotificationEntity } from './entities/notification.entity';
+import { AccountNotificationEntity } from './entities/account-notification.entity';
+import { AccountEntity } from '../accounts/entities/account.entity';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
 import { AccountNotificationService } from './account-notification.service';

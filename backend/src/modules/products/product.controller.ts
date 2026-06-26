@@ -9,21 +9,20 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 
-import * as authGuard from 'src/middlewares/auth.guard';
-import { IProduct, IPaginatedProducts } from './interfaces/product.interface';
+import * as authGuard from 'src/guards/auth.guard';
+import { IProduct } from './interfaces/product.interface';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { GetProductAllDto } from './dto/get-product-all.dto';
+import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
 
 /**
  * Controller quản lý sản phẩm
  * Routes: /products
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
@@ -37,7 +36,7 @@ export class ProductController {
   @HttpCode(HttpStatus.OK)
   getProducts(
     @Query(new ValidationPipe({ transform: true })) query: GetProductAllDto,
-  ): Promise<IPaginatedProducts> {
+  ): Promise<PaginatedResponseDto<IProduct>> {
     return this.productService.getProductsAll(query);
   }
 

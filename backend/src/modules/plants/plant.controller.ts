@@ -8,11 +8,11 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
+import * as authGuard from 'src/guards/auth.guard';
 import { IPlant, IPaginatedPlants } from './interfaces/plant.interface';
 import { PlantService } from './plant.service';
 import { CreatePlantDto } from './dto/create-plant.dto';
@@ -23,7 +23,6 @@ import { UpdatePlantDto } from './dto/update-plant.dto';
  * Controller quản lý nhà máy (Plant)
  * Routes: /plants
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('plants')
 export class PlantController {
   constructor(private readonly plantService: PlantService) {}

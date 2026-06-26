@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere } from 'typeorm';
-import { PlantEntity } from 'src/entities/plant.entity';
+import { PlantEntity } from './entities/plant.entity';
 import { CreatePlantDto } from './dto/create-plant.dto';
 import { GetPlantAllDto } from './dto/get-plant-all.dto';
 import { UpdatePlantDto } from './dto/update-plant.dto';

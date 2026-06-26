@@ -9,14 +9,13 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   ValidationPipe,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
+import * as authGuard from 'src/guards/auth.guard';
 import { AccountService, avatarMulterOptions } from './account.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { GetAccountsAllDto } from './dto/get-accounts-all.dto';
@@ -36,7 +35,6 @@ import { RegisterUserDto } from './dto/register-user.dto';
  * Controller quản lý tài khoản người dùng
  * Routes: /accounts
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('accounts')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}

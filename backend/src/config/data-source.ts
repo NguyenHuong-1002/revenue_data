@@ -10,7 +10,7 @@ export const AppDataSource = new DataSource({
   username: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
-  entities: [join(__dirname, '../entities/*.entity.ts')],
+  entities: [join(__dirname, '../modules/**/*.entity.ts')],
   migrations: [join(__dirname, '../migrations/*.ts')],
   migrationsTableName: 'typeorm_migrations',
 });

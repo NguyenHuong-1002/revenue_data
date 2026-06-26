@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SaleReportsController } from './sale-reports.controller';
 import { SaleReportsService } from './sale-reports.service';
-import { NotificationModule } from '../notifications/notification.module';
+import { NotificationModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [NotificationModule],

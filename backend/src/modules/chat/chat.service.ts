@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ChatSession } from '../../entities/chat-session.entity';
-import { ChatMessage } from '../../entities/chat-message.entity';
+import { ChatSession } from './entities/chat-session.entity';
+import { ChatMessage } from './entities/chat-message.entity';
 import { DatabaseService } from 'src/models/database.service';
 import { RowDataPacket } from 'mysql2';
 

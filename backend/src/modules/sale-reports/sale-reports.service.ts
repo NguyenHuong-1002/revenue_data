@@ -2,9 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/models/database.service';
 import { CreateSaleReportDto } from './dto/create-sale-report.dto';
 import { GetSaleReportAllDto } from './dto/get-sale-report-all.dto';
-import { ISaleReport, IPaginatedSaleReports } from './interfaces/sale-report.interface';
+import { ISaleReport } from './interfaces/sale-report.interface';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
+import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
 
 @Injectable()
 export class SaleReportsService {
@@ -13,7 +14,7 @@ export class SaleReportsService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async getSaleReportsAll(filters: GetSaleReportAllDto): Promise<IPaginatedSaleReports> {
+  async getSaleReportsAll(filters: GetSaleReportAllDto): Promise<PaginatedResponseDto<ISaleReport>> {
     const whereClauses: string[] = [];
     const values: unknown[] = [];
 
@@ -34,7 +35,6 @@ export class SaleReportsService {
       values.push(`${filters.fromMonth}-01 00:00:00`);
     }
     if (filters.toMonth) {
-      // End of the target month
       const [year, month] = filters.toMonth.split('-').map(Number);
       const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
       whereClauses.push('time_report <= ?');
@@ -56,15 +56,7 @@ export class SaleReportsService {
       skip,
     ]);
 
-    return {
-      data: dataRows as ISaleReport[],
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return new PaginatedResponseDto(dataRows as ISaleReport[], total, page, limit);
   }
 
   async getDetailSaleReport(id: string): Promise<ISaleReport> {

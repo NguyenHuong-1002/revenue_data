@@ -7,17 +7,15 @@ import {
   Body,
   Param,
   ParseIntPipe,
-  UseGuards,
   BadRequestException,
 } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
+import * as authGuard from 'src/guards/auth.guard';
 import { ChatService, ChatMessagePayload } from './chat.service';
 
 /**
  * Controller quản lý chat AI (DeepSeek/OpenRouter)
  * Routes: /chat
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}

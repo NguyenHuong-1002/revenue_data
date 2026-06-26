@@ -1,13 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import * as authGuard from 'src/guards/auth.guard';
 import { TestimonialService } from './testimonial.service';
-import { LandingTestimonialEntity } from '../../../entities/landing-testimonial.entity';
+import { LandingTestimonialEntity } from './entities/landing-testimonial.entity';
 
 /**
  * Controller quản lý đánh giá khách hàng Landing Page
  * Routes: /landing/testimonials
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('landing/testimonials')
 export class TestimonialController {
   constructor(private readonly testimonialService: TestimonialService) {}

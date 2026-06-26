@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductEntity } from 'src/entities/product.entity';
-import { StoreBranchEntity } from 'src/entities/branch.entity';
-import { DatabaseModule } from 'src/models/database.module';
+import { ProductEntity } from '../products/entities/product.entity';
+import { StoreBranchEntity } from '../branches/entities/branch.entity';
+import { SaleReportEntity } from '../sale-reports/entities/sale-report.entity';
 import { ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
 
 @Module({
-  imports: [DatabaseModule, TypeOrmModule.forFeature([ProductEntity, StoreBranchEntity])],
+  imports: [TypeOrmModule.forFeature([ProductEntity, StoreBranchEntity, SaleReportEntity])],
   controllers: [ReportsController],
   providers: [ReportsService],
 })

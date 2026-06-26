@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
-import { StoreBranchEntity } from 'src/entities/branch.entity';
+import { StoreBranchEntity } from './entities/branch.entity';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { GetBranchAllDto } from './dto/get-branch-all.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
-import { IBranch, IPaginatedBranches } from './interfaces/branch.interface';
+import { IBranch } from './interfaces/branch.interface';
 import { NotificationService } from '../notifications/notification.service';
+import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -17,7 +18,7 @@ export class BranchService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async getAll(filters: GetBranchAllDto): Promise<IPaginatedBranches> {
+  async getAll(filters: GetBranchAllDto): Promise<PaginatedResponseDto<IBranch>> {
     const { page, limit, city } = filters;
     const skip = (page - 1) * limit;
 
@@ -30,10 +31,7 @@ export class BranchService {
       take: limit,
     });
 
-    return {
-      data: data,
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    };
+    return new PaginatedResponseDto(data, total, page, limit);
   }
 
   async getById(id: string): Promise<IBranch> {

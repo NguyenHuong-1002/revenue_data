@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { ProductEntity } from '../../products/entities/product.entity';
+import { StoreBranchEntity } from '../../branches/entities/branch.entity';
 
 @Entity('saleReport')
 export class SaleReportEntity {
@@ -39,4 +41,12 @@ export class SaleReportEntity {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updated_at!: string;
+
+  @ManyToOne(() => ProductEntity, { eager: false })
+  @JoinColumn({ name: 'product_id', referencedColumnName: 'product_id', foreignKeyConstraintName: 'FK_sale_product' })
+  product!: ProductEntity;
+
+  @ManyToOne(() => StoreBranchEntity, { eager: false })
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'store_id', foreignKeyConstraintName: 'FK_sale_branch' })
+  branch!: StoreBranchEntity;
 }

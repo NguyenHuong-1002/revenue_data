@@ -1,13 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RowDataPacket } from 'mysql2';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import * as path from 'path';
-import { DatabaseService } from 'src/models/database.service';
-import { ProductEntity } from 'src/entities/product.entity';
-import { StoreBranchEntity } from 'src/entities/branch.entity';
+import { ProductEntity } from '../products/entities/product.entity';
+import { StoreBranchEntity } from '../branches/entities/branch.entity';
+import { SaleReportEntity } from '../sale-reports/entities/sale-report.entity';
 import { ReportQueryDto } from './dto/report-query.dto';
 import {
   IGrowthReportData,
@@ -16,19 +15,6 @@ import {
   ITopBranchRevenue,
   ITopProductRevenue,
 } from './interfaces/report.interface';
-
-type MonthlyRevenueRow = RowDataPacket & {
-  month: string;
-  revenue: string | number;
-  quantity: string | number;
-};
-
-type TopRevenueRow = RowDataPacket & {
-  id: string;
-  name: string;
-  quantity: string | number;
-  revenue: string | number;
-};
 
 /* ─── Font paths ─── */
 // Works in both dev (ts-node / webpack HMR) and prod (dist/)
@@ -72,11 +58,12 @@ const COLOR = {
 @Injectable()
 export class ReportsService {
   constructor(
-    private readonly db: DatabaseService,
     @InjectRepository(ProductEntity)
     private readonly productRepository: Repository<ProductEntity>,
     @InjectRepository(StoreBranchEntity)
     private readonly storeBranchRepository: Repository<StoreBranchEntity>,
+    @InjectRepository(SaleReportEntity)
+    private readonly saleReportRepository: Repository<SaleReportEntity>,
   ) {}
 
   async buildGrowthReport(query: ReportQueryDto): Promise<IGrowthReportData> {
@@ -141,31 +128,27 @@ export class ReportsService {
   ════════════════════════════════════════════ */
 
   private async loadMonthlyRevenue(query: ReportQueryDto): Promise<IMonthlyRevenuePoint[]> {
-    const params: Array<string> = [];
-    const where: string[] = [];
-
     const range = this.resolveMonthRange(query.fromMonth, query.toMonth);
+
+    const qb = this.saleReportRepository
+      .createQueryBuilder('sr')
+      .innerJoin('sr.product', 'p')
+      .select("DATE_FORMAT(sr.time_report, '%Y-%m')", 'month')
+      .addSelect('SUM(sr.sold_quantity * p.listing_price)', 'revenue')
+      .addSelect('SUM(sr.sold_quantity)', 'quantity');
+
     if (range.from) {
-      where.push('sr.time_report >= ?');
-      params.push(range.from);
+      qb.andWhere('sr.time_report >= :from', { from: range.from });
     }
     if (range.to) {
-      where.push('sr.time_report <= ?');
-      params.push(range.to);
+      qb.andWhere('sr.time_report <= :to', { to: range.to });
     }
 
-    const sql = `
-      SELECT DATE_FORMAT(sr.time_report, '%Y-%m') AS month,
-             SUM(sr.sold_quantity * p.listing_price) AS revenue,
-             SUM(sr.sold_quantity) AS quantity
-      FROM saleReport sr
-      INNER JOIN product p ON p.product_id = sr.product_id
-      ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
-      GROUP BY DATE_FORMAT(sr.time_report, '%Y-%m')
-      ORDER BY month ASC
-    `;
+    const rows = await qb
+      .groupBy("DATE_FORMAT(sr.time_report, '%Y-%m')")
+      .orderBy('month', 'ASC')
+      .getRawMany();
 
-    const [rows] = await this.db.client.query<MonthlyRevenueRow[]>(sql, params);
     return rows.map((row) => ({
       month: String(row.month),
       revenue: Number(row.revenue ?? 0),
@@ -177,34 +160,29 @@ export class ReportsService {
     query: ReportQueryDto,
     limit: number,
   ): Promise<ITopProductRevenue[]> {
-    const params: Array<string | number> = [];
-    const where: string[] = [];
     const range = this.resolveMonthRange(query.fromMonth, query.toMonth);
 
+    const qb = this.saleReportRepository
+      .createQueryBuilder('sr')
+      .innerJoin('sr.product', 'p')
+      .select('sr.product_id', 'id')
+      .addSelect('COALESCE(p.color, sr.product_id)', 'name')
+      .addSelect('SUM(sr.sold_quantity)', 'quantity')
+      .addSelect('SUM(sr.sold_quantity * p.listing_price)', 'revenue');
+
     if (range.from) {
-      where.push('sr.time_report >= ?');
-      params.push(range.from);
+      qb.andWhere('sr.time_report >= :from', { from: range.from });
     }
     if (range.to) {
-      where.push('sr.time_report <= ?');
-      params.push(range.to);
+      qb.andWhere('sr.time_report <= :to', { to: range.to });
     }
-    params.push(limit);
 
-    const sql = `
-      SELECT sr.product_id AS id,
-             COALESCE(p.color, sr.product_id) AS name,
-             SUM(sr.sold_quantity) AS quantity,
-             SUM(sr.sold_quantity * p.listing_price) AS revenue
-      FROM saleReport sr
-      INNER JOIN product p ON p.product_id = sr.product_id
-      ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
-      GROUP BY sr.product_id, p.color
-      ORDER BY revenue DESC
-      LIMIT ?
-    `;
+    const rows = await qb
+      .groupBy('sr.product_id, p.color')
+      .orderBy('revenue', 'DESC')
+      .limit(limit)
+      .getRawMany();
 
-    const [rows] = await this.db.client.query<TopRevenueRow[]>(sql, params);
     return rows.map((row) => ({
       product_id: String(row.id),
       product_name: String(row.name),
@@ -217,35 +195,30 @@ export class ReportsService {
     query: ReportQueryDto,
     limit: number,
   ): Promise<ITopBranchRevenue[]> {
-    const params: Array<string | number> = [];
-    const where: string[] = [];
     const range = this.resolveMonthRange(query.fromMonth, query.toMonth);
 
+    const qb = this.saleReportRepository
+      .createQueryBuilder('sr')
+      .innerJoin('sr.product', 'p')
+      .leftJoin('sr.branch', 'sb')
+      .select('sr.branch_id', 'id')
+      .addSelect('COALESCE(sb.name, sr.branch_id)', 'name')
+      .addSelect('SUM(sr.sold_quantity)', 'quantity')
+      .addSelect('SUM(sr.sold_quantity * p.listing_price)', 'revenue');
+
     if (range.from) {
-      where.push('sr.time_report >= ?');
-      params.push(range.from);
+      qb.andWhere('sr.time_report >= :from', { from: range.from });
     }
     if (range.to) {
-      where.push('sr.time_report <= ?');
-      params.push(range.to);
+      qb.andWhere('sr.time_report <= :to', { to: range.to });
     }
-    params.push(limit);
 
-    const sql = `
-      SELECT sr.branch_id AS id,
-             COALESCE(sb.name, sr.branch_id) AS name,
-             SUM(sr.sold_quantity) AS quantity,
-             SUM(sr.sold_quantity * p.listing_price) AS revenue
-      FROM saleReport sr
-      INNER JOIN product p ON p.product_id = sr.product_id
-      LEFT JOIN storeBranch sb ON sb.store_id = sr.branch_id
-      ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
-      GROUP BY sr.branch_id, sb.name
-      ORDER BY revenue DESC
-      LIMIT ?
-    `;
+    const rows = await qb
+      .groupBy('sr.branch_id, sb.name')
+      .orderBy('revenue', 'DESC')
+      .limit(limit)
+      .getRawMany();
 
-    const [rows] = await this.db.client.query<TopRevenueRow[]>(sql, params);
     return rows.map((row) => ({
       branch_id: String(row.id),
       branch_name: String(row.name),

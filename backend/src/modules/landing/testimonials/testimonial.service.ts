@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { LandingTestimonialEntity } from '../../../entities/landing-testimonial.entity';
+import { LandingTestimonialEntity } from './entities/landing-testimonial.entity';
 
 @Injectable()
 export class TestimonialService {

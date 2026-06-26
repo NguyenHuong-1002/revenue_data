@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AccountEntity } from 'src/entities/account.entity';
-import { AccountNotificationEntity } from 'src/entities/account-notification.entity';
+import { AccountEntity } from '../accounts/entities/account.entity';
+import { AccountNotificationEntity } from './entities/account-notification.entity';
 import { GetNotificationsDto } from './dto/get-notifications-all.dto';
 import {
   IAccountNotificationMapping,

@@ -1,12 +1,21 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 
-export const typeOrmConfig: TypeOrmModuleOptions = {
-  type: 'mysql',
-  host: process.env.MYSQL_HOST,
-  port: Number(process.env.MYSQL_PORT),
-  username: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  autoLoadEntities: true,
-  synchronize: true,
-};
+@Injectable()
+export class TypeOrmConfigService implements TypeOrmOptionsFactory {
+  constructor(private readonly configService: ConfigService) {}
+
+  createTypeOrmOptions(): TypeOrmModuleOptions {
+    return {
+      type: 'mysql',
+      host: this.configService.get<string>('MYSQL_HOST'),
+      port: this.configService.get<number>('MYSQL_PORT'),
+      username: this.configService.get<string>('MYSQL_USER'),
+      password: this.configService.get<string>('MYSQL_PASSWORD'),
+      database: this.configService.get<string>('MYSQL_DATABASE'),
+      autoLoadEntities: true,
+      synchronize: true,
+    };
+  }
+}

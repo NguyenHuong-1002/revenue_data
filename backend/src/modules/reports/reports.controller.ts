@@ -8,10 +8,9 @@ import {
   Res,
   StreamableFile,
   ValidationPipe,
-  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import * as authGuard from 'src/middlewares/auth.guard';
+import * as authGuard from 'src/guards/auth.guard';
 import { ReportQueryDto } from './dto/report-query.dto';
 import { ReportsService } from './reports.service';
 
@@ -19,7 +18,6 @@ import { ReportsService } from './reports.service';
  * Controller xuất báo cáo (PDF, Excel)
  * Routes: /reports
  */
-@UseGuards(authGuard.AuthGuard)
 @authGuard.Roles('ADMIN')
 @Controller('reports')
 export class ReportsController {

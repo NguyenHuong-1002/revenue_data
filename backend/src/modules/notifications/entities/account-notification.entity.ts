@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { AccountEntity } from './account.entity';
+import { AccountEntity } from '../../accounts/entities/account.entity';
 import { NotificationEntity } from './notification.entity';
 
 @Entity('account_notification')

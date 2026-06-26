@@ -3,20 +3,18 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
-  UseGuards,
   BadRequestException,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import * as authGuard from 'src/middlewares/auth.guard';
+import * as authGuard from 'src/guards/auth.guard';
 import { DataImportService } from './data-import.service';
 
 /**
  * Controller nhập dữ liệu từ file Excel
  * Routes: /import
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('import')
 export class DataImportController {
   constructor(private readonly dataImportService: DataImportService) {}

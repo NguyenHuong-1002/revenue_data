@@ -4,10 +4,9 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
+import * as authGuard from 'src/guards/auth.guard';
 import { InterpretationRequestDto } from './dto/interpretation-request.dto';
 import { IInterpretationResponse } from './interfaces/interpretation.interface';
 import { AiInterpretationService } from './ai-interpretation.service';
@@ -16,7 +15,6 @@ import { AiInterpretationService } from './ai-interpretation.service';
  * Controller phân tích dữ liệu bằng AI
  * Routes: /ai/interpretation
  */
-@UseGuards(authGuard.AuthGuard)
 @authGuard.Roles('ADMIN')
 @Controller('ai/interpretation')
 export class AiInterpretationController {

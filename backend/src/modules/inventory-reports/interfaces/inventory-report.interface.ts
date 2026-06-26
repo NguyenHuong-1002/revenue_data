@@ -7,13 +7,3 @@ export interface IInventoryReport {
   created_at: string;
   updated_at: string;
 }
-
-export interface IPaginatedInventoryReports {
-  data: IInventoryReport[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}

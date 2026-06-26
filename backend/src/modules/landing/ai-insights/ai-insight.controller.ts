@@ -1,13 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import * as authGuard from 'src/guards/auth.guard';
 import { AiInsightService } from './ai-insight.service';
-import { LandingAiInsightEntity } from '../../../entities/landing-ai-insight.entity';
+import { LandingAiInsightEntity } from './entities/landing-ai-insight.entity';
 
 /**
  * Controller quản lý insights AI trên Landing Page
  * Routes: /landing/ai-insights
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('landing/ai-insights')
 export class AiInsightController {
   constructor(private readonly aiInsightService: AiInsightService) {}

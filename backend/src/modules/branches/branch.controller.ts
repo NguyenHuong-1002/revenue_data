@@ -9,21 +9,20 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
-import { IBranch, IPaginatedBranches } from './interfaces/branch.interface';
+import * as authGuard from 'src/guards/auth.guard';
+import { IBranch } from './interfaces/branch.interface';
 import { BranchService } from './branch.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { GetBranchAllDto } from './dto/get-branch-all.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
+import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
 
 /**
  * Controller quản lý chi nhánh
  * Routes: /branches
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('branches')
 export class BranchController {
   constructor(private readonly branchService: BranchService) {}
@@ -37,7 +36,7 @@ export class BranchController {
   @HttpCode(HttpStatus.OK)
   getBranches(
     @Query(new ValidationPipe({ transform: true })) query: GetBranchAllDto,
-  ): Promise<IPaginatedBranches> {
+  ): Promise<PaginatedResponseDto<IBranch>> {
     return this.branchService.getAll(query);
   }
 

@@ -2,12 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/models/database.service';
 import { CreateInventoryReportDto } from './dto/create-inventory-report.dto';
 import { GetInventoryReportAllDto } from './dto/get-inventory-report-all.dto';
-import {
-  IInventoryReport,
-  IPaginatedInventoryReports,
-} from './interfaces/inventory-report.interface';
+import { IInventoryReport } from './interfaces/inventory-report.interface';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { NotificationService } from '../notifications/notification.service';
+import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
 
 @Injectable()
 export class InventoryReportsService {
@@ -18,7 +16,7 @@ export class InventoryReportsService {
 
   async getInventoryReportsAll(
     filters: GetInventoryReportAllDto,
-  ): Promise<IPaginatedInventoryReports> {
+  ): Promise<PaginatedResponseDto<IInventoryReport>> {
     const whereClauses: string[] = [];
     const values: unknown[] = [];
 
@@ -56,15 +54,7 @@ export class InventoryReportsService {
       skip,
     ]);
 
-    return {
-      data: dataRows as IInventoryReport[],
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return new PaginatedResponseDto(dataRows as IInventoryReport[], total, page, limit);
   }
 
   async getDetailInventoryReport(id: string): Promise<IInventoryReport> {

@@ -9,23 +9,19 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import * as authGuard from '@/middlewares/auth.guard';
+import * as authGuard from '@/guards/auth.guard';
 import { InventoryReportsService } from './inventory-reports.service';
 import { CreateInventoryReportDto } from './dto/create-inventory-report.dto';
 import { GetInventoryReportAllDto } from './dto/get-inventory-report-all.dto';
-import {
-  IInventoryReport,
-  IPaginatedInventoryReports,
-} from './interfaces/inventory-report.interface';
+import { IInventoryReport } from './interfaces/inventory-report.interface';
+import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
 
 /**
  * Controller quản lý báo cáo tồn kho
  * Routes: /inventory-reports
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('inventory-reports')
 export class InventoryReportsController {
   constructor(private readonly inventoryReportsService: InventoryReportsService) {}
@@ -38,7 +34,7 @@ export class InventoryReportsController {
   @HttpCode(HttpStatus.OK)
   getInventoryReports(
     @Query(new ValidationPipe({ transform: true })) query: GetInventoryReportAllDto,
-  ): Promise<IPaginatedInventoryReports> {
+  ): Promise<PaginatedResponseDto<IInventoryReport>> {
     return this.inventoryReportsService.getInventoryReportsAll(query);
   }
 

@@ -1,15 +1,21 @@
-import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './global/all-exceptions.filter';
+import { TransformInterceptor } from './global/transform.interceptor';
 import { ValidationPipe } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from './guards/auth.guard';
 import * as path from 'node:path';
 
 declare const module: any;
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  const configService = app.get(ConfigService);
 
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
@@ -27,15 +33,27 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new AllExceptionsFilter(app.get(WINSTON_MODULE_NEST_PROVIDER)));
+  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalGuards(
+    new AuthGuard(
+      app.get(Reflector),
+      app.get(JwtService),
+      app.get(WINSTON_MODULE_NEST_PROVIDER),
+    ),
+  );
 
-  // Kích hoạt CORS hỗ trợ gửi Authorization headers và credentials từ frontend
+  const corsOrigins = configService
+    .get<string>('CORS_ORIGINS')!
+    .split(',')
+    .map((s) => s.trim());
+
   app.enableCors({
-    origin: true, // Tự động cho phép theo nguồn gốc (origin) của frontend yêu cầu
+    origin: corsOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true, // Cho phép truyền gửi access tokens / cookies bảo mật
+    credentials: true,
   });
 
-  const port = Number(process.env.PORT ?? 3000);
+  const port = configService.get<number>('PORT') ?? 3000;
   await app.listen(port);
 
   // 3. Webpack Hot Module Replacement (HMR)

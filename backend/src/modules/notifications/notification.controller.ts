@@ -10,10 +10,9 @@ import {
   Post,
   Query,
   ParseUUIDPipe,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { AuthGuard, CurrentUser, type JwtPayload, Roles } from 'src/middlewares/auth.guard';
+import { AuthGuard, CurrentUser, type JwtPayload, Roles } from 'src/guards/auth.guard';
 import { NotificationService } from './notification.service';
 import { AccountNotificationService } from './account-notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -29,7 +28,6 @@ import {
  * Controller quản lý thông báo
  * Routes: /notifications
  */
-@UseGuards(AuthGuard)
 @Controller('notifications')
 export class NotificationController {
   constructor(

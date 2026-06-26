@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import * as dotenv from 'dotenv';
+import { ConfigService } from '@nestjs/config';
 import { createPool, Pool, PoolConnection } from 'mysql2/promise';
 import {
   checkDatabaseConnection,
@@ -7,12 +7,12 @@ import {
   seedMockAccounts,
 } from './database-bootstrap';
 
-dotenv.config();
-
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name);
   private pool?: Pool;
+
+  constructor(private readonly configService: ConfigService) {}
 
   private async checkConnection() {
     const connection = await this.client.getConnection();
@@ -20,11 +20,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    const host = process.env.MYSQL_HOST;
-    const port = Number(process.env.MYSQL_PORT);
-    const user = process.env.MYSQL_USER;
-    const password = process.env.MYSQL_PASSWORD;
-    const dbName = process.env.MYSQL_DATABASE;
+    const host = this.configService.get<string>('MYSQL_HOST')!;
+    const port = this.configService.get<number>('MYSQL_PORT')!;
+    const user = this.configService.get<string>('MYSQL_USER')!;
+    const password = this.configService.get<string>('MYSQL_PASSWORD')!;
+    const dbName = this.configService.get<string>('MYSQL_DATABASE')!;
 
     try {
       const connection = await checkDatabaseConnection(host!, port, user!, password);
@@ -43,7 +43,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       password,
       database: dbName,
       waitForConnections: true,
-      connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT ?? 10),
+      connectionLimit: this.configService.get<number>('MYSQL_CONNECTION_LIMIT') ?? 10,
       queueLimit: 0,
     });
 

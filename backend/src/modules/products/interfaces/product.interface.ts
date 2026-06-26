@@ -10,13 +10,3 @@ export interface IProduct {
   activity_group: string;
   lifestyle_group: string;
 }
-
-export interface IPaginatedProducts {
-  data: IProduct[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}

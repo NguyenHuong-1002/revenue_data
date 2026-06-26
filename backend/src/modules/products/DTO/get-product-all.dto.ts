@@ -1,20 +1,8 @@
 import { Type } from 'class-transformer';
-import { IsString, IsNumber, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
-export class GetProductAllDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt({ message: 'Số trang (page) phải là một số nguyên.' })
-  @Min(1, { message: 'Số trang (page) tối thiểu phải là 1.' })
-  page = 1;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt({ message: 'Số lượng phần tử (limit) phải là số nguyên.' })
-  @Min(1, { message: 'Số lượng phần tử (limit) tối thiểu phải là 1.' })
-  @Max(100, { message: 'Số lượng phần tử (limit) tối đa không quá 100.' })
-  limit = 10;
-
+export class GetProductAllDto extends PaginationQueryDto {
   @IsOptional()
   @IsString({ message: 'Mã sản phẩm (product_id) phải là một chuỗi ký tự!' })
   product_id?: string;

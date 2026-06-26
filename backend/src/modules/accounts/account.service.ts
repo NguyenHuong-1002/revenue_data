@@ -9,7 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
-import { AccountEntity } from 'src/entities/account.entity';
+import { AccountEntity } from './entities/account.entity';
 import { Repository } from 'typeorm';
 import { NotificationService } from '../notifications/notification.service';
 import { CreateAccountDto } from './dto/create-account.dto';

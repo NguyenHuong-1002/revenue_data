@@ -1,13 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import * as authGuard from 'src/guards/auth.guard';
 import { FeatureService } from './feature.service';
-import { LandingFeatureEntity } from '../../../entities/landing-feature.entity';
+import { LandingFeatureEntity } from './entities/landing-feature.entity';
 
 /**
  * Controller quản lý tính năng Landing Page
  * Routes: /landing/features
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('landing/features')
 export class FeatureController {
   constructor(private readonly featureService: FeatureService) {}

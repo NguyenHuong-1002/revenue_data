@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from 'src/models/database.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProductEntity } from './entities/product.entity';
 import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
-import { NotificationModule } from '../notifications/notification.module';
+import { NotificationModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [DatabaseModule, NotificationModule],
+  imports: [TypeOrmModule.forFeature([ProductEntity]), NotificationModule],
   controllers: [ProductController],
   providers: [ProductService],
   exports: [ProductService],

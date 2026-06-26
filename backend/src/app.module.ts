@@ -1,33 +1,40 @@
-import * as dotenv from 'dotenv';
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { ProductModule } from './modules/products/product.module';
+import { ProductModule } from './modules/products/products.module';
 import { DatabaseModule } from './models/database.module';
-import { DataProcessingModule } from './modules/data-processing/data-processing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AccountModule } from './modules/accounts/account.module';
-import { typeOrmConfig } from './config/typeorm.config';
-import { NotificationModule } from './modules/notifications/notification.module';
+import { AccountModule } from './modules/accounts/accounts.module';
+import { NotificationModule } from './modules/notifications/notifications.module';
 import { WinstonModule } from 'nest-winston';
-import { ApiLoggerMiddleware } from './middlewares/api-logger.middleware';
+import { ApiLoggerMiddleware } from './middleware/api-logger.middleware';
 import { CorrelationIdMiddleware } from './global/correlation-id.middleware';
 import { createWinstonLoggerOptions } from './global/logger.config';
 import { DataImportModule } from './modules/data-import/data-import.module';
-import { BranchModule } from './modules/branches/branch.module';
-import { PlantModule } from './modules/plants/plant.module';
+import { BranchModule } from './modules/branches/branches.module';
+import { PlantModule } from './modules/plants/plants.module';
 import { AiInterpretationModule } from './modules/ai-interpretation/ai-interpretation.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { LandingModule } from './modules/landing/landing.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { SaleReportsModule } from './modules/sale-reports/sale-reports.module';
 import { InventoryReportsModule } from './modules/inventory-reports/inventory-reports.module';
-
-dotenv.config();
+import { HealthModule } from './modules/health/health.module';
+import { envValidationSchema } from './config/env.validation';
+import { TypeOrmConfigService } from './config/typeorm.config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: envValidationSchema,
+      envFilePath: '.env',
+    }),
     WinstonModule.forRoot(createWinstonLoggerOptions()),
-    TypeOrmModule.forRoot(typeOrmConfig),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useClass: TypeOrmConfigService,
+    }),
     JwtModule.register({
       global: true,
       secret: process.env.ACCESS_TOKEN_JWT,
@@ -35,7 +42,6 @@ dotenv.config();
     }),
     ProductModule,
     AccountModule,
-    DataProcessingModule,
     DatabaseModule,
     NotificationModule,
     DataImportModule,
@@ -47,6 +53,7 @@ dotenv.config();
     ChatModule,
     SaleReportsModule,
     InventoryReportsModule,
+    HealthModule,
   ],
 })
 export class AppModule implements NestModule {

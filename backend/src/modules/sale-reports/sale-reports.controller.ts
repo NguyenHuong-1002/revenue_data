@@ -9,20 +9,19 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import * as authGuard from 'src/middlewares/auth.guard';
+import * as authGuard from 'src/guards/auth.guard';
 import { SaleReportsService } from './sale-reports.service';
 import { CreateSaleReportDto } from './dto/create-sale-report.dto';
 import { GetSaleReportAllDto } from './dto/get-sale-report-all.dto';
-import { ISaleReport, IPaginatedSaleReports } from './interfaces/sale-report.interface';
+import { ISaleReport } from './interfaces/sale-report.interface';
+import { PaginatedResponseDto } from '@/common/dto/paginated-response.dto';
 
 /**
  * Controller quản lý báo cáo bán hàng
  * Routes: /sale-reports
  */
-@UseGuards(authGuard.AuthGuard)
 @Controller('sale-reports')
 export class SaleReportsController {
   constructor(private readonly saleReportsService: SaleReportsService) {}
@@ -35,7 +34,7 @@ export class SaleReportsController {
   @HttpCode(HttpStatus.OK)
   getSaleReports(
     @Query(new ValidationPipe({ transform: true })) query: GetSaleReportAllDto,
-  ): Promise<IPaginatedSaleReports> {
+  ): Promise<PaginatedResponseDto<ISaleReport>> {
     return this.saleReportsService.getSaleReportsAll(query);
   }
 
