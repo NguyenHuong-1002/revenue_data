@@ -15,7 +15,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_DATABASE,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: false,
     };
   }
 }

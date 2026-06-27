@@ -6,6 +6,9 @@ import { InventoryReportEntity } from '../inventory-reports/entities/inventory-r
 import { StoreBranchEntity } from '../branches/entities/branch.entity';
 import { PlantEntity } from '../plants/entities/plant.entity';
 import { DataProcessingService } from './data-processing.service';
+import { ProductImporterService } from './importers/product-importer.service';
+import { SaleImporterService } from './importers/sale-importer.service';
+import { InventoryImporterService } from './importers/inventory-importer.service';
 
 @Module({
   imports: [
@@ -17,7 +20,12 @@ import { DataProcessingService } from './data-processing.service';
       PlantEntity,
     ]),
   ],
-  providers: [DataProcessingService],
+  providers: [
+    ProductImporterService,
+    SaleImporterService,
+    InventoryImporterService,
+    DataProcessingService,
+  ],
   exports: [DataProcessingService],
 })
 export class DataProcessingModule {}
