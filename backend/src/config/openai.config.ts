@@ -4,10 +4,22 @@ import OpenAI from 'openai';
 dotenv.config();
 
 const apiKey = process.env.DEEPSEEK_API_KEY;
-const baseURL = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
+const baseURL = process.env.DEEPSEEK_BASE_URL;
+const model = process.env.DEEPSEEK_MODEL;
 
+const missing: string[] = [];
 if (!apiKey) {
-  throw new Error('Missing DEEPSEEK_API_KEY in .env');
+  missing.push('DEEPSEEK_API_KEY');
+}
+if (!baseURL) {
+  missing.push('DEEPSEEK_BASE_URL');
+}
+if (!model) {
+  missing.push('DEEPSEEK_MODEL');
+}
+
+if (missing.length > 0) {
+  throw new Error(`Missing Error`);
 }
 
 export const openaiClient = new OpenAI({
@@ -16,7 +28,7 @@ export const openaiClient = new OpenAI({
 });
 
 export const openaiConfig = {
-  model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+  model: model,
   temperature: 0.7,
   maxTokens: 4096,
 };

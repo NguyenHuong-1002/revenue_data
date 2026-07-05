@@ -1,13 +1,14 @@
-import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
-import type { LoggerService } from '@nestjs/common';
+import * as common from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
-@Injectable()
-export class ApiLoggerMiddleware implements NestMiddleware {
+@common.Injectable()
+export class ApiLoggerMiddleware implements common.NestMiddleware {
+  private readonly context = ApiLoggerMiddleware.name;
+
   constructor(
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
-    private readonly logger: LoggerService,
+    @common.Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: common.LoggerService,
   ) {}
 
   use(req: Request, res: Response, next: NextFunction) {
@@ -17,17 +18,15 @@ export class ApiLoggerMiddleware implements NestMiddleware {
       const { method, originalUrl: url } = req;
       const { statusCode } = res;
       const duration = Date.now() - startTime;
-      const ip = req.ip;
-      const correlationId = req['correlationId'];
 
-      const logData = { method, url, statusCode, duration, correlationId, ip };
+      const message = `${method} ${url} ${statusCode} ${duration}ms`;
 
       if (statusCode >= 500) {
-        this.logger.error({ message: `${method} ${url} ${statusCode} ${duration}ms`, ...logData });
+        this.logger.error(message, undefined, this.context);
       } else if (statusCode >= 400) {
-        this.logger.warn({ message: `${method} ${url} ${statusCode} ${duration}ms`, ...logData });
+        this.logger.warn(message, this.context);
       } else {
-        this.logger.log({ message: `${method} ${url} ${statusCode} ${duration}ms`, ...logData });
+        this.logger.log(message, this.context);
       }
     });
 

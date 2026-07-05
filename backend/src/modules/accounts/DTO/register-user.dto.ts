@@ -1,5 +1,24 @@
-import { IsEmail, IsIn, IsNotEmpty, IsString, MinLength, Validate } from 'class-validator';
-import { MatchPasswordValidator } from 'src/validators/match-password.validator';
+import {
+  IsEmail,
+  IsIn,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  Validate,
+  ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
+
+@ValidatorConstraint({ name: 'MatchPassword', async: false })
+class MatchPasswordValidator implements ValidatorConstraintInterface {
+  validate(confirmPassword: string, args: ValidationArguments): boolean {
+    const [passwordField] = args.constraints as string[];
+    const object = args.object as Record<string, unknown>;
+
+    return confirmPassword === object[passwordField];
+  }
+}
 
 export class RegisterUserDto {
   @IsNotEmpty({ message: 'Họ tên không được để trống!' })
@@ -27,8 +46,8 @@ export class RegisterUserDto {
   mail!: string;
 
   @IsIn(['STAFF'], { message: 'Role chỉ chấp nhận: STAFF!' })
-  role: 'STAFF' = 'STAFF';
+  role = 'STAFF' as const;
 
   @IsIn(['ACTIVE'], { message: 'Trạng thái chỉ chấp nhận: ACTIVE!' })
-  status_account: 'ACTIVE' = 'ACTIVE';
+  status_account = 'ACTIVE' as const;
 }

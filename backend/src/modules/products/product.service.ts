@@ -28,9 +28,10 @@ export class ProductService {
       .take(limit)
       .getManyAndCount();
 
-    return new PaginatedResponseDto(data as IProduct[], total, page, limit);
+    return new PaginatedResponseDto(data, total, page, limit);
   }
 
+  // todo Bộ lọc tìm kiếm
   private createFilteredQuery(
     filters: Omit<GetProductAllDto, 'page' | 'limit'>,
   ): SelectQueryBuilder<ProductEntity> {
@@ -43,7 +44,9 @@ export class ProductService {
       qb.andWhere('product.color LIKE :color', { color: `%${filters.color.trim()}%` });
     }
     if (filters.listing_price !== undefined) {
-      qb.andWhere('product.listing_price = :listing_price', { listing_price: filters.listing_price });
+      qb.andWhere('product.listing_price = :listing_price', {
+        listing_price: filters.listing_price,
+      });
     }
     if (filters.price_cost !== undefined) {
       qb.andWhere('product.price_cost = :price_cost', { price_cost: filters.price_cost });
@@ -148,7 +151,7 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException(`Product with ID '${id}' not found`);
     }
-    return product as IProduct;
+    return product;
   }
 
   async createProduct(dto: CreateProductDto, adminUsername?: string): Promise<IProduct> {

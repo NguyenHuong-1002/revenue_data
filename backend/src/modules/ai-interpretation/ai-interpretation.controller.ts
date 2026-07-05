@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, ValidationPipe } from '@nestjs/common';
 import * as authGuard from 'src/guards/auth.guard';
 import { InterpretationRequestDto } from './dto/interpretation-request.dto';
 import { IInterpretationResponse } from './interfaces/interpretation.interface';

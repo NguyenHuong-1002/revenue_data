@@ -71,18 +71,13 @@ export class AccountService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  /**
-   * Lấy danh sách toàn bộ tài khoản trong hệ thống có phân trang và sắp xếp tăng dần theo ID
-   * @param filters DTO chứa thông tin phân trang bao gồm số trang (page) và giới hạn bản ghi (limit)
-   * @returns Object phân trang gồm mảng dữ liệu tài khoản và thông tin Meta dữ liệu (tổng số bản ghi, tổng số trang)
-   */
   async getUsersAll(filters: GetAccountsAllDto): Promise<IPaginatedAccounts> {
     const { page, limit } = filters;
     const skip = (page - 1) * limit;
 
     const [accounts, total] = await this.accountRepository.findAndCount({
       order: {
-        account_id: 'ASC',
+        created_at: 'ASC',
       },
       skip,
       take: limit,
@@ -99,12 +94,6 @@ export class AccountService {
     };
   }
 
-  /**
-   * Lấy thông tin chi tiết một tài khoản bằng Khóa chính (ID)
-   * @param id Chuỗi định danh UUID của tài khoản cần tìm
-   * @returns Object thông tin tài khoản nếu tìm thấy
-   * @throws NotFoundException Nếu ID tài khoản không tồn tại trong Database
-   */
   async getAccountById(id: string): Promise<IAccount> {
     const account = await this.accountRepository.findOneBy({ account_id: id });
     if (!account) {
